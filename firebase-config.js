@@ -4,12 +4,13 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/9.23.0/firebase
 import { getStorage } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJECT_ID.firebaseapp.com",
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_PROJECT_ID.appspot.com",
-  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "AIzaSyCv6pzl34tyPTARtGxV6g2AJfkrtQeA-xU",
+  authDomain: "cadastro-igreja-23042.firebaseapp.com",
+  databaseURL: "https://cadastro-igreja-23042-default-rtdb.firebaseio.com",
+  projectId: "cadastro-igreja-23042",
+  storageBucket: "cadastro-igreja-23042.firebasestorage.app",
+  messagingSenderId: "977906864836",
+  appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
 };
 
 const app = initializeApp(firebaseConfig);
