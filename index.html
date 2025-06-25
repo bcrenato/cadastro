@@ -1,134 +1,32 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cadastro de Membros</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <style>
-        /* Garante que os inputs não zoomem no focus */
-        input, select, textarea {
-            font-size: 16px !important;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro de Membro</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="mobile-view">
-    <div class="container-fluid py-2">
-        <!-- Cabeçalho simplificado -->
-        <header class="text-center mb-2">
-            <h1 class="h4">Cadastro de Membros</h1>
-        </header>
+<body>
+  <h1>Cadastro de Membro</h1>
+  <form id="cadastroForm">
+    <input type="text" name="nome" placeholder="Nome completo" required />
+    <input type="text" name="endereco" placeholder="Endereço" required />
+    <input type="date" name="batismo" required />
+    
+    <select name="funcao" required>
+      <option value="">Selecione a função</option>
+      <option value="membro">Membro</option>
+      <option value="diacono">Diácono</option>
+      <option value="pastor">Pastor</option>
+    </select>
 
-        <!-- Abas para alternar entre câmera e formulário -->
-        <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="foto-tab" data-bs-toggle="tab" data-bs-target="#foto-tab-pane" type="button">Foto</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados-tab-pane" type="button">Dados</button>
-            </li>
-        </ul>
+    <label for="foto">Foto:</label>
+    <input type="file" id="foto" accept="image/*" capture="environment" required />
 
-        <div class="tab-content" id="myTabContent">
-            <!-- Tab de Foto -->
-            <div class="tab-pane fade show active" id="foto-tab-pane" role="tabpanel">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <div id="camera-container">
-                            <div id="camera-preview" class="mb-2"></div>
-                            <button id="btn-tirar-foto" class="btn btn-primary btn-sm mb-2">
-                                Tirar Foto
-                            </button>
-                            <div class="mb-2">OU</div>
-                            <input type="file" id="foto-upload" accept="image/*" capture="environment" class="form-control form-control-sm">
-                        </div>
-                        <div id="foto-preview" class="mt-2"></div>
-                    </div>
-                </div>
-            </div>
+    <button type="submit">Cadastrar</button>
+  </form>
 
-            <!-- Tab de Dados -->
-            <div class="tab-pane fade" id="dados-tab-pane" role="tabpanel">
-                <form id="form-cadastro">
-
-            <!-- Formulário de Dados -->
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        Dados do Membro
-                    </div>
-                    <div class="card-body">
-                        <form id="form-cadastro">
-                            <div class="row g-3">
-                                <div class="col-md-12">
-                                    <label for="nome" class="form-label">Nome Completo *</label>
-                                    <input type="text" class="form-control" id="nome" required>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <label for="data-nascimento" class="form-label">Data de Nascimento</label>
-                                    <input type="date" class="form-control" id="data-nascimento">
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <label for="telefone" class="form-label">Telefone *</label>
-                                    <input type="tel" class="form-control" id="telefone" required>
-                                </div>
-                                
-                                <div class="col-12">
-                                    <label for="email" class="form-label">E-mail</label>
-                                    <input type="email" class="form-control" id="email">
-                                </div>
-                                
-                                <div class="col-12">
-                                    <label for="endereco" class="form-label">Endereço</label>
-                                    <input type="text" class="form-control" id="endereco">
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <label for="data-batismo" class="form-label">Data de Batismo</label>
-                                    <input type="date" class="form-control" id="data-batismo">
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <label for="cargo" class="form-label">Cargo/Ministerio</label>
-                                    <select class="form-select" id="cargo">
-                                        <option value="">Selecione...</option>
-                                        <option value="membro">Membro</option>
-                                        <option value="diacono">Diácono</option>
-                                        <option value="presbitero">Presbítero</option>
-                                        <option value="pastor">Pastor</option>
-                                        <option value="outro">Outro</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="col-12 mt-4">
-                                    <button type="submit" class="btn btn-success w-100 mt-2">
-                        Cadastrar
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Modal de Sucesso -->
-    <!-- Substitua o modal existente por este -->
-<div class="modal fade" id="modal-sucesso" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body text-center p-4">
-                    <div id="modal-message"></div>
-                    <button class="btn btn-primary mt-3" data-bs-dismiss="modal">OK</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts otimizados para mobile -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
+  <script src="supabase.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
