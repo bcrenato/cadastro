@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ficha de Membro</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Ficha do Membro</h1>
+    <img id="foto" src="" alt="Foto do membro">
+    <p><strong>Nome:</strong> <span id="nome"></span></p>
+    <p><strong>Endereço:</strong> <span id="endereco"></span></p>
+    <p><strong>Data de Batismo:</strong> <span id="batismo"></span></p>
+    <p><strong>Função:</strong> <span id="funcao"></span></p>
+  </div>
+
+  <script type="module">
+    import { db, storage } from './firebase-config.js';
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+
+    async function carregarFicha() {
+      const params = new URLSearchParams(location.search);
+      const id = params.get("id");
+      if (!id) return;
+
+      const docRef = doc(db, "membros", id);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return console.error("Membro não encontrado");
+
+      const data = docSnap.data();
+      document.getElementById("nome").textContent = data.nome;
+      document.getElementById("endereco").textContent = data.endereco;
+      document.getElementById("batismo").textContent = data.batismo;
+      document.getElementById("funcao").textContent = data.funcao;
+
+      const fotosRef = ref(storage, `fotos/${id}`);
+      const url = await getDownloadURL(fotosRef);
+      document.getElementById("foto").src = url;
+    }
+
+    carregarFicha();
+  </script>
+</body>
+</html>
