@@ -2,46 +2,55 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cadastro de Membros</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Garante que os inputs não zoomem no focus */
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+    </style>
 </head>
-<body>
-    <div class="container py-4">
-        <header class="text-center mb-4">
-            <img src="assets/images/logo.png" alt="Logo da Igreja" class="logo mb-3">
-            <h1 class="text-primary">Cadastro de Membros</h1>
+<body class="mobile-view">
+    <div class="container-fluid py-2">
+        <!-- Cabeçalho simplificado -->
+        <header class="text-center mb-2">
+            <h1 class="h4">Cadastro de Membros</h1>
         </header>
 
-        <div class="row g-4">
-            <!-- Seção da Foto -->
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white d-flex align-items-center">
-                        <img src="assets/icons/camera.svg" alt="Ícone câmera" class="me-2" width="24">
-                        <span>Foto do Membro</span>
-                    </div>
-                    <div class="card-body">
-                        <div id="camera-preview" class="mb-3 bg-light rounded"></div>
-                        <div class="d-flex gap-2 mb-3">
-                            <button id="btn-tirar-foto" class="btn btn-primary flex-grow-1">
-                                <img src="assets/icons/camera.svg" alt="Câmera" class="me-1" width="16">
+        <!-- Abas para alternar entre câmera e formulário -->
+        <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="foto-tab" data-bs-toggle="tab" data-bs-target="#foto-tab-pane" type="button">Foto</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados-tab-pane" type="button">Dados</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- Tab de Foto -->
+            <div class="tab-pane fade show active" id="foto-tab-pane" role="tabpanel">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div id="camera-container">
+                            <div id="camera-preview" class="mb-2"></div>
+                            <button id="btn-tirar-foto" class="btn btn-primary btn-sm mb-2">
                                 Tirar Foto
                             </button>
-                            <button id="btn-reiniciar" class="btn btn-outline-secondary">
-                                Reiniciar
-                            </button>
+                            <div class="mb-2">OU</div>
+                            <input type="file" id="foto-upload" accept="image/*" capture="environment" class="form-control form-control-sm">
                         </div>
-                        <div class="mb-3">
-                            <label for="foto-upload" class="form-label">Ou selecione uma imagem</label>
-                            <input type="file" id="foto-upload" accept="image/*" class="form-control">
-                        </div>
-                        <div id="foto-preview" class="text-center mt-3"></div>
+                        <div id="foto-preview" class="mt-2"></div>
                     </div>
                 </div>
             </div>
+
+            <!-- Tab de Dados -->
+            <div class="tab-pane fade" id="dados-tab-pane" role="tabpanel">
+                <form id="form-cadastro">
 
             <!-- Formulário de Dados -->
             <div class="col-lg-6">
@@ -95,51 +104,31 @@
                                 </div>
                                 
                                 <div class="col-12 mt-4">
-                                    <button type="submit" class="btn btn-success w-100 py-2">
-                                        Cadastrar Membro
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+                                    <button type="submit" class="btn btn-success w-100 mt-2">
+                        Cadastrar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal de Sucesso -->
+    <!-- Substitua o modal existente por este -->
+<div class="modal fade" id="modal-sucesso" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div id="modal-message"></div>
+                    <button class="btn btn-primary mt-3" data-bs-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Sucesso -->
-    <!-- Substitua o modal existente por este -->
-<div class="modal fade" id="modal-sucesso" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body p-4 text-center">
-                <!-- Conteúdo será injetado via JavaScript -->
-            </div>
-            <div class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
-                    Fechar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-    <!-- Scripts -->
+    <!-- Scripts otimizados para mobile -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
     <script src="script.js"></script>
-
-
-<script>
-        if (typeof Webcam === 'undefined') {
-            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"><\/script>');
-        }
-    </script>
-    
-
-
-    
-
 </body>
 </html>
