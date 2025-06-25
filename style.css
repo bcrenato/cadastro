@@ -69,3 +69,24 @@ body {
         height: 60px;
     }
 }
+
+
+
+/* Adicione ao style.css */
+#camera-preview.erro {
+    border: 2px solid #dc3545;
+    padding: 1rem;
+    text-align: center;
+}
+
+.spinner-border {
+    vertical-align: middle;
+}
+
+.alert {
+    transition: opacity 0.5s ease-out;
+}
+
+.alert.fade-out {
+    opacity: 0;
+}
