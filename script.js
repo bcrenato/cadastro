@@ -8,17 +8,42 @@ let fotoCapturada = null;
 const modalSucesso = new bootstrap.Modal(document.getElementById('modal-sucesso'));
 
 // Inicialização da câmera
-function iniciarCamera() {
-    Webcam.set({
-        width: 320,
-        height: 240,
-        image_format: 'jpeg',
-        jpeg_quality: 90,
-        constraints: {
-            facingMode: 'user'
+// Modifique a função iniciarCamera()
+async function iniciarCamera() {
+    try {
+        // Verifica se o navegador suporta câmera
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Navegador não suporta acesso à câmera');
         }
-    });
-    Webcam.attach('#camera-preview');
+        
+        // Solicita permissão antes de inicializar
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        
+        Webcam.set({
+            width: 320,
+            height: 240,
+            dest_width: 320,
+            dest_height: 240,
+            image_format: 'jpeg',
+            jpeg_quality: 90,
+            constraints: {
+                facingMode: 'user',
+                width: { ideal: 320 },
+                height: { ideal: 240 }
+            }
+        });
+        
+        Webcam.attach('#camera-preview');
+        
+    } catch (error) {
+        console.error("Erro na câmera:", error);
+        document.getElementById('camera-preview').innerHTML = `
+            <div class="alert alert-warning">
+                Câmera não disponível: ${error.message}
+                <br>Você pode enviar uma foto do arquivo.
+            </div>
+        `;
+    }
 }
 
 // Evento para tirar foto
@@ -91,28 +116,31 @@ async function uploadFoto(userId) {
 }
 
 // Cadastro do membro
+// Modifique o evento de submit do formulário
 document.getElementById('form-cadastro').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const btnSubmit = e.target.querySelector('button[type="submit"]');
-    btnSubmit.disabled = true;
-    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cadastrando...';
-
+    const originalText = btnSubmit.innerHTML;
+    
     try {
-        // Coleta os dados do formulário
+        // Feedback visual
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status"></span>
+            Cadastrando...
+        `;
+
+        // Coleta dados do formulário
         const formData = {
             nome: document.getElementById('nome').value.trim(),
-            data_nascimento: document.getElementById('data-nascimento').value || null,
             telefone: document.getElementById('telefone').value.trim(),
-            email: document.getElementById('email').value.trim() || null,
-            endereco: document.getElementById('endereco').value.trim() || null,
-            data_batismo: document.getElementById('data-batismo').value || null,
-            cargo: document.getElementById('cargo').value || null,
+            // ... (outros campos)
         };
 
-        // Validação básica
+        // Validação obrigatória
         if (!formData.nome || !formData.telefone) {
-            throw new Error('Nome e telefone são obrigatórios');
+            throw new Error('Preencha todos os campos obrigatórios');
         }
 
         // Upload da foto (se existir)
@@ -120,7 +148,7 @@ document.getElementById('form-cadastro').addEventListener('submit', async (e) =>
             formData.foto_url = await uploadFoto(Date.now());
         }
 
-        // Insere no banco de dados
+        // Cadastro no Supabase
         const { data, error } = await supabase
             .from('membros')
             .insert([formData])
@@ -128,28 +156,53 @@ document.getElementById('form-cadastro').addEventListener('submit', async (e) =>
 
         if (error) throw error;
 
-        // Mostra modal de sucesso
-        if (formData.foto_url) {
-            document.getElementById('modal-foto').innerHTML = `
-                <img src="${formData.foto_url}" class="img-thumbnail">
-            `;
-        }
+        // Feedback visual de sucesso
+        const modalBody = document.querySelector('#modal-sucesso .modal-body');
+        modalBody.innerHTML = `
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#28a745" viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                </svg>
+                <h4 class="mt-3 text-success">Cadastro realizado!</h4>
+                ${formData.foto_url ? `<img src="${formData.foto_url}" class="img-thumbnail mt-3" style="max-height: 150px">` : ''}
+                <p class="mt-3">${formData.nome} foi cadastrado(a) com sucesso.</p>
+            </div>
+        `;
+
+        // Mostra o modal
         modalSucesso.show();
 
-        // Limpa o formulário
-        e.target.reset();
-        document.getElementById('foto-preview').innerHTML = '';
-        fotoCapturada = null;
-        document.getElementById('foto-upload').value = '';
-        Webcam.reset('#camera-preview');
-        iniciarCamera();
+        // Limpa o formulário (com delay para melhor UX)
+        setTimeout(() => {
+            e.target.reset();
+            document.getElementById('foto-preview').innerHTML = '';
+            fotoCapturada = null;
+            document.getElementById('foto-upload').value = '';
+            if (Webcam.live) Webcam.reset('#camera-preview');
+            iniciarCamera();
+        }, 1000);
 
     } catch (error) {
+        // Feedback visual de erro
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'alert alert-danger mt-3';
+        errorContainer.innerHTML = `
+            <strong>Erro:</strong> ${error.message}
+        `;
+        
+        // Insere após o botão de submit
+        btnSubmit.parentNode.insertBefore(errorContainer, btnSubmit.nextSibling);
+        
+        // Remove o erro após 5 segundos
+        setTimeout(() => {
+            errorContainer.remove();
+        }, 5000);
+        
         console.error("Erro no cadastro:", error);
-        alert(`Erro: ${error.message}`);
     } finally {
+        // Restaura o botão
         btnSubmit.disabled = false;
-        btnSubmit.innerHTML = 'Cadastrar Membro';
+        btnSubmit.innerHTML = originalText;
     }
 });
 
