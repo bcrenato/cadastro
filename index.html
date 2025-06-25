@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cadastro de Membros</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Cadastrar Membro</h1>
+  <form id="form-membro">
+    <input type="text" name="nome" placeholder="Nome" required>
+    <input type="text" name="endereco" placeholder="Endereço" required>
+    <input type="date" name="batismo" required>
+    <select name="funcao" required>
+      <option value="">Selecione a função</option>
+      <option value="membro">Membro</option>
+      <option value="diacono">Diácono</option>
+      <option value="pastor">Pastor</option>
+    </select>
+    <input type="file" accept="image/*" capture="environment" id="foto" required>
+    <button type="submit">Cadastrar</button>
+  </form>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
