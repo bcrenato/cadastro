@@ -1,1 +1,28 @@
+/* Estilos gerais */
+body {
+    font-family: 'Arial', sans-serif;
+    background-image: url('../assets/images/bg-cadastro.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+}
 
+.logo {
+    height: 80px;
+    margin-bottom: 20px;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#camera-preview {
+    background: #f0f0f0;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+}
+
+#foto-preview img {
+    max-width: 100%;
+    border-radius: 8px;
+}
