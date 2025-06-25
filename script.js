@@ -5,60 +5,151 @@ const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 // Variáveis globais
 let fotoCapturada = null;
+const modalSucesso = new bootstrap.Modal(document.getElementById('modal-sucesso'));
 
-// Inicializa a câmera
+// Inicialização da câmera
 function iniciarCamera() {
     Webcam.set({
         width: 320,
         height: 240,
         image_format: 'jpeg',
-        jpeg_quality: 90
+        jpeg_quality: 90,
+        constraints: {
+            facingMode: 'user'
+        }
     });
     Webcam.attach('#camera-preview');
 }
 
-// Evento de captura de foto
+// Evento para tirar foto
 document.getElementById('btn-tirar-foto').addEventListener('click', () => {
     Webcam.snap((dataUri) => {
         fotoCapturada = dataUri;
-        document.getElementById('foto-preview').innerHTML = `<img src="${dataUri}" class="img-thumbnail">`;
+        document.getElementById('foto-preview').innerHTML = `
+            <img src="${dataUri}" class="img-thumbnail">
+            <p class="text-success mt-2 mb-0">Foto capturada!</p>
+        `;
     });
 });
 
-// Upload da foto para o Supabase Storage
+// Evento para reiniciar foto
+document.getElementById('btn-reiniciar').addEventListener('click', () => {
+    fotoCapturada = null;
+    document.getElementById('foto-preview').innerHTML = '';
+    document.getElementById('foto-upload').value = '';
+    Webcam.reset('#camera-preview');
+    iniciarCamera();
+});
+
+// Evento para selecionar arquivo
+document.getElementById('foto-upload').addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            fotoCapturada = event.target.result;
+            document.getElementById('foto-preview').innerHTML = `
+                <img src="${event.target.result}" class="img-thumbnail">
+                <p class="text-success mt-2 mb-0">Imagem selecionada!</p>
+            `;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+});
+
+// Função para upload da foto
 async function uploadFoto(userId) {
-    const fileName = `foto-${userId}-${Date.now()}.jpg`;
-    const file = await fetch(fotoCapturada).then(res => res.blob());
+    try {
+        let file;
+        let fileName = `membro-${userId}-${Date.now()}.jpg`;
+        
+        if (fotoCapturada.includes('base64')) {
+            // Se for foto da câmera (Base64)
+            const blob = await fetch(fotoCapturada).then(r => r.blob());
+            file = new File([blob], fileName, { type: 'image/jpeg' });
+        } else {
+            // Se for arquivo selecionado
+            file = document.getElementById('foto-upload').files[0];
+            fileName = file.name;
+        }
 
-    const { data, error } = await supabase.storage
-        .from('membros-fotos')
-        .upload(fileName, file);
+        const { data, error } = await supabase.storage
+            .from('membros-fotos')
+            .upload(fileName, file);
 
-    if (error) throw error;
+        if (error) throw error;
 
-    return supabase.storage.from('membros-fotos').getPublicUrl(data.path).data.publicUrl;
+        // Obtém URL pública
+        const { data: { publicUrl } } = supabase.storage
+            .from('membros-fotos')
+            .getPublicUrl(data.path);
+
+        return publicUrl;
+    } catch (error) {
+        console.error("Erro no upload da foto:", error);
+        return null;
+    }
 }
 
-// Cadastro no banco de dados
+// Cadastro do membro
 document.getElementById('form-cadastro').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const fotoUrl = await uploadFoto(Date.now());
-    
-    const { error } = await supabase.from('membros').insert([{
-        nome: document.getElementById('nome').value,
-        data_nascimento: document.getElementById('data-nascimento').value,
-        telefone: document.getElementById('telefone').value,
-        email: document.getElementById('email').value,
-        foto_url: fotoUrl
-        // Adicione outros campos conforme necessário
-    }]);
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cadastrando...';
 
-    if (error) {
-        alert('Erro ao cadastrar: ' + error.message);
-    } else {
-        alert('Membro cadastrado com sucesso!');
-        location.reload(); // Limpa o formulário
+    try {
+        // Coleta os dados do formulário
+        const formData = {
+            nome: document.getElementById('nome').value.trim(),
+            data_nascimento: document.getElementById('data-nascimento').value || null,
+            telefone: document.getElementById('telefone').value.trim(),
+            email: document.getElementById('email').value.trim() || null,
+            endereco: document.getElementById('endereco').value.trim() || null,
+            data_batismo: document.getElementById('data-batismo').value || null,
+            cargo: document.getElementById('cargo').value || null,
+        };
+
+        // Validação básica
+        if (!formData.nome || !formData.telefone) {
+            throw new Error('Nome e telefone são obrigatórios');
+        }
+
+        // Upload da foto (se existir)
+        if (fotoCapturada) {
+            formData.foto_url = await uploadFoto(Date.now());
+        }
+
+        // Insere no banco de dados
+        const { data, error } = await supabase
+            .from('membros')
+            .insert([formData])
+            .select();
+
+        if (error) throw error;
+
+        // Mostra modal de sucesso
+        if (formData.foto_url) {
+            document.getElementById('modal-foto').innerHTML = `
+                <img src="${formData.foto_url}" class="img-thumbnail">
+            `;
+        }
+        modalSucesso.show();
+
+        // Limpa o formulário
+        e.target.reset();
+        document.getElementById('foto-preview').innerHTML = '';
+        fotoCapturada = null;
+        document.getElementById('foto-upload').value = '';
+        Webcam.reset('#camera-preview');
+        iniciarCamera();
+
+    } catch (error) {
+        console.error("Erro no cadastro:", error);
+        alert(`Erro: ${error.message}`);
+    } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = 'Cadastrar Membro';
     }
 });
 
