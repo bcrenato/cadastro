@@ -1,1 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Membros</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="assets/icons/camera.svg">
+</head>
+<body>
+    <div class="container">
+        <header class="text-center my-4">
+            <img src="assets/images/logo.png" alt="Logo Igreja" class="logo">
+            <h1>Cadastro de Membros</h1>
+        </header>
 
+        <div class="row">
+            <!-- Seção da Foto -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <img src="assets/icons/camera.svg" alt="Ícone Câmera" width="20"> Foto do Membro
+                    </div>
+                    <div class="card-body text-center">
+                        <div id="camera-preview" class="mb-3"></div>
+                        <button id="btn-tirar-foto" class="btn btn-primary mb-2">
+                            <img src="assets/icons/camera.svg" alt="Câmera" width="16"> Tirar Foto
+                        </button>
+                        <input type="file" id="foto-upload" accept="image/*" class="form-control">
+                        <div id="foto-preview" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulário de Dados -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        Dados Pessoais
+                    </div>
+                    <div class="card-body">
+                        <form id="form-cadastro">
+                            <!-- Campos do formulário (mesmo do exemplo anterior) -->
+                            <button type="submit" class="btn btn-success w-100 mt-3">
+                                Cadastrar Membro
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
