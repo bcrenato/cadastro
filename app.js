@@ -1,3 +1,15 @@
+console.log("app.js carregado");
+
+document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  console.log("Formulário enviado");
+
+
+
+
+
+
+
 document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
