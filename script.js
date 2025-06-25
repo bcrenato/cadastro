@@ -1,95 +1,56 @@
 // Configuração do Supabase
-const supabaseUrl = 'https://gtpsdstjfdygmdkgevml.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0cHNkc3RqZmR5Z21ka2dldm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4Nzk4MTgsImV4cCI6MjA2NjQ1NTgxOH0.xj78Xz4rOgQ4Xrn_feLakJLbUb-4rGMxU9Ul-rb5yec';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = supabase.createClient(
+    'https://gtpsdstjfdygmdkgevml.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0cHNkc3RqZmR5Z21ka2dldm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4Nzk4MTgsImV4cCI6MjA2NjQ1NTgxOH0.xj78Xz4rOgQ4Xrn_feLakJLbUb-4rGMxU9Ul-rb5yec'
+);
 
 // Variáveis globais
 let fotoCapturada = null;
-const modalSucesso = new bootstrap.Modal('#modal-sucesso');
+let webcamAtiva = false;
 
-// 1. SOLUÇÃO PARA A CÂMERA
+// 1. Solução definitiva para a câmera
 async function iniciarCamera() {
-    try {
-        // Verifica se o Webcam.js está carregado
+    return new Promise((resolve) => {
+        // Verifica se o Webcam.js carregou
         if (typeof Webcam === 'undefined') {
-            throw new Error('Biblioteca de câmera não carregada');
+            console.error('Webcam.js não carregou');
+            document.getElementById('camera-preview').innerHTML = `
+                <div class="alert alert-warning">
+                    Câmera não disponível. Use o upload de arquivo.
+                </div>
+            `;
+            return resolve(false);
         }
 
-        // Configuração otimizada da câmera
         Webcam.set({
             width: 320,
             height: 240,
             dest_width: 320,
             dest_height: 240,
             image_format: 'jpeg',
-            jpeg_quality: 85,
+            jpeg_quality: 90,
             constraints: {
-                facingMode: 'user',
-                width: { exact: 320 },
-                height: { exact: 240 }
+                facingMode: 'user'
             }
         });
 
-        // Tenta iniciar a câmera
-        Webcam.attach('#camera-preview', {
-            onError: () => {
-                throw new Error('Não foi possível acessar a câmera');
-            },
-            onLoad: () => {
-                console.log('Câmera iniciada com sucesso');
-            }
+        Webcam.attach('#camera-preview', function() {
+            webcamAtiva = true;
+            console.log('Câmera iniciada com sucesso');
+            resolve(true);
+        }, function(err) {
+            console.error('Erro na câmera:', err);
+            document.getElementById('camera-preview').innerHTML = `
+                <div class="alert alert-warning">
+                    Permissão de câmera negada. Use o upload de arquivo.
+                </div>
+            `;
+            resolve(false);
         });
-
-    } catch (error) {
-        console.error("Erro na câmera:", error);
-        document.getElementById('camera-preview').innerHTML = `
-            <div class="alert alert-warning p-2">
-                <small>
-                    <i class="bi bi-exclamation-triangle"></i> 
-                    ${error.message || 'Erro ao acessar a câmera'}. 
-                    Use o upload de arquivo.
-                </small>
-            </div>
-        `;
-        return false;
-    }
-    return true;
+    });
 }
 
-// 2. SOLUÇÃO PARA O CADASTRO
-async function cadastrarMembro(formData) {
-    try {
-        // Verificação básica
-        if (!formData.nome || !formData.telefone) {
-            throw new Error('Nome e telefone são obrigatórios');
-        }
-
-        // Upload da foto se existir
-        if (fotoCapturada) {
-            const fotoUrl = await uploadFoto();
-            if (fotoUrl) formData.foto_url = fotoUrl;
-        }
-
-        // Insere no Supabase
-        const { data, error } = await supabase
-            .from('membros')
-            .insert([formData])
-            .select();
-
-        if (error) {
-            console.error('Erro Supabase:', error);
-            throw new Error(error.message || 'Erro ao cadastrar');
-        }
-
-        return data[0]; // Retorna o membro cadastrado
-
-    } catch (error) {
-        console.error('Erro no cadastro:', error);
-        throw error;
-    }
-}
-
-// 3. FUNÇÃO DE UPLOAD REVISADA
+// 2. Função de upload revisada
 async function uploadFoto() {
     try {
         const fileName = `membro-${Date.now()}.jpg`;
@@ -104,10 +65,7 @@ async function uploadFoto() {
 
         const { data, error } = await supabase.storage
             .from('membros-fotos')
-            .upload(fileName, file, {
-                cacheControl: '3600',
-                upsert: false
-            });
+            .upload(fileName, file);
 
         if (error) throw error;
 
@@ -117,27 +75,40 @@ async function uploadFoto() {
 
     } catch (error) {
         console.error('Erro no upload:', error);
-        throw new Error('Erro ao salvar a foto');
+        throw new Error('Não foi possível salvar a foto');
     }
 }
 
-// EVENTOS PRINCIPAIS
+// 3. Cadastro otimizado
+async function cadastrarMembro(dados) {
+    const { data, error } = await supabase
+        .from('membros')
+        .insert([dados])
+        .select();
+
+    if (error) {
+        console.error('Erro no Supabase:', error);
+        throw new Error(error.message || 'Erro ao cadastrar');
+    }
+
+    return data[0];
+}
+
+// Eventos principais
 document.addEventListener('DOMContentLoaded', async () => {
     // Inicia a câmera
-    const cameraIniciada = await iniciarCamera();
-    if (!cameraIniciada) {
-        document.getElementById('btn-tirar-foto').disabled = true;
-    }
+    const cameraPronta = await iniciarCamera();
+    document.getElementById('btn-tirar-foto').disabled = !cameraPronta;
 
     // Evento de tirar foto
     document.getElementById('btn-tirar-foto').addEventListener('click', () => {
         Webcam.snap((dataUri) => {
             fotoCapturada = dataUri;
             document.getElementById('foto-preview').innerHTML = `
-                <div class="alert alert-success p-2 mb-2">
-                    <small>Foto capturada!</small>
+                <img src="${dataUri}" class="img-thumbnail mt-2">
+                <div class="alert alert-success mt-2 p-2">
+                    Foto capturada com sucesso!
                 </div>
-                <img src="${dataUri}" class="img-fluid rounded border">
             `;
         });
     });
@@ -158,38 +129,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
 
             // Coleta os dados
-            const formData = {
+            const dadosMembro = {
                 nome: document.getElementById('nome').value.trim(),
-                data_nascimento: document.getElementById('data-nascimento').value || null,
                 telefone: document.getElementById('telefone').value.trim(),
                 email: document.getElementById('email').value.trim() || null,
+                data_nascimento: document.getElementById('data-nascimento').value || null,
                 endereco: document.getElementById('endereco').value.trim() || null,
                 data_batismo: document.getElementById('data-batismo').value || null,
                 cargo: document.getElementById('cargo').value || null
             };
 
-            // Cadastra
-            const membroCadastrado = await cadastrarMembro(formData);
+            // Upload da foto se existir
+            if (fotoCapturada) {
+                dadosMembro.foto_url = await uploadFoto();
+            }
+
+            // Cadastra o membro
+            const membroCadastrado = await cadastrarMembro(dadosMembro);
             
             // Feedback visual
+            const modal = new bootstrap.Modal('#modal-sucesso');
             document.querySelector('#modal-sucesso .modal-body').innerHTML = `
                 <div class="text-center">
-                    <div class="mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="#28a745" viewBox="0 0 16 16">
-                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
-                        </svg>
-                    </div>
-                    <h5 class="text-success mb-3">Cadastro realizado!</h5>
-                    <p>${membroCadastrado.nome} foi cadastrado(a) com sucesso.</p>
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Cadastro realizado!</h4>
+                    <p>${membroCadastrado.nome} foi cadastrado com sucesso.</p>
                     ${membroCadastrado.foto_url ? `
-                        <div class="mt-3">
-                            <img src="${membroCadastrado.foto_url}" class="img-thumbnail" style="max-height: 150px">
-                        </div>
+                        <img src="${membroCadastrado.foto_url}" class="img-thumbnail mt-2" style="max-height: 150px">
                     ` : ''}
                 </div>
             `;
-
-            modalSucesso.show();
+            modal.show();
             
             // Limpa o formulário
             setTimeout(() => {
@@ -197,25 +167,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('foto-preview').innerHTML = '';
                 fotoCapturada = null;
                 document.getElementById('foto-upload').value = '';
-                if (typeof Webcam !== 'undefined' && Webcam.live) {
+                if (webcamAtiva) {
                     Webcam.reset('#camera-preview');
                     iniciarCamera();
                 }
-            }, 1500);
+                btn.disabled = false;
+                btn.innerHTML = btnOriginal;
+            }, 2000);
 
         } catch (error) {
             // Mostra erro
             const alerta = document.createElement('div');
             alerta.className = 'alert alert-danger mt-3';
             alerta.innerHTML = `
-                <i class="bi bi-exclamation-circle"></i>
-                ${error.message || 'Erro ao cadastrar membro'}
+                <i class="bi bi-exclamation-triangle"></i>
+                ${error.message || 'Erro ao cadastrar'}
             `;
             
-            e.target.insertBefore(alerta, btn);
+            e.target.appendChild(alerta);
             setTimeout(() => alerta.remove(), 5000);
             
-        } finally {
             // Restaura o botão
             btn.disabled = false;
             btn.innerHTML = btnOriginal;
