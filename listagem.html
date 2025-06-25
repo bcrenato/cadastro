@@ -1,1 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lista de Membros</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Membros Cadastrados</h1>
+  <ul id="lista-membros"></ul>
 
+  <script type="module">
+    import { db } from './firebase-config.js';
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    async function carregar() {
+      const snapshot = await getDocs(collection(db, "membros"));
+      const ul = document.getElementById("lista-membros");
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.innerHTML = `<a href="ficha.html?id=${doc.id}">
+          ${data.nome} — ${data.funcao}
+        </a>`;
+        ul.appendChild(li);
+      });
+    }
+    carregar();
+  </script>
+</body>
+</html>
