@@ -5,9 +5,45 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Cadastro de Membro</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Estilo simples da navbar */
+    .navbar {
+      background-color: #333;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .navbar a {
+      color: white;
+      text-decoration: none;
+      margin-left: 20px;
+    }
+
+    .navbar a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <h1>Cadastro de Membro</h1>
+  <!-- 🔹 NAVBAR -->
+  <div class="navbar">
+    <h1>Cadastro da Igreja</h1>
+    <div>
+      <a href="index.html">Cadastro</a>
+      <a href="listagem.html">Listagem</a>
+    </div>
+  </div>
+
+  <!-- 🔹 FORMULÁRIO -->
+  <h2>Cadastro de Membro</h2>
   <form id="form-membro">
     <input type="text" name="nome" placeholder="Nome" required>
     <input type="text" name="endereco" placeholder="Endereço" required>
