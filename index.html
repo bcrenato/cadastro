@@ -64,42 +64,50 @@
     </div>
 
     <div class="container">
-  <div class="row">
-    <!-- Coluna 1 -->
-    <div class="col-md-8"> <!-- Aumentei para 8 colunas (de 12) -->
-      <div class="mb-3 text-start">
-        <label class="form-label">Nome</label>
-        <input type="text" name="nome" class="form-control" required>
-      </div>
-      
-      <div class="mb-3 text-start">
-        <label class="form-label">Endereço</label>
-        <input type="text" name="endereco" class="form-control" required>
-      </div>
-    </div>
-    
-    <!-- Coluna 2 -->
-    <div class="col-md-4"> <!-- Reduzi para 4 colunas (de 12) -->
-      <div class="mb-3 text-start">
-        <label class="form-label">Data de Batismo</label>
-        <input type="date" name="batismo" class="form-control" required>
-      </div>
-      
-      <div class="mb-3 text-start">
-        <label class="form-label">Data de Nascimento</label>
-        <input type="date" name="nascimento" class="form-control" required>
-      </div>
-      
-      <div class="mb-3 text-start">
-        <label class="form-label">Função</label>
-        <select name="funcao" class="form-select" required>
-          <option value="">Selecione a função</option>
-          <option value="membro">Membro</option>
-          <option value="diacono">Diácono</option>
-          <option value="pastor">Pastor</option>
-        </select>
-      </div>
-    </div>
+  <!-- Título principal -->
+  <h2 class="mb-4">Dados Pessoais</h2>
+  
+  <!-- Nome -->
+  <div class="mb-4">
+    <h4 class="mb-3">Nome*</h4>
+    <input type="text" name="nome" class="form-control" placeholder="Digite seu nome completo" required>
+  </div>
+  
+  <hr class="my-4">
+  
+  <!-- Endereço -->
+  <div class="mb-4">
+    <h4 class="mb-3">Endereço*</h4>
+    <input type="text" name="endereco" class="form-control" placeholder="Digite seu endereço completo" required>
+  </div>
+  
+  <hr class="my-4">
+  
+  <!-- Data de Batismo -->
+  <div class="mb-4">
+    <h4 class="mb-3">Data de Batismo*</h4>
+    <input type="date" name="batismo" class="form-control" required>
+  </div>
+  
+  <hr class="my-4">
+  
+  <!-- Data de Nascimento -->
+  <div class="mb-4">
+    <h4 class="mb-3">Data de Nascimento*</h4>
+    <input type="date" name="nascimento" class="form-control" required>
+  </div>
+  
+  <hr class="my-4">
+  
+  <!-- Função -->
+  <div class="mb-4">
+    <h4 class="mb-3">Função*</h4>
+    <select name="funcao" class="form-select" required>
+      <option value="">Selecione a função</option>
+      <option value="membro">Membro</option>
+      <option value="diacono">Diácono</option>
+      <option value="pastor">Pastor</option>
+    </select>
   </div>
 </div>
 
