@@ -30,6 +30,9 @@ form.addEventListener("submit", async (e) => {
   const nome = form.nome.value;
   const endereco = form.endereco.value;
   const batismo = form.batismo.value;
+
+  const nascimento = form.nascimento.value;
+  
   const funcao = form.funcao.value;
   const fotoFile = fotoInput.files[0];
 
@@ -46,6 +49,7 @@ form.addEventListener("submit", async (e) => {
       nome,
       endereco,
       batismo,
+      nascimento,
       funcao,
       fotoURL
     });
