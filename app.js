@@ -7,7 +7,7 @@ async function uploadImagemCloudinary(file) {
   formData.append("file", file);
   formData.append("upload_preset", "igreja_preset"); // coloque o nome do seu preset
 
-  const response = await fetch("https://api.cloudinary.com/v1_1/cadastroigreja/image/upload", {
+  const response = await fetch("https://api.cloudinary.com/v1_1/bcrenato/image/upload", {
     method: "POST",
     body: formData
   });
