@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cadastro de Membro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .foto-preview {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
+      display: none;
+      margin: 10px auto;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <!-- 🔹 Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#">Cadastro da Igreja</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link active" href="index.html">Cadastro</a></li>
+          <li class="nav-item"><a class="nav-link" href="listagem.html">Listagem</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 🔹 Formulário -->
+  <div class="container my-5">
+    <h2 class="text-center mb-4">Cadastro de Membro</h2>
+    <form id="form-membro" class="card p-4 shadow-sm">
+      <div class="mb-3">
+        <label class="form-label">Nome</label>
+        <input type="text" name="nome" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Endereço</label>
+        <input type="text" name="endereco" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Data de Batismo</label>
+        <input type="date" name="batismo" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Função</label>
+        <select name="funcao" class="form-select" required>
+          <option value="">Selecione a função</option>
+          <option value="membro">Membro</option>
+          <option value="diacono">Diácono</option>
+          <option value="pastor">Pastor</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Selecionar/Tirar Foto</label>
+        <input type="file" id="foto" accept="image/*" class="form-control" required>
+        <img id="preview" class="foto-preview mt-2" alt="Prévia da Foto">
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Cadastrar</button>
+    </form>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="app.js"></script>
+  <script>
+    // Miniatura da foto
+    const fotoInput = document.getElementById("foto");
+    const preview = document.getElementById("preview");
+
+    fotoInput.addEventListener("change", () => {
+      const file = fotoInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          preview.src = reader.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
