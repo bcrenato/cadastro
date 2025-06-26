@@ -6,7 +6,7 @@ import { ref, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/fireba
 async function uploadImagemCloudinary(file) {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "igreja_preset"); // seu preset do Cloudinary
+  formData.append("upload_preset", "igreja_preset"); // substitua pelo seu preset real
 
   const response = await fetch("https://api.cloudinary.com/v1_1/bcrenato/image/upload", {
     method: "POST",
@@ -18,10 +18,12 @@ async function uploadImagemCloudinary(file) {
   return data.secure_url;
 }
 
+// Elementos da página
 const form = document.getElementById("form-membro");
 const fotoInput = document.getElementById("foto");
 const preview = document.getElementById("preview");
 
+// Evento de envio do formulário
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -49,19 +51,7 @@ form.addEventListener("submit", async (e) => {
     });
 
     alert("Membro cadastrado com sucesso!");
-
-    // Limpar campos texto e select
-    form.nome.value = "";
-    form.endereco.value = "";
-    form.batismo.value = "";
-    form.funcao.value = "";
-
-    // Limpar input file
-    fotoInput.value = "";
-
-    // Esconder preview da foto
-    preview.src = "";
-    preview.style.display = "none";
+    location.reload(); // 🔁 Recarrega a página e limpa tudo
 
   } catch (error) {
     console.error("Erro ao cadastrar:", error);
@@ -69,7 +59,7 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Atualizar preview ao selecionar foto
+// Preview da foto ao selecionar imagem
 fotoInput.addEventListener("change", () => {
   const file = fotoInput.files[0];
   if (file) {
