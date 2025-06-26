@@ -26,6 +26,14 @@ const preview = document.getElementById("preview");
 // Evento de envio do formulário
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  // Obter e validar telefone
+  const telefone = form.telefone.value;
+  const telefoneNumeros = telefone.replace(/\D/g, '');
+  
+  if (telefoneNumeros.length < 11) {
+    alert("Por favor, insira um telefone válido com DDD (11 dígitos)");
+    return;
+  }
 
   // Obter valores do formulário - FORMA CORRETA
   const nome = form.nome.value;
@@ -90,20 +98,21 @@ fotoInput.addEventListener("change", () => {
 });
 
 
-
-
-
-// Máscara para telefone
+// Máscara para telefone - FORMATO: (00) 00000-0000
 document.getElementById('telefone').addEventListener('input', function(e) {
   let value = e.target.value.replace(/\D/g, '');
-  
-  // Aplicar máscara (00) 00000-0000
-  if (value.length > 2) {
-    value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}`;
-    if (value.length > 10) {
-      value = `${value}-${value.substring(10, 14)}`;
-    }
+  let formattedValue = '';
+
+  if (value.length > 0) {
+    formattedValue = `(${value.substring(0, 2)}`;
   }
-  
-  e.target.value = value.substring(0, 15); // Limitar ao tamanho máximo
+  if (value.length > 2) {
+    formattedValue += ` ${value.substring(2, 7)}`;
+  }
+  if (value.length > 7) {
+    formattedValue += `-${value.substring(7, 11)}`;
+  }
+
+  e.target.value = formattedValue;
+});
 });
