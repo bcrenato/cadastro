@@ -53,6 +53,11 @@
       <p><strong>Data de Nascimento:</strong> <span id="nascimento"></span></p>
       
       <p><strong>Função:</strong> <span id="funcao"></span></p>
+
+      <p><strong>Telefone:</strong> <span id="telefone"></span></p>
+
+       <p><strong>Sexo:</strong> <span id="sexo"></span></p>
+      
       <a href="listagem.html" class="btn btn-outline-primary mt-3">← Voltar para lista</a>
     </div>
   </main>
@@ -80,6 +85,14 @@
           document.getElementById("nascimento").textContent = membro.nascimento;
           
           document.getElementById("funcao").textContent = membro.funcao;
+
+          document.getElementById("telefone").textContent = membro.telefone;
+
+          document.getElementById("telefone").textContent = membro.telefone;
+
+
+
+          
 
           const foto = document.getElementById("foto");
           if (membro.fotoURL) {
