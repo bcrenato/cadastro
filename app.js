@@ -80,3 +80,22 @@ fotoInput.addEventListener("change", () => {
     preview.style.display = "none";
   }
 });
+
+
+
+
+
+// Máscara para telefone
+document.getElementById('telefone').addEventListener('input', function(e) {
+  let value = e.target.value.replace(/\D/g, '');
+  
+  // Aplicar máscara (00) 00000-0000
+  if (value.length > 2) {
+    value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}`;
+    if (value.length > 10) {
+      value = `${value}-${value.substring(10, 14)}`;
+    }
+  }
+  
+  e.target.value = value.substring(0, 15); // Limitar ao tamanho máximo
+});
