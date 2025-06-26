@@ -4,8 +4,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Cadastro de Membro</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
+    /* Esconde o input file original */
+    #foto {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      border: 0;
+    }
+
+    /* Botão personalizado para input file */
+    label[for="foto"] {
+      display: inline-block;
+      background-color: #0d6efd;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+    label[for="foto"]:hover {
+      background-color: #0b5ed7;
+    }
+
+    /* Miniatura da foto preview */
     .foto-preview {
       width: 150px;
       height: 150px;
@@ -13,35 +42,19 @@
       border-radius: 50%;
       display: none;
       margin: 0 auto 20px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.25);
     }
+
+    /* Container do form */
     .form-wrapper {
       max-width: 500px;
       margin: 30px auto;
-    }
-    input[type="file"]::-webkit-file-upload-button {
-      visibility: hidden;
-    }
-    input[type="file"]::before {
-      content: 'Selecionar/Tirar Foto';
-      display: inline-block;
-      background: #0d6efd;
-      color: white;
-      padding: 6px 12px;
-      outline: none;
-      white-space: nowrap;
-      border-radius: 4px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    input[type="file"]:hover::before {
-      background: #0b5ed7;
     }
   </style>
 </head>
 <body>
 
-  <!-- 🔹 Navbar -->
+  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container">
       <a class="navbar-brand" href="#">Cadastro da Igreja</a>
@@ -54,33 +67,34 @@
     </div>
   </nav>
 
-  <!-- 🔹 Formulário -->
+  <!-- Formulário -->
   <div class="container form-wrapper">
     <h2 class="text-center mb-4">Cadastro de Membro</h2>
 
     <form id="form-membro" class="card p-4 shadow-sm text-center">
 
-      <!-- Pré-visualização da Foto -->
+      <!-- Miniatura da foto -->
       <img id="preview" class="foto-preview" alt="Prévia da Foto" />
 
-      <!-- Botão de Escolher Arquivo -->
-      <div class="mb-3">
-        <input type="file" id="foto" accept="image/*" required style="border: none; display: block; margin: 0 auto;">
+      <!-- Botão para selecionar/tirar foto -->
+      <div class="mb-4">
+        <label for="foto">Selecionar/Tirar Foto</label>
+        <input type="file" id="foto" accept="image/*" required />
       </div>
 
       <div class="mb-3 text-start">
         <label class="form-label">Nome</label>
-        <input type="text" name="nome" class="form-control" required>
+        <input type="text" name="nome" class="form-control" required />
       </div>
 
       <div class="mb-3 text-start">
         <label class="form-label">Endereço</label>
-        <input type="text" name="endereco" class="form-control" required>
+        <input type="text" name="endereco" class="form-control" required />
       </div>
 
       <div class="mb-3 text-start">
         <label class="form-label">Data de Batismo</label>
-        <input type="date" name="batismo" class="form-control" required>
+        <input type="date" name="batismo" class="form-control" required />
       </div>
 
       <div class="mb-4 text-start">
@@ -97,7 +111,7 @@
     </form>
   </div>
 
-  <!-- JS: app.js + miniatura -->
+  <!-- Scripts -->
   <script type="module" src="app.js"></script>
   <script>
     const fotoInput = document.getElementById("foto");
