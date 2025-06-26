@@ -47,44 +47,51 @@
   </nav>
 
   <!-- 🔹 Formulário de cadastro -->
-  <div class="container form-container">
-    <h2 class="text-center mt-3">Cadastro de Membro</h2>
-    <form id="form-membro" class="mt-4">
-      <div class="text-center">
-        <img id="preview" alt="Prévia da Foto">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Nome</label>
-        <input type="text" name="nome" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Endereço</label>
-        <input type="text" name="endereco" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Data de Batismo</label>
-        <input type="date" name="batismo" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Função</label>
-        <select name="funcao" class="form-select" required>
-          <option value="">Selecione a função</option>
-          <option value="membro">Membro</option>
-          <option value="diacono">Diácono</option>
-          <option value="pastor">Pastor</option>
-        </select>
-      </div>
-      <div class="mb-3 text-center">
-        <label class="btn btn-outline-primary">
-          Selecionar / Tirar Foto
-          <input type="file" id="foto" accept="image/*" class="d-none" required>
-        </label>
-      </div>
-      <div class="d-grid">
-        <button type="submit" class="btn btn-success">Cadastrar</button>
-      </div>
-    </form>
-  </div>
+<div class="container form-container">
+  <h2 class="text-center mt-3">Cadastro de Membro</h2>
+  <form id="form-membro" class="mt-4 text-center">
+    
+    <!-- Miniatura redonda centralizada -->
+    <img id="preview" alt="Prévia da Foto">
+
+    <!-- Botão de seleção abaixo da miniatura -->
+    <div class="mb-3">
+      <label class="btn btn-outline-primary">
+        Selecionar / Tirar Foto
+        <input type="file" id="foto" accept="image/*" class="d-none" required>
+      </label>
+    </div>
+
+    <!-- Campos do formulário -->
+    <div class="mb-3 text-start">
+      <label class="form-label">Nome</label>
+      <input type="text" name="nome" class="form-control" required>
+    </div>
+    <div class="mb-3 text-start">
+      <label class="form-label">Endereço</label>
+      <input type="text" name="endereco" class="form-control" required>
+    </div>
+    <div class="mb-3 text-start">
+      <label class="form-label">Data de Batismo</label>
+      <input type="date" name="batismo" class="form-control" required>
+    </div>
+    <div class="mb-3 text-start">
+      <label class="form-label">Função</label>
+      <select name="funcao" class="form-select" required>
+        <option value="">Selecione a função</option>
+        <option value="membro">Membro</option>
+        <option value="diacono">Diácono</option>
+        <option value="pastor">Pastor</option>
+      </select>
+    </div>
+
+    <!-- Botão cadastrar -->
+    <div class="d-grid">
+      <button type="submit" class="btn btn-success">Cadastrar</button>
+    </div>
+  </form>
+</div>
+
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
