@@ -44,6 +44,7 @@
     </div>
   </nav>
 
+
   <!-- 🔹 Conteúdo -->
   <div class="container mt-4">
     <h3 class="mb-3">Selecione o mês:</h3>
@@ -74,6 +75,11 @@
     const mesSelect = document.getElementById("mes");
     const listaDiv = document.getElementById("lista-aniversariantes");
 
+    const mesesNomes = [
+      "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+
     mesSelect.addEventListener("change", () => {
       const mesSelecionado = parseInt(mesSelect.value);
       if (!mesSelecionado) {
@@ -94,6 +100,9 @@
           const mes = dataNasc.getMonth() + 1;
 
           if (mes === mesSelecionado) {
+            const dia = dataNasc.getDate();
+            const nomeMes = mesesNomes[mes];
+
             const item = document.createElement("div");
             item.className = "membro-item";
 
@@ -101,7 +110,7 @@
               <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
               <div>
                 <strong>${membro.nome}</strong><br>
-                <small>Nascimento: ${dataNasc.toLocaleDateString("pt-BR")}</small>
+                <small>Nascimento: ${dia} de ${nomeMes}</small>
               </div>
             `;
 
@@ -121,3 +130,4 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
