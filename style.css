@@ -56,6 +56,7 @@ body {
 .form-control {
   width: 100%;
   padding: 0.75rem 1rem;
+  padding-right: 2.5rem; /* Espaço para o ícone */
   font-size: 0.875rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -74,6 +75,7 @@ body {
   top: 50%;
   transform: translateY(-50%);
   color: #9ca3af;
+  pointer-events: none; /* Permite clicar através do ícone */
 }
 
 /* Botão de Upload */
@@ -132,3 +134,10 @@ h2.text-center {
   font-weight: 600;
   margin-bottom: 1.5rem;
 }
+
+/* Estilo para os containers com ícone */
+.relative {
+  position: relative;
+  width: 100%; /* Garante que o container ocupe toda a largura */
+}
+
