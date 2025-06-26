@@ -32,8 +32,8 @@ form.addEventListener("submit", async (e) => {
   const batismo = form.batismo.value;
   const nascimento = form.nascimento.value;
   const funcao = form.funcao.value;
-  const funcao = form.telefone.value;
-  const funcao = form.sexo.value;
+  const telefone = form.telefone.value;
+  const sexo = form.sexo.value;
   const fotoFile = fotoInput.files[0];
 
   if (!fotoFile) {
