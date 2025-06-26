@@ -6,16 +6,21 @@ import { ref, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/fireba
 async function uploadImagemCloudinary(file) {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "igreja_preset"); // substitua pelo seu preset real
+  formData.append("upload_preset", "igreja_preset");
 
-  const response = await fetch("https://api.cloudinary.com/v1_1/bcrenato/image/upload", {
-    method: "POST",
-    body: formData
-  });
+  try {
+    const response = await fetch("https://api.cloudinary.com/v1_1/bcrenato/image/upload", {
+      method: "POST",
+      body: formData
+    });
 
-  if (!response.ok) throw new Error("Erro no upload da imagem");
-  const data = await response.json();
-  return data.secure_url;
+    if (!response.ok) throw new Error("Erro no upload da imagem");
+    const data = await response.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error("Erro no upload:", error);
+    throw error;
+  }
 }
 
 // Elementos da página
@@ -23,43 +28,51 @@ const form = document.getElementById("form-membro");
 const fotoInput = document.getElementById("foto");
 const preview = document.getElementById("preview");
 
+// Preview da foto ao selecionar imagem
+fotoInput.addEventListener("change", () => {
+  const file = fotoInput.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      preview.src = e.target.result;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  } else {
+    preview.style.display = "none";
+  }
+});
+
 // Evento de envio do formulário
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  // Obter e validar telefone
-  const telefone = form.telefone.value;
-  const telefoneNumeros = telefone.replace(/\D/g, '');
-  
-  if (telefoneNumeros.length < 11) {
-    alert("Por favor, insira um telefone válido com DDD (11 dígitos)");
-    return;
-  }
 
-  // Obter valores do formulário - FORMA CORRETA
+  // Obter valores do formulário
   const nome = form.nome.value;
   const endereco = form.endereco.value;
   const batismo = form.batismo.value;
   const nascimento = form.nascimento.value;
   const funcao = form.funcao.value;
   const telefone = form.telefone.value;
-  const sexo = document.querySelector('input[name="sexo"]:checked')?.value; // Correção aqui
+  const sexo = form.sexo.value;
   const fotoFile = fotoInput.files[0];
 
-  // Validação dos campos obrigatórios
+  // Validação básica
   if (!fotoFile) {
     alert("Por favor, selecione uma foto.");
     return;
   }
 
-  if (!sexo) {
-    alert("Por favor, selecione o sexo.");
-    return;
-  }
-
   try {
-   
+    // Mostrar feedback visual de carregamento
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cadastrando...';
+
+    // Upload da imagem
     const fotoURL = await uploadImagemCloudinary(fotoFile);
 
+    // Salvar no Firebase
     const novoRef = push(ref(db, "membros"));
     await set(novoRef, {
       nome,
@@ -69,50 +82,35 @@ form.addEventListener("submit", async (e) => {
       funcao,
       telefone,
       sexo,
-      fotoURL
+      fotoURL,
+      timestamp: new Date().toISOString()
     });
 
     alert("Membro cadastrado com sucesso!");
-    location.reload(); // 🔁 Recarrega a página e limpa tudo
-
+    form.reset();
+    preview.style.display = "none";
+    
   } catch (error) {
     console.error("Erro ao cadastrar:", error);
-    alert("Erro ao cadastrar membro.");
+    alert(`Erro ao cadastrar membro: ${error.message}`);
+  } finally {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Cadastrar Membro";
   }
 });
 
-// Preview da foto ao selecionar imagem
-fotoInput.addEventListener("change", () => {
-  const file = fotoInput.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      preview.src = reader.result;
-      preview.style.display = "block";
-    };
-    reader.readAsDataURL(file);
-  } else {
-    preview.src = "";
-    preview.style.display = "none";
-  }
-});
-
-
-// Máscara para telefone - FORMATO: (00) 00000-0000
+// Máscara para telefone
 document.getElementById('telefone').addEventListener('input', function(e) {
   let value = e.target.value.replace(/\D/g, '');
-  let formattedValue = '';
-
-  if (value.length > 0) {
-    formattedValue = `(${value.substring(0, 2)}`;
-  }
+  
+  // Aplicar máscara (00) 00000-0000
   if (value.length > 2) {
-    formattedValue += ` ${value.substring(2, 7)}`;
+    value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}`;
+    if (value.length > 10) {
+      value = `${value}-${value.substring(10, 14)}`;
+    }
   }
-  if (value.length > 7) {
-    formattedValue += `-${value.substring(7, 11)}`;
-  }
-
-  e.target.value = formattedValue;
-});
+  
+  e.target.value = value.substring(0, 15); // Limitar ao tamanho máximo
 });
