@@ -8,11 +8,12 @@
 <body>
   <h2>Ficha do Membro</h2>
   <div id="dados-membro">
-    <p><strong>Nome:</strong> <span id="nome"></span></p>
-    <p><strong>Endereço:</strong> <span id="endereco"></span></p>
-    <p><strong>Data de Batismo:</strong> <span id="batismo"></span></p>
-    <p><strong>Função:</strong> <span id="funcao"></span></p>
-  </div>
+  <img id="foto" width="200" alt="Foto do membro" style="display:none; margin-bottom:10px;">
+  <p><strong>Nome:</strong> <span id="nome"></span></p>
+  <p><strong>Endereço:</strong> <span id="endereco"></span></p>
+  <p><strong>Data de Batismo:</strong> <span id="batismo"></span></p>
+  <p><strong>Função:</strong> <span id="funcao"></span></p>
+</div>
 
   <a href="listagem.html">← Voltar para lista</a>
 
@@ -29,18 +30,29 @@
       const membroRef = ref(db, `membros/${id}`);
 
       get(membroRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          const membro = snapshot.val();
-          document.getElementById("nome").textContent = membro.nome;
-          document.getElementById("endereco").textContent = membro.endereco;
-          document.getElementById("batismo").textContent = membro.batismo;
-          document.getElementById("funcao").textContent = membro.funcao;
-        } else {
-          document.getElementById("dados-membro").innerHTML = "<p>Membro não encontrado.</p>";
-        }
-      }).catch((error) => {
-        console.error("Erro ao buscar membro:", error);
-      });
+  if (snapshot.exists()) {
+    const membro = snapshot.val();
+
+    document.getElementById("nome").textContent = membro.nome;
+    document.getElementById("endereco").textContent = membro.endereco;
+    document.getElementById("batismo").textContent = membro.batismo;
+    document.getElementById("funcao").textContent = membro.funcao;
+
+    // Aqui você coloca o código da foto
+    const foto = document.getElementById("foto");
+    if (membro.fotoURL) {
+      foto.src = membro.fotoURL;
+      foto.style.display = "block";
+    } else {
+      foto.style.display = "none";
+    }
+
+  } else {
+    document.getElementById("dados-membro").innerHTML = "<p>Membro não encontrado.</p>";
+  }
+}).catch((error) => {
+  console.error("Erro ao buscar membro:", error);
+});
     }
   </script>
 </body>
