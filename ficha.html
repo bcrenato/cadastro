@@ -1,25 +1,47 @@
-<script type="module">
-  import { db, storage } from './firebase-config.js';
-  import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-  import { ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ficha do Membro</title>
+</head>
+<body>
+  <h2>Ficha do Membro</h2>
+  <div id="dados-membro">
+    <p><strong>Nome:</strong> <span id="nome"></span></p>
+    <p><strong>Endereço:</strong> <span id="endereco"></span></p>
+    <p><strong>Data de Batismo:</strong> <span id="batismo"></span></p>
+    <p><strong>Função:</strong> <span id="funcao"></span></p>
+  </div>
 
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
+  <a href="listagem.html">← Voltar para lista</a>
 
-  async function carregarFicha() {
-    const membroSnap = await get(ref(db, `membros/${id}`));
-    const membro = membroSnap.val();
-    if (!membro) return alert("Membro não encontrado");
+  <script type="module">
+    import { db } from './firebase-config.js';
+    import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    document.getElementById("nome").textContent = membro.nome;
-    document.getElementById("endereco").textContent = membro.endereco;
-    document.getElementById("batismo").textContent = membro.batismo;
-    document.getElementById("funcao").textContent = membro.funcao;
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
 
-    const fotoRef = storageRef(storage, `fotos/${id}`);
-    const fotoURL = await getDownloadURL(fotoRef);
-    document.getElementById("foto").src = fotoURL;
-  }
+    if (!id) {
+      document.getElementById("dados-membro").innerHTML = "<p>Membro não encontrado.</p>";
+    } else {
+      const membroRef = ref(db, `membros/${id}`);
 
-  carregarFicha();
-</script>
+      get(membroRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const membro = snapshot.val();
+          document.getElementById("nome").textContent = membro.nome;
+          document.getElementById("endereco").textContent = membro.endereco;
+          document.getElementById("batismo").textContent = membro.batismo;
+          document.getElementById("funcao").textContent = membro.funcao;
+        } else {
+          document.getElementById("dados-membro").innerHTML = "<p>Membro não encontrado.</p>";
+        }
+      }).catch((error) => {
+        console.error("Erro ao buscar membro:", error);
+      });
+    }
+  </script>
+</body>
+</html>
