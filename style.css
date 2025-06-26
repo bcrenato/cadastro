@@ -95,22 +95,11 @@ body {
   border-color: #9ca3af;
 }
 
-/* Botão de Submit */
-.btn-submit {
-  background-color: #4f46e5;
-  color: white;
-  padding: 0.5rem 1.25rem;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: background-color 0.2s;
-  width: auto;
+/* Adicionar estas novas regras se quiser manter o espaçamento */
+.btn-primary {
   margin: 2rem auto 0;
   display: block;
-  border: none;
-}
-
-.btn-submit:hover {
-  background-color: #4338ca;
+  padding: 0.5rem 1.5rem;
 }
 
 /* Campos Obrigatórios */
