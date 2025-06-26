@@ -134,15 +134,20 @@ h2.text-center {
 }
 
 #funcao {
-    max-width: 250px; /* Um pouco menor em telas maiores */
-  }
-  
+  max-width: 300px; /* Largura reduzida mas não centralizada */
+}
+
+@media (min-width: 768px) {
   .md-col-span-2 {
     grid-column: span 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Centraliza o conteúdo */
   }
+  
+  #funcao {
+    max-width: 250px; /* Largura um pouco menor em desktop */
+  }
+}
+  
+
 /* Ajuste para o container do botão */
 .text-center {
   margin-top: 3rem; /* Aumentei de 2rem para 3rem */
