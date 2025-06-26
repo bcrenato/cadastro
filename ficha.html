@@ -1,47 +1,44 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Ficha do Membro</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <nav class="navbar">
+    <h1>Cadastro da Igreja</h1>
+    <a href="listagem.html">Listagem</a>
+  </nav>
+
   <h2>Ficha do Membro</h2>
   <div id="dados-membro">
-    <p><strong>Nome:</strong> <span id="nome"></span></p>
-    <p><strong>Endereço:</strong> <span id="endereco"></span></p>
-    <p><strong>Data de Batismo:</strong> <span id="batismo"></span></p>
-    <p><strong>Função:</strong> <span id="funcao"></span></p>
+    <img id="foto" width="200" alt="Foto do membro"><br>
+    <strong>Nome:</strong> <span id="nome"></span><br>
+    <strong>Endereço:</strong> <span id="endereco"></span><br>
+    <strong>Data de Batismo:</strong> <span id="batismo"></span><br>
+    <strong>Função:</strong> <span id="funcao"></span><br>
   </div>
 
-  <a href="listagem.html">← Voltar para lista</a>
+  <a href="listagem.html">← Voltar</a>
 
   <script type="module">
     import { db } from './firebase-config.js';
     import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    if (!id) return document.getElementById("dados-membro").innerHTML = "<p>Erro: ID não fornecido.</p>";
 
-    if (!id) {
-      document.getElementById("dados-membro").innerHTML = "<p>Membro não encontrado.</p>";
-    } else {
-      const membroRef = ref(db, `membros/${id}`);
-
-      get(membroRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          const membro = snapshot.val();
-          document.getElementById("nome").textContent = membro.nome;
-          document.getElementById("endereco").textContent = membro.endereco;
-          document.getElementById("batismo").textContent = membro.batismo;
-          document.getElementById("funcao").textContent = membro.funcao;
-        } else {
-          document.getElementById("dados-membro").innerHTML = "<p>Membro não encontrado.</p>";
-        }
-      }).catch((error) => {
-        console.error("Erro ao buscar membro:", error);
-      });
-    }
+    get(ref(db, `membros/${id}`)).then(snapshot => {
+      if (snapshot.exists()) {
+        const m = snapshot.val();
+        document.getElementById("nome").textContent = m.nome;
+        document.getElementById("endereco").textContent = m.endereco;
+        document.getElementById("batismo").textContent = m.batismo;
+        document.getElementById("funcao").textContent = m.funcao;
+        document.getElementById("foto").src = m.fotoURL;
+      } else document.getElementById("dados-membro").innerHTML = "<p>Membro não encontrado.</p>";
+    }).catch(console.error);
   </script>
 </body>
 </html>
