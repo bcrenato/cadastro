@@ -145,22 +145,7 @@ h2.text-center {
   margin-bottom: 1.5rem;
 }
 
-/* Campo Função - Versão final não centralizada */
-#funcao {
-  width: 100%; /* Ocupa a largura total do container */
-  max-width: 300px; /* Mas não ultrapassa esta largura */
-}
 
-/* Em telas maiores */
-@media (min-width: 768px) {
-  #funcao {
-    max-width: 250px; /* Largura um pouco menor em desktop */
-  }
-  
-  .md-col-span-2 {
-    grid-column: span 2; /* Continua ocupando 2 colunas */
-  }
-}
   
 
 /* Ajuste para o container do botão */
