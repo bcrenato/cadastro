@@ -27,21 +27,29 @@ const preview = document.getElementById("preview");
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  // Obter valores do formulário - FORMA CORRETA
   const nome = form.nome.value;
   const endereco = form.endereco.value;
   const batismo = form.batismo.value;
   const nascimento = form.nascimento.value;
   const funcao = form.funcao.value;
   const telefone = form.telefone.value;
-  const sexo = form.sexo.value;
+  const sexo = document.querySelector('input[name="sexo"]:checked')?.value; // Correção aqui
   const fotoFile = fotoInput.files[0];
 
+  // Validação dos campos obrigatórios
   if (!fotoFile) {
-    alert("Selecione uma foto.");
+    alert("Por favor, selecione uma foto.");
+    return;
+  }
+
+  if (!sexo) {
+    alert("Por favor, selecione o sexo.");
     return;
   }
 
   try {
+   
     const fotoURL = await uploadImagemCloudinary(fotoFile);
 
     const novoRef = push(ref(db, "membros"));
