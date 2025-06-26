@@ -103,7 +103,8 @@
           <label for="telefone" class="form-label required-field">Telefone</label>
           <div class="relative">
             <input type="text" id="telefone" name="telefone" class="form-control" required 
-                   placeholder="(00) 00000-0000" maxlength="15">
+                   placeholder="(00) 00000-0000" minlength="14" maxlength="15"
+                   pattern="\(\d{2}\) \d{5}-\d{4}">
             <i class="fas fa-phone input-icon"></i>
           </div>
         </div>
