@@ -142,3 +142,12 @@ h2.text-center {
     flex-direction: column;
     align-items: center; /* Centraliza o conteúdo */
   }
+/* Ajuste para o container do botão */
+.text-center {
+  margin-top: 3rem; /* Aumentei de 2rem para 3rem */
+}
+
+/* Ou especificamente para o botão */
+.btn-primary {
+  margin-top: 3rem; /* Espaçamento acima do botão */
+}
