@@ -1,20 +1,36 @@
-<script type="module">
-  import { db } from './firebase-config.js';
-  import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lista de Membros</title>
+</head>
+<body>
+  <h2>Lista de Membros</h2>
+  <ul id="lista-membros"></ul>
 
-  const lista = document.getElementById("lista-membros");
+  <script type="module">
+    import { db } from './firebase-config.js';
+    import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  const membrosRef = ref(db, "membros");
-  onValue(membrosRef, (snapshot) => {
-    lista.innerHTML = '';
-    const data = snapshot.val();
-    for (let id in data) {
-      const membro = data[id];
-      const li = document.createElement("li");
-      li.innerHTML = `<a href="ficha.html?id=${id}">
-        ${membro.nome} — ${membro.funcao}
-      </a>`;
-      lista.appendChild(li);
-    }
-  });
-</script>
+    const lista = document.getElementById("lista-membros");
+    const membrosRef = ref(db, "membros");
+
+    onValue(membrosRef, (snapshot) => {
+      const data = snapshot.val();
+      lista.innerHTML = "";
+
+      for (const id in data) {
+        const membro = data[id];
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <a href="ficha.html?id=${id}">
+            ${membro.nome} - ${membro.funcao}
+          </a>
+        `;
+        lista.appendChild(li);
+      }
+    });
+  </script>
+</body>
+</html>
