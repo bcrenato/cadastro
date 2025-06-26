@@ -92,6 +92,8 @@
         const data = snapshot.val();
         listaDiv.innerHTML = "";
 
+        const aniversariantesDoMes = [];
+
         for (const id in data) {
           const membro = data[id];
           if (!membro.nascimento) continue;
@@ -100,25 +102,34 @@
           const mes = dataNasc.getMonth() + 1;
 
           if (mes === mesSelecionado) {
-            const dia = dataNasc.getDate();
-            const nomeMes = mesesNomes[mes];
-
-            const item = document.createElement("div");
-            item.className = "membro-item";
-
-            item.innerHTML = `
-              <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
-              <div>
-                <strong>${membro.nome}</strong><br>
-                <small>Nascimento: ${dia} de ${nomeMes}</small>
-              </div>
-            `;
-
-            listaDiv.appendChild(item);
+            aniversariantesDoMes.push({
+              id,
+              nome: membro.nome,
+              fotoURL: membro.fotoURL || "",
+              dia: dataNasc.getDate(),
+              mesNome: mesesNomes[mes]
+            });
           }
         }
 
-        if (!listaDiv.innerHTML) {
+        // Ordenar por dia de nascimento
+        aniversariantesDoMes.sort((a, b) => a.dia - b.dia);
+
+        // Exibir na tela
+        aniversariantesDoMes.forEach((m) => {
+          const item = document.createElement("div");
+          item.className = "membro-item";
+          item.innerHTML = `
+            <img src="${m.fotoURL}" class="foto-miniatura" alt="Foto">
+            <div>
+              <strong>${m.nome}</strong><br>
+              <small>Nascimento: ${m.dia} de ${m.mesNome}</small>
+            </div>
+          `;
+          listaDiv.appendChild(item);
+        });
+
+        if (aniversariantesDoMes.length === 0) {
           listaDiv.innerHTML = `<p class="text-muted">Nenhum aniversariante encontrado.</p>`;
         }
       }, {
@@ -131,3 +142,6 @@
 </body>
 </html>
 
+
+
+  
