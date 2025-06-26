@@ -43,6 +43,9 @@
       <p><strong>Nome:</strong> <span id="nome"></span></p>
       <p><strong>Endereço:</strong> <span id="endereco"></span></p>
       <p><strong>Data de Batismo:</strong> <span id="batismo"></span></p>
+
+      <p><strong>Data de Nascimento:</strong> <span id="nascimento"></span></p>
+      
       <p><strong>Função:</strong> <span id="funcao"></span></p>
       <a href="listagem.html" class="btn btn-outline-primary mt-3">← Voltar para lista</a>
     </div>
@@ -67,6 +70,9 @@
           document.getElementById("nome").textContent = membro.nome;
           document.getElementById("endereco").textContent = membro.endereco;
           document.getElementById("batismo").textContent = membro.batismo;
+          
+          document.getElementById("nascimento").textContent = membro.nascimento;
+          
           document.getElementById("funcao").textContent = membro.funcao;
 
           const foto = document.getElementById("foto");
