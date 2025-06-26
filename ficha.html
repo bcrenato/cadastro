@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ficha do Membro</title>
+  <style>
+    #foto {
+      display: none;          /* começa oculto */
+      margin: 0 auto 15px;   /* centraliza e margem inferior */
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    }
+    #dados-membro {
+      max-width: 400px;
+      margin: 20px auto;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    body {
+      background-color: #f9f9f9;
+      padding: 10px;
+      color: #333;
+    }
+    a {
+      display: block;
+      max-width: 400px;
+      margin: 10px auto;
+      text-decoration: none;
+      color: #007BFF;
+      font-weight: bold;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    h2 {
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <h2>Ficha do Membro</h2>
+  <div id="dados-membro">
+    <img id="foto" alt="Foto do membro" />
+    <p><strong>Nome:</strong> <span id="nome"></span></p>
+    <p><strong>Endereço:</strong> <span id="endereco"></span></p>
+    <p><strong>Data de Batismo:</strong> <span id="batismo"></span></p>
+    <p><strong>Função:</strong> <span id="funcao"></span></p>
+  </div>
+
+  <a href="listagem.html">← Voltar para lista</a>
+
+  <script type="module">
+    import { db } from './firebase-config.js';
+    import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+
+    if (!id) {
+      document.getElementById("dados-membro").innerHTML = "<p>Membro não encontrado.</p>";
+    } else {
+      const membroRef = ref(db, `membros/${id}`);
+
+      get(membroRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const membro = snapshot.val();
+
+          document.getElementById("nome").textContent = membro.nome;
+          document.getElementById("endereco").textContent = membro.endereco;
+          document.getElementById("batismo").textContent = membro.batismo;
+          document.getElementById("funcao").textContent = membro.funcao;
+
+          const foto = document.getElementById("foto");
+          if (membro.fotoURL) {
+            foto.src = membro.fotoURL;
+            foto.style.display = "block";
+          } else {
+            foto.style.display = "none";
+          }
+        } else {
+          document.getElementById("dados-membro").innerHTML = "<p>Membro não encontrado.</p>";
+        }
+      }).catch((error) => {
+        console.error("Erro ao buscar membro:", error);
+      });
+    }
+  </script>
+</body>
+</html>
