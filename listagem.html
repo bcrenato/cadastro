@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lista de Membros</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      padding-top: 70px;
+    }
+    .foto-miniatura {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .membro-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    .info-membro {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: inherit;
+      flex-grow: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🔹 Navbar -->
+  <nav class="navbar navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Listagem de Membros</a>
+      <a class="btn btn-outline-light" href="index.html">← Cadastro</a>
+    </div>
+  </nav>
+
+  <!-- 🔹 Lista de membros -->
+  <div class="container mt-4">
+    <div id="lista-membros" class="list-group"></div>
+    <div class="d-grid mt-4">
+      <button id="excluirSelecionados" class="btn btn-danger">Excluir Selecionados</button>
+    </div>
+  </div>
+
+  <!-- 🔹 Firebase e lógica -->
+  <script type="module">
+    import { db } from './firebase-config.js';
+    import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+    const lista = document.getElementById("lista-membros");
+    const excluirBtn = document.getElementById("excluirSelecionados");
+
+    const membrosRef = ref(db, "membros");
+
+    onValue(membrosRef, (snapshot) => {
+      const data = snapshot.val();
+      lista.innerHTML = "";
+
+      if (!data) {
+        lista.innerHTML = "<p class='text-center'>Nenhum membro cadastrado.</p>";
+        return;
+      }
+
+      for (const id in data) {
+        const membro = data[id];
+        const item = document.createElement("div");
+        item.className = "list-group-item membro-item";
+
+        item.innerHTML = `
+          <input type="checkbox" class="form-check-input me-2" data-id="${id}">
+          <a href="ficha.html?id=${id}" class="info-membro">
+            <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
+            <div>
+              <div><strong>${membro.nome}</strong></div>
+              <small>${membro.funcao}</small>
+            </div>
+          </a>
+        `;
+
+        lista.appendChild(item);
+      }
+    });
+
+    excluirBtn.addEventListener("click", () => {
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+      if (checkboxes.length === 0) {
+        alert("Selecione pelo menos um membro para excluir.");
+        return;
+      }
+
+      if (!confirm("Tem certeza que deseja excluir os membros selecionados?")) return;
+
+      checkboxes.forEach(cb => {
+        const id = cb.getAttribute("data-id");
+        remove(ref(db, `membros/${id}`));
+      });
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
