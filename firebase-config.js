@@ -8,7 +8,7 @@ const firebaseConfig = {
   authDomain: "cadastro-igreja-23042.firebaseapp.com",
   databaseURL: "https://cadastro-igreja-23042-default-rtdb.firebaseio.com",
   projectId: "cadastro-igreja-23042",
-  storageBucket: "cadastro-igreja-23042.appspot.com", // ✅ CORRETO
+  //storageBucket: "cadastro-igreja-23042.appspot.com", // ✅ CORRETO
   messagingSenderId: "977906864836",
   appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
 };
