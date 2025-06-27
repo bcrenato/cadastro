@@ -1,5 +1,17 @@
+// Aplica a máscara ao campo de CEP ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+  const cepInput = document.getElementById('cep');
+
+  // Aplicando a máscara 00000-000
+  IMask(cepInput, {
+    mask: '00000-000'
+  });
+});
+
+// Função global para buscar o endereço pelo CEP
 window.buscarCEP = function () {
-  const cep = document.getElementById('cep').value.replace(/\D/g, '');
+  const cepInput = document.getElementById('cep');
+  const cep = cepInput.value.replace(/\D/g, ''); // Remove caracteres não numéricos
 
   if (cep.length === 8) {
     fetch(`https://viacep.com.br/ws/${cep}/json/`)
@@ -17,6 +29,6 @@ window.buscarCEP = function () {
         document.getElementById('endereco').value = 'Erro ao buscar';
       });
   } else {
-    document.getElementById('endereco').value = ''; // Limpa se for incompleto
+    document.getElementById('endereco').value = ''; // Limpa se incompleto
   }
 };
