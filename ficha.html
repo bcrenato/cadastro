@@ -41,7 +41,11 @@
     <div class="card p-4 shadow-sm">
       <img id="foto" alt="Foto do membro" />
       <p><strong>Nome:</strong> <span id="nome"></span></p>
+      <p><strong>CEP:</strong> <span id="cep"></span></p>
       <p><strong>Endereço:</strong> <span id="endereco"></span></p>
+      <p><strong>Bairro:</strong> <span id="bairro"></span></p>
+      <p><strong>Cidade:</strong> <span id="cidade"></span></p>
+      <p><strong>Estado:</strong> <span id="estado"></span></p>
       <p><strong>Data de Batismo:</strong> <span id="batismo"></span></p>
       <p><strong>Data de Nascimento:</strong> <span id="nascimento"></span></p>
       <p><strong>Função:</strong> <span id="funcao"></span></p>
@@ -68,7 +72,11 @@
           const membro = snapshot.val();
 
           document.getElementById("nome").textContent = membro.nome;
+          document.getElementById("cep").textContent = membro.cep;
           document.getElementById("endereco").textContent = membro.endereco;
+          document.getElementById("bairro").textContent = membro.bairro;
+          document.getElementById("cidade").textContent = membro.cidade;
+          document.getElementById("estado").textContent = membro.estado;
           document.getElementById("batismo").textContent = membro.batismo;
           document.getElementById("nascimento").textContent = membro.nascimento;
           document.getElementById("funcao").textContent = membro.funcao;
