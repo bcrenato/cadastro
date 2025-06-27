@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Função global para buscar o endereço pelo CEP
-// Aplica máscara no campo de CEP
+// Aplica a máscara ao campo de CEP ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
   const cepInput = document.getElementById('cep');
   IMask(cepInput, { mask: '00000-000' });
@@ -147,7 +147,10 @@ window.buscarCEP = function () {
           document.getElementById('cidade').value = '';
           document.getElementById('estado').value = '';
         } else {
-          document.getElementById('endereco').value = data.logradouro || '';
+          // Preenche a rua com vírgula e "Nº" ao final
+          const ruaComNumero = `${data.logradouro}, Nº`;
+          document.getElementById('endereco').value = ruaComNumero;
+
           document.getElementById('bairro').value = data.bairro || '';
           document.getElementById('cidade').value = data.localidade || '';
           document.getElementById('estado').value = data.uf || '';
@@ -161,11 +164,11 @@ window.buscarCEP = function () {
         document.getElementById('estado').value = '';
       });
   } else {
-    // Limpa os campos se o CEP for incompleto
     document.getElementById('endereco').value = '';
     document.getElementById('bairro').value = '';
     document.getElementById('cidade').value = '';
     document.getElementById('estado').value = '';
   }
 };
+
 
