@@ -27,6 +27,10 @@ const preview = document.getElementById("preview");
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  // Obter valores CEP
+  const cep = form.cep.value.replace(/\D/g, '');
+  const endereco = form.endereco.value;
+
   const nome = form.nome.value;
   const endereco = form.endereco.value;
   const batismo = form.batismo.value;
@@ -35,6 +39,12 @@ form.addEventListener("submit", async (e) => {
   const telefone = form.telefone.value;
   const sexo = form.sexo.value;
   const fotoFile = fotoInput.files[0];
+
+  if (cep.length !== 8) {
+    alert("Por favor, insira um CEP válido");
+    return;
+  }
+  
 
   if (!fotoFile) {
     alert("Selecione uma foto.");
@@ -103,3 +113,46 @@ document.getElementById('telefone').addEventListener('input', function(e) {
   
   e.target.value = value;
 });
+
+// Máscara para CEP e busca automática
+document.getElementById('cep').addEventListener('input', function(e) {
+  // Aplicar máscara 00000-000
+  let value = e.target.value.replace(/\D/g, '');
+  if (value.length > 5) {
+    value = `${value.substring(0, 5)}-${value.substring(5, 8)}`;
+  }
+  e.target.value = value;
+
+  // Buscar endereço quando CEP estiver completo
+  if (value.length === 9) {
+    buscarEndereco(value);
+  }
+});
+
+async function buscarEndereco(cep) {
+  cep = cep.replace('-', '');
+  
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = await response.json();
+    
+    if (data.erro) {
+      throw new Error('CEP não encontrado');
+    }
+    
+    // Preencher os campos automaticamente
+    document.getElementById('endereco').value = 
+      `${data.logradouro || ''} ${data.complemento || ''}`.trim();
+    
+    // Você pode adicionar mais campos se quiser:
+    // document.getElementById('bairro').value = data.bairro;
+    // document.getElementById('cidade').value = data.localidade;
+    // document.getElementById('estado').value = data.uf;
+    
+  } catch (error) {
+    console.error('Erro ao buscar CEP:', error);
+    alert('CEP não encontrado. Por favor, digite o endereço manualmente.');
+  }
+}
+
+
