@@ -57,31 +57,31 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { firebaseConfig } from "./firebase-config.js";
+  import { firebaseConfig, auth } from "./firebase-config.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+  // Inicializa o app e a autenticação (caso ainda não iniciado)
+  initializeApp(firebaseConfig);
 
-    const form = document.getElementById("loginForm");
-    const errorMsg = document.getElementById("errorMsg");
+  const form = document.getElementById("loginForm");
+  const errorMsg = document.getElementById("errorMsg");
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorMsg.textContent = "";
 
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          // ✅ REDIRECIONA
-          window.location.href = "/cadastro/index.html"; // OU use caminho absoluto se estiver no GitHub Pages
-        })
-        .catch((error) => {
-          errorMsg.textContent = "Erro: " + error.message;
-        });
-    });
-  </script>
+    try {
+      await signInWithEmailAndPassword(getAuth(), email, password);
+      window.location.href = "/cadastro/index.html";
+    } catch (error) {
+      errorMsg.textContent = "Erro: " + error.message;
+    }
+  });
+</script>
+
 </body>
 </html>
