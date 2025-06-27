@@ -1,13 +1,39 @@
 // auth-guard.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { firebaseConfig } from "./firebase-config.js";
+import { auth } from './firebase-config.js';
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+export const initializeAuthGuard = () => {
+  auth.onAuthStateChanged((user) => {
+    const currentPath = window.location.pathname.split('/').pop();
+    
+    if (!user && currentPath !== 'login.html') {
+      // Redireciona para login se não estiver autenticado
+      window.location.href = 'login.html';
+    } else if (user && currentPath === 'login.html') {
+      // Redireciona para index se já estiver autenticado
+      window.location.href = 'index.html';
+    }
+    
+    // Atualiza a UI baseada no estado de autenticação
+    updateAuthUI(user);
+  });
+};
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.href = "login.html";
+const updateAuthUI = (user) => {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.style.display = user ? 'block' : 'none';
   }
-});
+};
+
+export const getCurrentUser = () => {
+  return auth.currentUser;
+};
+
+export const logout = async () => {
+  try {
+    await auth.signOut();
+    window.location.href = 'login.html';
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error);
+  }
+};
