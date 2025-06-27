@@ -15,10 +15,9 @@ const firebaseConfig = {
   appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
 };
 
-// Inicializa Firebase
-const app = initializeApp(firebaseConfig);
+// Inicializa o Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database(); // Agora usando Realtime Database
 
-// Exporta instâncias
-export const db = getDatabase(app);
-export const storage = getStorage(app);
-export const auth = getAuth(app);
+export { app, auth, db, firebaseConfig };
