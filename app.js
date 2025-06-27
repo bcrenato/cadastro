@@ -95,23 +95,17 @@ fotoInput.addEventListener("change", () => {
 // Máscara para telefone
 document.getElementById('telefone').addEventListener('input', function(e) {
   let value = e.target.value.replace(/\D/g, '');
+  if (value.length > 11) value = value.substring(0, 11);
   
-  if (value.length > 11) {
-    value = value.substring(0, 11);
-  }
-
-  // Formatação: (00) 00000-0000
-  if (value.length > 0) {
-    value = `(${value.substring(0, 2)}`;
-  }
-  if (value.length > 3) {
-    value = `${value} ${value.substring(3, 7)}`;
-  }
-  if (value.length > 8) {
-    value = `${value}-${value.substring(8, 12)}`;
+  let formatted = value.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+  if (!formatted.startsWith('(') && value.length > 2) {
+    formatted = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+    if (formatted.length > 9) {
+      formatted = `${formatted.substring(0, 10)}-${formatted.substring(10)}`;
+    }
   }
   
-  e.target.value = value;
+  e.target.value = formatted;
 });
 
 // Máscara para CEP e busca automática
