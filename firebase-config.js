@@ -4,9 +4,9 @@ import { getDatabase } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-
 import { getStorage } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-// 🔑 Configuração da sua aplicação Firebase
+// ✅ Exportando firebaseConfig para import por login.html
 export const firebaseConfig = {
-  apiKey: "AIzaSyCv6pzl34tyPTARtGxV6g2AJfkrtQeA-xU",
+  apiKey: "AIzaSyCv6pzl34tyPTARtQeA-xU",
   authDomain: "cadastro-igreja-23042.firebaseapp.com",
   databaseURL: "https://cadastro-igreja-23042-default-rtdb.firebaseio.com",
   projectId: "cadastro-igreja-23042",
@@ -14,8 +14,10 @@ export const firebaseConfig = {
   appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
 };
 
-// Inicialização do Firebase e exportação das instâncias
+// Inicializa Firebase
 const app = initializeApp(firebaseConfig);
+
+// Exporta instâncias
 export const db = getDatabase(app);
 export const storage = getStorage(app);
 export const auth = getAuth(app);
