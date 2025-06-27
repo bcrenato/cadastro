@@ -19,4 +19,11 @@ window.buscarCEP = function () {
   } else {
     document.getElementById('endereco').value = ''; // Limpa se for incompleto
   }
+// Aplicar a máscara após o carregamento da página
+document.addEventListener('DOMContentLoaded', () => {
+  const cepInput = document.getElementById('cep');
+  IMask(cepInput, {
+    mask: '00000-000'
+  });
+  
 };
