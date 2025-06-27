@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Registrar Usuário</title>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js"></script>
+  <script type="module" src="firebase-config.js"></script> <!-- seu arquivo de configuração -->
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; }
+    input, button { width: 100%; margin: 10px 0; padding: 10px; }
+    .msg { margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <h2>Cadastro de Novo Usuário</h2>
+
+  <form id="registerForm">
+    <input type="email" id="email" placeholder="E-mail" required />
+    <input type="password" id="password" placeholder="Senha (mínimo 6 caracteres)" required />
+    <button type="submit">Cadastrar</button>
+  </form>
+
+  <p class="msg" id="mensagem"></p>
+
+  <p>Já tem conta? <a href="login.html">Entrar</a></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
+    import { firebaseConfig } from "./firebase-config.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const form = document.getElementById("registerForm");
+    const mensagem = document.getElementById("mensagem");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("password").value;
+
+      createUserWithEmailAndPassword(auth, email, senha)
+        .then((userCredential) => {
+          mensagem.textContent = "Usuário cadastrado com sucesso!";
+          form.reset();
+        })
+        .catch((error) => {
+          mensagem.textContent = "Erro: " + error.message;
+        });
+    });
+  </script>
+</body>
+</html>
