@@ -12,16 +12,14 @@
   <form>
     <div class="mb-3">
       <label for="cep" class="form-label">CEP:</label>
-      <input type="text" class="form-control" id="cep" placeholder="Digite o CEP" maxlength="9" oninput="buscarCEP()">
+      <input type="text" class="form-control" id="cep" placeholder="Digite o CEP" maxlength="9"
+             oninput="buscarCEP()" onblur="buscarCEP()">
     </div>
 
     <div class="mb-3">
       <label for="endereco" class="form-label">Endereço:</label>
       <input type="text" class="form-control" id="endereco" placeholder="Endereço completo" readonly>
     </div>
-
-    <!-- Outros campos do formulário aqui -->
-
   </form>
 
   <script src="app.js"></script>
