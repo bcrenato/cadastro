@@ -126,9 +126,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Função global para buscar o endereço pelo CEP
+// Aplica máscara no campo de CEP
+document.addEventListener('DOMContentLoaded', () => {
+  const cepInput = document.getElementById('cep');
+  IMask(cepInput, { mask: '00000-000' });
+});
+
+// Função para buscar e preencher os dados do CEP
 window.buscarCEP = function () {
   const cepInput = document.getElementById('cep');
-  const cep = cepInput.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+  const cep = cepInput.value.replace(/\D/g, '');
 
   if (cep.length === 8) {
     fetch(`https://viacep.com.br/ws/${cep}/json/`)
@@ -136,16 +143,29 @@ window.buscarCEP = function () {
       .then(data => {
         if (data.erro) {
           document.getElementById('endereco').value = 'CEP não encontrado';
+          document.getElementById('bairro').value = '';
+          document.getElementById('cidade').value = '';
+          document.getElementById('estado').value = '';
         } else {
-          const enderecoCompleto = `${data.logradouro}`;
-          document.getElementById('endereco').value = enderecoCompleto;
+          document.getElementById('endereco').value = data.logradouro || '';
+          document.getElementById('bairro').value = data.bairro || '';
+          document.getElementById('cidade').value = data.localidade || '';
+          document.getElementById('estado').value = data.uf || '';
         }
       })
       .catch(error => {
         console.error('Erro ao buscar o CEP:', error);
         document.getElementById('endereco').value = 'Erro ao buscar';
+        document.getElementById('bairro').value = '';
+        document.getElementById('cidade').value = '';
+        document.getElementById('estado').value = '';
       });
   } else {
-    document.getElementById('endereco').value = ''; // Limpa se incompleto
+    // Limpa os campos se o CEP for incompleto
+    document.getElementById('endereco').value = '';
+    document.getElementById('bairro').value = '';
+    document.getElementById('cidade').value = '';
+    document.getElementById('estado').value = '';
   }
 };
+
