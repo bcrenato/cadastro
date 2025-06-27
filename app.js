@@ -111,6 +111,47 @@ document.getElementById('telefone').addEventListener('input', function(e) {
   e.target.value = value;
 });
 
+// CEP search functionality
+    document.getElementById('searchCep').addEventListener('click', function() {
+        const cepInput = document.getElementById('cep');
+        const cep = cepInput.value.replace(/\D/g, '');
+        
+        if (cep.length !== 8) {
+            alert('CEP inválido. Por favor, insira um CEP com 8 dígitos.');
+            return;
+        }
+        
+        // Show loading
+        this.innerHTML = '<i class="fas fa-spinner animate-spin mr-1"></i> Buscando...';
+        this.disabled = true;
+        
+        // Fazer requisição para a API ViaCEP
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    throw new Error('CEP não encontrado');
+                }
+                
+                // Preencher os campos
+                document.getElementById('street').value = data.logradouro || '';
+                document.getElementById('neighborhood').value = data.bairro || '';
+                document.getElementById('city').value = data.localidade || '';
+                document.getElementById('state').value = data.uf || '';
+            })
+            .catch(error => {
+                console.error('Erro ao buscar CEP:', error);
+                alert('CEP não encontrado. Por favor, preencha os dados manualmente.');
+            })
+            .finally(() => {
+                // Reset button
+                this.innerHTML = '<i class="fas fa-search mr-1"></i> Buscar';
+                this.disabled = false;
+            });
+    });
+
+
+
 
 
 // CEP mask
