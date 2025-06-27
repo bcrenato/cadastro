@@ -89,42 +89,6 @@ fotoInput.addEventListener("change", () => {
   }
 });
 
-
-// Máscara para telefone
-document.getElementById('telefone').addEventListener('input', function(e) {
-  let value = e.target.value.replace(/\D/g, '');
-  
-  if (value.length > 11) {
-    value = value.substring(0, 11);
-  }
-
-  // Formatação: (00) 00000-0000
-  if (value.length > 0) {
-    value = `(${value.substring(0, 2)}`;
-  }
-  if (value.length > 3) {
-    value = `${value} ${value.substring(3, 7)}`;
-  }
-  if (value.length > 8) {
-    value = `${value}-${value.substring(8, 12)}`;
-  }
-  
-  e.target.value = value;
-});
-
-
-
-
-// Aplica a máscara ao campo de CEP ao carregar a página
-document.addEventListener('DOMContentLoaded', () => {
-  const cepInput = document.getElementById('cep');
-
-  // Aplicando a máscara 00000-000
-  IMask(cepInput, {
-    mask: '00000-000'
-  });
-});
-
 // Função global para buscar o endereço pelo CEP
 // Aplica a máscara ao campo de CEP ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
