@@ -69,16 +69,17 @@
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const email = document.getElementById("email").value.trim();
+
+      const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
       signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          // ✅ Redireciona após login
-          window.location.href = "index.html"; // ou /cadastro/index.html se necessário
+        .then(() => {
+          // ✅ REDIRECIONA
+          window.location.href = "/cadastro/index.html"; // OU use caminho absoluto se estiver no GitHub Pages
         })
         .catch((error) => {
-          errorMsg.textContent = "Erro: " + (error.message || "Não foi possível fazer login.");
+          errorMsg.textContent = "Erro: " + error.message;
         });
     });
   </script>
