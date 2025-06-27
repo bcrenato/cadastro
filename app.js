@@ -27,10 +27,6 @@ const preview = document.getElementById("preview");
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // Obter valores CEP
-  const cep = form.cep.value.replace(/\D/g, '');
-  const endereco = form.endereco.value;
-
   const nome = form.nome.value;
   const endereco = form.endereco.value;
   const batismo = form.batismo.value;
@@ -39,12 +35,6 @@ form.addEventListener("submit", async (e) => {
   const telefone = form.telefone.value;
   const sexo = form.sexo.value;
   const fotoFile = fotoInput.files[0];
-
-  if (cep.length !== 8) {
-    alert("Por favor, insira um CEP válido");
-    return;
-  }
-  
 
   if (!fotoFile) {
     alert("Selecione uma foto.");
@@ -92,99 +82,24 @@ fotoInput.addEventListener("change", () => {
 });
 
 
-// Máscara vanilla JS que funciona no GitHub Pages
+// Máscara para telefone
 document.getElementById('telefone').addEventListener('input', function(e) {
   let value = e.target.value.replace(/\D/g, '');
   
-  if (value.length > 11) value = value.substring(0, 11);
-  
+  if (value.length > 11) {
+    value = value.substring(0, 11);
+  }
+
+  // Formatação: (00) 00000-0000
   if (value.length > 0) {
-    value = '(' + value.substring(0, 2);
+    value = `(${value.substring(0, 2)}`;
   }
   if (value.length > 3) {
-    value = value + ') ' + value.substring(3, 8);
+    value = `${value} ${value.substring(3, 7)}`;
   }
-  if (value.length > 10) {
-    value = value + '-' + value.substring(10, 14);
+  if (value.length > 8) {
+    value = `${value}-${value.substring(8, 12)}`;
   }
   
   e.target.value = value;
 });
-
-// CEP search functionality
-    document.getElementById('searchCep').addEventListener('click', function() {
-        const cepInput = document.getElementById('cep');
-        const cep = cepInput.value.replace(/\D/g, '');
-        
-        if (cep.length !== 8) {
-            alert('CEP inválido. Por favor, insira um CEP com 8 dígitos.');
-            return;
-        }
-        
-        // Show loading
-        this.innerHTML = '<i class="fas fa-spinner animate-spin mr-1"></i> Buscando...';
-        this.disabled = true;
-        
-        // Fazer requisição para a API ViaCEP
-        fetch(`https://viacep.com.br/ws/${cep}/json/`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.erro) {
-                    throw new Error('CEP não encontrado');
-                }
-                
-                // Preencher os campos
-                document.getElementById('street').value = data.logradouro || '';
-                document.getElementById('neighborhood').value = data.bairro || '';
-                document.getElementById('city').value = data.localidade || '';
-                document.getElementById('state').value = data.uf || '';
-            })
-            .catch(error => {
-                console.error('Erro ao buscar CEP:', error);
-                alert('CEP não encontrado. Por favor, preencha os dados manualmente.');
-            })
-            .finally(() => {
-                // Reset button
-                this.innerHTML = '<i class="fas fa-search mr-1"></i> Buscar';
-                this.disabled = false;
-            });
-    });
-
-
-
-
-
-// CEP mask
-    document.getElementById('cep').addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        value = value.replace(/^(\d{5})(\d)/, '$1-$2');
-        e.target.value = value;
-    });
-
-async function buscarEndereco(cep) {
-  cep = cep.replace('-', '');
-  
-  try {
-    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-    const data = await response.json();
-    
-    if (data.erro) {
-      throw new Error('CEP não encontrado');
-    }
-    
-    // Preencher os campos automaticamente
-    document.getElementById('endereco').value = 
-      `${data.logradouro || ''} ${data.complemento || ''}`.trim();
-    
-    // Você pode adicionar mais campos se quiser:
-    // document.getElementById('bairro').value = data.bairro;
-    // document.getElementById('cidade').value = data.localidade;
-    // document.getElementById('estado').value = data.uf;
-    
-  } catch (error) {
-    console.error('Erro ao buscar CEP:', error);
-    alert('CEP não encontrado. Por favor, digite o endereço manualmente.');
-  }
-}
-
-
