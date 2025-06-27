@@ -1,141 +1,143 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cadastro de Membro</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+// app.js
+import { db } from './firebase-config.js';
+import { ref, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-    <div class="container">
-      <a class="navbar-brand" href="#">Cadastro da Igreja</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link active" href="index.html">Cadastro</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="listagem.html">Listagem</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="aniversariantes.html">Aniversariantes</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+// Função que envia a imagem para o Cloudinary e retorna a URL
+async function uploadImagemCloudinary(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "igreja_preset"); // substitua pelo seu preset real
 
-  <div class="container form-container my-4">
-    <h2 class="text-center mb-6">Cadastro de Membro</h2>
-    <form id="form-membro">
-      
-      <div class="text-center mb-6">
-        <img id="preview" alt="Prévia da Foto">
-        <div class="mt-3">
-          <label class="btn-upload">
-            <i class="fas fa-camera mr-2"></i>
-            Selecionar/Tirar Foto
-            <input type="file" id="foto" accept="image/*" class="d-none" required>
-          </label>
-        </div>
-      </div>
+  const response = await fetch("https://api.cloudinary.com/v1_1/bcrenato/image/upload", {
+    method: "POST",
+    body: formData
+  });
 
-      <div class="form-grid">
-        <!-- Coluna 1 -->
-        <div>
-          <label for="nome" class="form-label required-field">Nome Completo</label>
-          <div class="relative">
-            <input type="text" id="nome" name="nome" class="form-control" required placeholder="Digite o nome completo">
-            <i class="fas fa-user input-icon"></i>
-          </div>
-        </div>
+  if (!response.ok) throw new Error("Erro no upload da imagem");
+  const data = await response.json();
+  return data.secure_url;
+}
 
-        <!-- Coluna 2 -->
-        <div>
-          <label for="endereco" class="form-label required-field">Endereço</label>
-          <div class="relative">
-            <input type="text" id="endereco" name="endereco" class="form-control" required placeholder="Digite o endereço completo">
-            <i class="fas fa-map-marker-alt input-icon"></i>
-          </div>
-        </div>
+// Elementos da página
+const form = document.getElementById("form-membro");
+const fotoInput = document.getElementById("foto");
+const preview = document.getElementById("preview");
 
-        <!-- Coluna 1 -->
-        <div>
-          <label for="batismo" class="form-label required-field">Data de Batismo</label>
-          <div class="relative">
-            <input type="date" id="batismo" name="batismo" class="form-control" required>
-            <i class="fas fa-calendar-check input-icon"></i>
-          </div>
-        </div>
+// Evento de envio do formulário
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-        <!-- Coluna 2 -->
-        <div>
-          <label for="nascimento" class="form-label required-field">Data de Nascimento</label>
-          <div class="relative">
-            <input type="date" id="nascimento" name="nascimento" class="form-control" required>
-            <i class="fas fa-birthday-cake input-icon"></i>
-          </div>
-        </div>
+  const nome = form.nome.value;
+  const endereco = form.endereco.value;
+  const batismo = form.batismo.value;
+  const nascimento = form.nascimento.value;
+  const funcao = form.funcao.value;
+  const telefone = form.telefone.value;
+  const sexo = form.sexo.value;
+  const fotoFile = fotoInput.files[0];
 
-        <!-- Função (ocupa duas colunas em desktop) -->
-        <div>
-          <label for="funcao" class="form-label required-field">Função</label>
-          <div class="relative">
-            <select id="funcao" name="funcao" class="form-control" required>
-              <option value="">Selecione a função</option>
-              <option value="membro">Membro</option>
-              <option value="diacono">Diácono</option>
-              <option value="pastor">Pastor</option>
-            </select>
-            <i class="fas fa-user-tag input-icon"></i>
-          </div>
-        </div>
+  if (!fotoFile) {
+    alert("Selecione uma foto.");
+    return;
+  }
 
-        <!-- Campo Telefone -->
-        <div class="mb-4">
-          <label for="telefone" class="form-label required-field">Telefone</label>
-          <div class="relative">
-            <input type="text" id="telefone" name="telefone" class="form-control" required 
-                   placeholder="(00) 00000-0000" maxlength="15">
-            <i class="fas fa-phone input-icon"></i>
-          </div>
-        </div>
+  try {
+    const fotoURL = await uploadImagemCloudinary(fotoFile);
 
-         <!-- Campo Sexo -->
-        <div class="mb-4">
-          <label class="form-label required-field">Sexo</label>
-          <div class="radio-group">
-            <label class="radio-option">
-              <input type="radio" name="sexo" value="masculino" required>
-              <span class="radio-custom"></span>
-              Masculino
-            </label>
-            <label class="radio-option">
-              <input type="radio" name="sexo" value="feminino">
-              <span class="radio-custom"></span>
-              Feminino
-            </label>
-          </div>
-        </div>
-        
-      </div>
+    const novoRef = push(ref(db, "membros"));
+    await set(novoRef, {
+      nome,
+      endereco,
+      batismo,
+      nascimento,
+      funcao,
+      telefone,
+      sexo,
+      fotoURL
+    });
 
-      <div class="text-center">
-        <button type="submit" class="btn btn-primary px-4">
-          Cadastrar Membro
-        </button>
-      </div>
-    </form>
-  </div>
+    alert("Membro cadastrado com sucesso!");
+    location.reload(); // 🔁 Recarrega a página e limpa tudo
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module" src="app.js"></script>
-</body>
-</html>
+  } catch (error) {
+    console.error("Erro ao cadastrar:", error);
+    alert("Erro ao cadastrar membro.");
+  }
+});
+
+// Preview da foto ao selecionar imagem
+fotoInput.addEventListener("change", () => {
+  const file = fotoInput.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      preview.src = reader.result;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  } else {
+    preview.src = "";
+    preview.style.display = "none";
+  }
+});
+
+
+// Máscara para telefone
+document.getElementById('telefone').addEventListener('input', function(e) {
+  let value = e.target.value.replace(/\D/g, '');
+  
+  if (value.length > 11) {
+    value = value.substring(0, 11);
+  }
+
+  // Formatação: (00) 00000-0000
+  if (value.length > 0) {
+    value = `(${value.substring(0, 2)}`;
+  }
+  if (value.length > 3) {
+    value = `${value} ${value.substring(3, 7)}`;
+  }
+  if (value.length > 8) {
+    value = `${value}-${value.substring(8, 12)}`;
+  }
+  
+  e.target.value = value;
+});
+
+
+
+
+// Aplica a máscara ao campo de CEP ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+  const cepInput = document.getElementById('cep');
+
+  // Aplicando a máscara 00000-000
+  IMask(cepInput, {
+    mask: '00000-000'
+  });
+});
+
+// Função global para buscar o endereço pelo CEP
+window.buscarCEP = function () {
+  const cepInput = document.getElementById('cep');
+  const cep = cepInput.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+
+  if (cep.length === 8) {
+    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.erro) {
+          document.getElementById('endereco').value = 'CEP não encontrado';
+        } else {
+          const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+          document.getElementById('endereco').value = enderecoCompleto;
+        }
+      })
+      .catch(error => {
+        console.error('Erro ao buscar o CEP:', error);
+        document.getElementById('endereco').value = 'Erro ao buscar';
+      });
+  } else {
+    document.getElementById('endereco').value = ''; // Limpa se incompleto
+  }
+};
