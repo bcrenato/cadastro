@@ -20,7 +20,8 @@ window.buscarCEP = function () {
         if (data.erro) {
           document.getElementById('endereco').value = 'CEP não encontrado';
         } else {
-          const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+          const enderecoCompleto = `${data.logradouro}`;
+          //const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`; 
           document.getElementById('endereco').value = enderecoCompleto;
         }
       })
