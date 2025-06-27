@@ -28,7 +28,11 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const nome = form.nome.value;
+  const cep = form.cep.value;
   const endereco = form.endereco.value;
+  const bairro = form.bairro.value;
+  const cidade = form.cidade.value;
+  const estado = form.estado.value;
   const batismo = form.batismo.value;
   const nascimento = form.nascimento.value;
   const funcao = form.funcao.value;
@@ -47,7 +51,11 @@ form.addEventListener("submit", async (e) => {
     const novoRef = push(ref(db, "membros"));
     await set(novoRef, {
       nome,
+      cep,
       endereco,
+      bairro,
+      cidade,
+      estado,
       batismo,
       nascimento,
       funcao,
