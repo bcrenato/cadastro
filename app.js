@@ -92,23 +92,20 @@ fotoInput.addEventListener("change", () => {
 });
 
 
-// Máscara para telefone
+// Máscara vanilla JS que funciona no GitHub Pages
 document.getElementById('telefone').addEventListener('input', function(e) {
   let value = e.target.value.replace(/\D/g, '');
   
-  if (value.length > 11) {
-    value = value.substring(0, 11);
-  }
-
-  // Formatação: (00) 00000-0000
+  if (value.length > 11) value = value.substring(0, 11);
+  
   if (value.length > 0) {
-    value = `(${value.substring(0, 2)}`;
+    value = '(' + value.substring(0, 2);
   }
   if (value.length > 3) {
-    value = `${value} ${value.substring(3, 7)}`;
+    value = value + ') ' + value.substring(3, 8);
   }
-  if (value.length > 8) {
-    value = `${value}-${value.substring(8, 12)}`;
+  if (value.length > 10) {
+    value = value + '-' + value.substring(10, 14);
   }
   
   e.target.value = value;
