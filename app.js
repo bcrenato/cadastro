@@ -112,20 +112,13 @@ document.getElementById('telefone').addEventListener('input', function(e) {
 });
 
 
-// Máscara para CEP e busca automática
-document.getElementById('cep').addEventListener('input', function(e) {
-  // Aplicar máscara 00000-000
-  let value = e.target.value.replace(/\D/g, '');
-  if (value.length > 5) {
-    value = `${value.substring(0, 5)}-${value.substring(5, 8)}`;
-  }
-  e.target.value = value;
 
-  // Buscar endereço quando CEP estiver completo
-  if (value.length === 9) {
-    buscarEndereco(value);
-  }
-});
+// CEP mask
+    document.getElementById('cep').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+        e.target.value = value;
+    });
 
 async function buscarEndereco(cep) {
   cep = cep.replace('-', '');
