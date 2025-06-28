@@ -213,9 +213,9 @@
 
   <script type="module">
   import { db, auth } from './firebase-config.js';
-  import { ref, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { registerUser, getAllUsers } from './users.js';
+  import { registerUser, getAllUsers, deleteUserFromDatabase } from './users.js';
 
   // Elementos da UI
   const usersList = document.getElementById('usersList');
@@ -239,23 +239,39 @@
           <td>${user.fullName || 'Não informado'}</td>
           <td>${user.username}</td>
           <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
-         <td class="action-buttons">
-  <button class="btn btn-sm btn-warning change-password" data-id="${user.id}">
-    <i class="fas fa-key"></i> Alterar Senha
-  </button>
-  <button class="btn btn-sm btn-danger ms-1 delete-user" data-id="${user.id}">
-    <i class="fas fa-trash"></i> Excluir
-  </button>
-</td>
+          <td class="action-buttons">
+            <button class="btn btn-sm btn-warning change-password" data-id="${user.id}">
+              <i class="fas fa-key"></i> Alterar Senha
+            </button>
+            <button class="btn btn-sm btn-danger ms-1 delete-user" data-id="${user.id}">
+              <i class="fas fa-trash"></i> Excluir
+            </button>
+          </td>
         `;
         usersList.appendChild(row);
       });
 
-      // Configurar eventos de botões
+      // Evento para alterar senha
       document.querySelectorAll('.change-password').forEach(btn => {
         btn.addEventListener('click', () => {
           document.getElementById('userId').value = btn.getAttribute('data-id');
           new bootstrap.Modal(document.getElementById('passwordModal')).show();
+        });
+      });
+
+      // Evento para excluir usuário
+      document.querySelectorAll('.delete-user').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const userId = btn.getAttribute('data-id');
+          if (confirm('Tem certeza que deseja excluir este usuário?')) {
+            try {
+              await deleteUserFromDatabase(userId);
+              alert('Usuário excluído com sucesso!');
+              loadUsers();
+            } catch (error) {
+              alert('Erro ao excluir usuário: ' + error.message);
+            }
+          }
         });
       });
 
@@ -314,6 +330,7 @@
     field.type = field.type === 'password' ? 'text' : 'password';
   };
 </script>
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
