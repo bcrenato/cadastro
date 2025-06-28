@@ -1,36 +1,19 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>Configuração do Administrador</title>
-</head>
-<body>
-  <h1>Criação do Usuário Administrador</h1>
-  <p>Esta página deve ser usada apenas uma vez para criar o primeiro administrador.</p>
+async function createFirstAdmin() {
+  const username = prompt("Digite o nome de usuário do administrador:");
+  const password = prompt("Digite a senha do administrador:");
+  const fullName = prompt("Digite o nome completo do administrador:");
   
-  <script type="module">
-    import { auth } from './firebase-config.js';
-    import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  if (!username || !password || !fullName) {
+    alert("Todos os campos são obrigatórios!");
+    return;
+  }
+  
+  try {
+    await registerUser(username, password, fullName, true);
+    alert("Administrador criado com sucesso!");
+  } catch (error) {
+    alert("Erro ao criar administrador: " + error.message);
+  }
+}
 
-    async function createAdmin() {
-      const email = prompt("Digite o e-mail do administrador:");
-      const password = prompt("Digite a senha do administrador:");
-      
-      if (!email || !password) {
-        alert("E-mail e senha são obrigatórios!");
-        return;
-      }
-      
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        alert("Administrador criado com sucesso!\n\nAgora você pode:\n1. Fechar esta página\n2. Deletar o arquivo admin-setup.html\n3. Acessar o sistema normalmente pelo login.html");
-      } catch (error) {
-        alert("Erro ao criar administrador: " + error.message);
-      }
-    }
-
-    // Executa imediatamente ao carregar a página
-    createAdmin();
-  </script>
-</body>
-</html>
+createFirstAdmin();
