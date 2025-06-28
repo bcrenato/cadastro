@@ -22,16 +22,6 @@ export async function registerUser(username, password, fullName, isAdmin = false
   }
 }
 
-export async function deleteUser(userId) {
-  try {
-    // Remove do banco de dados
-    await set(ref(db, `users/${userId}`), null);
-    return true;
-  } catch (error) {
-    throw new Error(`Erro ao deletar usuário: ${error.message}`);
-  }
-}
-
 // Login com username
 export async function loginUser(username, password) {
   const email = `${username}@igreja.local`;
@@ -65,4 +55,14 @@ export async function getAllUsers() {
     });
   });
   return users;
+}
+
+// Excluir usuário
+export async function deleteUser(userId) {
+  try {
+    await set(ref(db, `users/${userId}`), null);
+    return true;
+  } catch (error) {
+    throw new Error(`Erro ao deletar usuário: ${error.message}`);
+  }
 }
