@@ -5,6 +5,22 @@ import {
   signInWithEmailAndPassword 
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
+
+
+import { db } from './firebase-config.js';
+import { ref, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+// Remove usuário apenas do Realtime Database
+export async function deleteUserFromDatabase(userId) {
+  try {
+    await remove(ref(db, `users/${userId}`));
+  } catch (error) {
+    throw new Error('Erro ao excluir do banco de dados: ' + error.message);
+  }
+}
+
+
+
 // Cadastra usuário com username (e-mail fictício)
 export async function registerUser(username, password, fullName, isAdmin = false) {
   const email = `${username}@igreja.local`;
