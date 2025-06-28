@@ -43,3 +43,16 @@ export async function getCurrentUserData() {
   const snapshot = await get(ref(db, `users/${user.uid}`));
   return snapshot.val();
 }
+
+// Listar todos os usuários
+export async function getAllUsers() {
+  const snapshot = await get(ref(db, 'users'));
+  const users = [];
+  snapshot.forEach((child) => {
+    users.push({
+      id: child.key,
+      ...child.val()
+    });
+  });
+  return users;
+}
