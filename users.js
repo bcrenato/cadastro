@@ -44,6 +44,9 @@ export async function registerUser(username, password, fullName, isAdmin = false
       throw new Error("Apenas administradores podem cadastrar usuários");
     }
     
+    // Salva o token de acesso atual
+    const currentUserToken = await currentUser.getIdToken();
+    
     // Cria o novo usuário
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
@@ -55,15 +58,25 @@ export async function registerUser(username, password, fullName, isAdmin = false
       createdAt: new Date().toISOString()
     });
     
-    // Volta para o usuário admin original
-    const adminEmail = `${currentUserData.val().username}@igreja.local`;
-    const credential = EmailAuthProvider.credential(adminEmail, prompt("Digite sua senha de administrador para continuar:"));
-    await signInWithCredential(auth, credential);
+    // Restaura a sessão do admin
+    await auth.signOut();
+    await signInWithEmailAndPassword(
+      auth, 
+      `${currentUserData.val().username}@igreja.local`,
+      await getAdminPassword() // Você precisará implementar esta função
+    );
     
     return userCredential.user;
   } catch (error) {
     throw new Error(`Erro ao registrar: ${error.message}`);
   }
+}
+
+// Função auxiliar para obter a senha do admin (exemplo simples)
+async function getAdminPassword() {
+  // Em uma aplicação real, você teria uma maneira mais segura de armazenar temporariamente
+  return localStorage.getItem('admin_temp_password') || 
+         prompt("Digite sua senha de administrador para continuar:");
 }
 
 // Login com username
