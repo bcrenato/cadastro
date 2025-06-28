@@ -37,34 +37,69 @@
 </head>
 <body>
 
-  <!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO (NOVO) -->
-  <script type="module">
-    import { checkAuth } from './auth.js';
-    checkAuth();
-  </script>
+ <!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO (ATUALIZADO) -->
+<script type="module">
+  import { checkAuth } from './auth.js';
+  import { isUserAdmin } from './users.js';
+  
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = await checkAuth();
+    
+    // Mostrar menu admin se o usuário for administrador
+    if (user && await isUserAdmin()) {
+      document.getElementById('adminMenuItem').style.display = 'block';
+    }
+  });
+</script>
 
   <!-- 🔹 Navbar fixa no topo -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-    <div class="container">
-      <a class="navbar-brand" href="#">Listagem</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="index.html">Cadastro</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="listagem.html">Listagem</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="aniversariantes.html">Aniversariantes</a>
-          </li>
-        </ul>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">Listagem</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="index.html">
+            <i class="fas fa-user-plus me-1"></i> Cadastro
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="listagem.html">
+            <i class="fas fa-list me-1"></i> Listagem
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="aniversariantes.html">
+            <i class="fas fa-birthday-cake me-1"></i> Aniversariantes
+          </a>
+        </li>
+        
+        <!-- Menu de Admin (só aparece para administradores) -->
+        <li class="nav-item" id="adminMenuItem" style="display: none;">
+          <a class="nav-link" href="register.html">
+            <i class="fas fa-user-shield me-1"></i> Cadastrar Usuários
+          </a>
+        </li>
+      </ul>
+      
+      <div class="d-flex align-items-center">
+        <!-- Nome do usuário logado -->
+        <span class="navbar-text text-white me-3" id="currentUserDisplay">
+          <i class="fas fa-user-circle me-1"></i>
+          <span>Carregando...</span>
+        </span>
+        
+        <!-- Botão de Logout -->
+        <button id="logoutBtn" class="btn btn-sm btn-outline-light">
+          <i class="fas fa-sign-out-alt me-1"></i> Sair
+        </button>
       </div>
     </div>
-  </nav>
+  </div>
+</nav>
 
   <!-- 🔹 Conteúdo -->
   <div class="container mt-4">
