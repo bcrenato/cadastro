@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cadastrar Usuário - Sistema Igreja</title>
+  <title>Gerenciar Usuários - Sistema Igreja</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
@@ -21,6 +21,29 @@
     .admin-card {
       border-left: 4px solid #ffc107;
     }
+    .password-field {
+      position: relative;
+    }
+    .toggle-password {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #6c757d;
+    }
+    .user-table th {
+      white-space: nowrap;
+    }
+    .action-buttons {
+      white-space: nowrap;
+    }
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1100;
+    }
   </style>
 </head>
 <body>
@@ -36,7 +59,7 @@
   <nav class="navbar navbar-expand-lg navbar-dark bg-admin fixed-top">
     <div class="container">
       <a class="navbar-brand" href="index.html">
-        <i class="fas fa-user-shield me-2"></i> Área Administrativa
+        <i class="fas fa-user-shield me-2"></i> Gerenciar Usuários
       </a>
       
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
@@ -52,12 +75,7 @@
           </li>
           <li class="nav-item">
             <a class="nav-link active" href="register.html">
-              <i class="fas fa-user-plus me-1"></i> Cadastrar Usuário
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="listagem.html">
-              <i class="fas fa-users-cog me-1"></i> Gerenciar Membros
+              <i class="fas fa-users-cog me-1"></i> Gerenciar Usuários
             </a>
           </li>
         </ul>
@@ -78,8 +96,8 @@
 
   <!-- Conteúdo Principal -->
   <div class="container mt-4">
-    <div class="row justify-content-center">
-      <div class="col-lg-6">
+    <div class="row">
+      <div class="col-lg-6 mb-4">
         <div class="card admin-card shadow">
           <div class="card-header bg-white">
             <h3 class="text-center mb-0">
@@ -104,11 +122,12 @@
                 <input type="text" id="username" class="form-control" required>
               </div>
               
-              <div class="mb-3">
+              <div class="mb-3 password-field">
                 <label for="password" class="form-label">
                   <i class="fas fa-lock me-1"></i> Senha
                 </label>
-                <input type="password" id="password" class="form-control" required>
+                <input type="password" id="password" class="form-control" required minlength="6">
+                <i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i>
               </div>
               
               <div class="mb-3 form-check">
@@ -125,13 +144,153 @@
           </div>
         </div>
       </div>
+      
+      <div class="col-lg-6">
+        <div class="card admin-card shadow">
+          <div class="card-header bg-white">
+            <h3 class="text-center mb-0">
+              <i class="fas fa-users text-primary me-2"></i>
+              Usuários Cadastrados
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover user-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Usuário</th>
+                    <th>Tipo</th>
+                    <th class="action-buttons">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="usersList"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Modal para alterar senha -->
+  <div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title">
+            <i class="fas fa-key me-2"></i> Alterar Senha
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="passwordForm">
+            <input type="hidden" id="userId">
+            <div class="mb-3 password-field">
+              <label for="newPassword" class="form-label">Nova Senha</label>
+              <input type="password" id="newPassword" class="form-control" required minlength="6">
+              <i class="fas fa-eye toggle-password" onclick="togglePassword('newPassword')"></i>
+            </div>
+            <div class="mb-3 password-field">
+              <label for="confirmPassword" class="form-label">Confirmar Senha</label>
+              <input type="password" id="confirmPassword" class="form-control" required minlength="6">
+              <i class="fas fa-eye toggle-password" onclick="togglePassword('confirmPassword')"></i>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" id="savePasswordBtn" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
   <!-- Scripts -->
   <script type="module">
+    import { db, auth } from './firebase-config.js';
+    import { ref, get, update, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
     import { registerUser } from './users.js';
-    
+    import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    // Função para exibir notificação
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast show align-items-center text-white bg-${type}`;
+      toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      `;
+      
+      document.getElementById('toastContainer').appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
+
+    // Carregar lista de usuários
+    async function loadUsers() {
+      const snapshot = await get(ref(db, 'users'));
+      const usersList = document.getElementById('usersList');
+      usersList.innerHTML = '';
+
+      if (!snapshot.exists()) {
+        usersList.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum usuário cadastrado</td></tr>';
+        return;
+      }
+
+      snapshot.forEach((child) => {
+        const userId = child.key;
+        const user = child.val();
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${user.fullName || 'Não informado'}</td>
+          <td>${user.username}</td>
+          <td>${user.isAdmin ? '<span class="badge bg-warning text-dark">Admin</span>' : '<span class="badge bg-secondary">Usuário</span>'}</td>
+          <td class="action-buttons">
+            <button class="btn btn-sm btn-outline-primary change-password" data-id="${userId}">
+              <i class="fas fa-key"></i> Senha
+            </button>
+            ${userId !== auth.currentUser?.uid ? `
+              <button class="btn btn-sm btn-outline-danger delete-user" data-id="${userId}">
+                <i class="fas fa-trash"></i>
+              </button>
+            ` : ''}
+          </td>
+        `;
+        usersList.appendChild(row);
+      });
+
+      // Configurar eventos dos botões
+      document.querySelectorAll('.change-password').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('userId').value = btn.getAttribute('data-id');
+          const modal = new bootstrap.Modal(document.getElementById('passwordModal'));
+          modal.show();
+        });
+      });
+
+      document.querySelectorAll('.delete-user').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const userId = btn.getAttribute('data-id');
+          if (confirm('Tem certeza que deseja excluir este usuário?')) {
+            try {
+              await remove(ref(db, `users/${userId}`));
+              showToast('Usuário excluído com sucesso!');
+              loadUsers();
+            } catch (error) {
+              showToast('Erro ao excluir usuário: ' + error.message, 'danger');
+            }
+          }
+        });
+      });
+    }
+
+    // Cadastrar novo usuário
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       try {
@@ -142,41 +301,47 @@
           document.getElementById('isAdmin').checked
         );
         
-        // Modal de sucesso (substitui o alert)
-        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-        successModal.show();
-        
+        showToast('Usuário cadastrado com sucesso!');
         document.getElementById('registerForm').reset();
+        loadUsers();
       } catch (error) {
-        const errorElement = document.getElementById('registerError');
-        errorElement.textContent = error.message;
-        errorElement.classList.remove('d-none');
+        showToast('Erro ao cadastrar: ' + error.message, 'danger');
       }
     });
+
+    // Alterar senha
+    document.getElementById('savePasswordBtn').addEventListener('click', async () => {
+      const userId = document.getElementById('userId').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        showToast('As senhas não coincidem!', 'danger');
+        return;
+      }
+
+      try {
+        // ATENÇÃO: Esta implementação requer que o admin esteja logado como o usuário
+        // Para produção, recomendo usar Cloud Functions
+        await updatePassword(auth.currentUser, newPassword);
+        
+        showToast('Senha alterada com sucesso!');
+        document.getElementById('passwordForm').reset();
+        bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+      } catch (error) {
+        showToast('Erro ao alterar senha: ' + error.message, 'danger');
+      }
+    });
+
+    // Função para alternar visibilidade da senha
+    window.togglePassword = (fieldId) => {
+      const field = document.getElementById(fieldId);
+      field.type = field.type === 'password' ? 'text' : 'password';
+    };
+
+    // Carregar usuários ao iniciar
+    loadUsers();
   </script>
-
-  <!-- Modal de Sucesso -->
-  <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">
-            <i class="fas fa-check-circle me-2"></i> Sucesso!
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p>Usuário cadastrado com sucesso!</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mensagem de Erro (inicialmente oculta) -->
-  <div id="registerError" class="alert alert-danger d-none position-fixed top-0 start-50 translate-middle-x mt-3"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
