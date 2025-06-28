@@ -212,10 +212,16 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <script type="module">
+  
   import { db, auth } from './firebase-config.js';
   import { ref, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
   import { registerUser, getAllUsers, deleteUser } from './users.js';
+  import { ensureAdminSession } from './auth.js';
+  
+  if (!await ensureAdminSession()) {
+    window.location.href = 'index.html';
+  }
 
   // Elementos da UI
   const usersList = document.getElementById('usersList');
