@@ -1,5 +1,5 @@
 import { db, auth } from './firebase-config.js';
-import { ref, set, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword 
