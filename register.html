@@ -267,21 +267,27 @@
 
   // Registrar novo usuário
   registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      await registerUser(
-        document.getElementById('username').value,
-        document.getElementById('password').value,
-        document.getElementById('fullName').value,
-        document.getElementById('isAdmin').checked
-      );
-      showToast('Usuário cadastrado com sucesso!');
-      registerForm.reset();
-      loadUsers();
-    } catch (error) {
-      showToast(error.message, "danger");
-    }
-  });
+  e.preventDefault();
+  
+  if (!await ensureAdminSession()) {
+    showToast("Sessão de administrador necessária", "danger");
+    return;
+  }
+
+  try {
+    await registerUser(
+      document.getElementById('username').value,
+      document.getElementById('password').value,
+      document.getElementById('fullName').value,
+      document.getElementById('isAdmin').checked
+    );
+    showToast('Usuário cadastrado com sucesso!');
+    registerForm.reset();
+    loadUsers();
+  } catch (error) {
+    showToast(error.message, "danger");
+  }
+});
 
   // Alterar senha
   document.getElementById('savePasswordBtn').addEventListener('click', async () => {
