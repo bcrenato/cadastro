@@ -3,12 +3,12 @@ import { ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0
 import { 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut,
-  signInWithCredential,
-  EmailAuthProvider
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  deleteUser as deleteAuthUser
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-// Função para excluir usuário (atualizada)
+// Função para excluir usuário
 export async function deleteUser(userId) {
   try {
     // Verifica se o usuário atual é admin
@@ -31,10 +31,9 @@ export async function deleteUser(userId) {
 }
 
 // Cadastra usuário com username (e-mail fictício)
-export async function registerUser(username, password, fullName, isAdmin = false) {
+export async function registerUser(username, password, fullName, isAdmin = false, adminPassword) {
   const email = `${username}@igreja.local`;
   try {
-    // Salva o usuário atual
     const currentUser = auth.currentUser;
     if (!currentUser) throw new Error("Nenhum usuário autenticado");
     
@@ -44,8 +43,10 @@ export async function registerUser(username, password, fullName, isAdmin = false
       throw new Error("Apenas administradores podem cadastrar usuários");
     }
     
-    // Salva o token de acesso atual
-    const currentUserToken = await currentUser.getIdToken();
+    // Reautentica o admin
+    const adminEmail = `${currentUserData.val().username}@igreja.local`;
+    const credential = EmailAuthProvider.credential(adminEmail, adminPassword);
+    await reauthenticateWithCredential(currentUser, credential);
     
     // Cria o novo usuário
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -58,25 +59,10 @@ export async function registerUser(username, password, fullName, isAdmin = false
       createdAt: new Date().toISOString()
     });
     
-    // Restaura a sessão do admin
-    await auth.signOut();
-    await signInWithEmailAndPassword(
-      auth, 
-      `${currentUserData.val().username}@igreja.local`,
-      await getAdminPassword() // Você precisará implementar esta função
-    );
-    
     return userCredential.user;
   } catch (error) {
     throw new Error(`Erro ao registrar: ${error.message}`);
   }
-}
-
-// Função auxiliar para obter a senha do admin (exemplo simples)
-async function getAdminPassword() {
-  // Em uma aplicação real, você teria uma maneira mais segura de armazenar temporariamente
-  return localStorage.getItem('admin_temp_password') || 
-         prompt("Digite sua senha de administrador para continuar:");
 }
 
 // Login com username
