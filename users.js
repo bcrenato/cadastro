@@ -1,17 +1,26 @@
 import { db, auth } from './firebase-config.js';
 import { ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { deleteUser as deleteAuthUser } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword 
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-// users.js (adicionar esta função)
+// Função para excluir usuário (atualizada)
 export async function deleteUser(userId) {
   try {
-    // Remove dos dados do Realtime Database
+    // Remove do Realtime Database
     await remove(ref(db, `users/${userId}`));
+    
+    // Se quiser remover também da autenticação (requer privilégios admin)
+    const user = auth.currentUser;
+    if (user && user.uid === userId) {
+      await deleteAuthUser(user);
+    }
+    
     return true;
   } catch (error) {
+    console.error("Erro detalhado ao excluir:", error);
     throw new Error(`Erro ao excluir usuário: ${error.message}`);
   }
 }
