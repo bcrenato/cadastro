@@ -267,21 +267,30 @@
 
   // Registrar novo usuário
   registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  try {
+    await registerUser(
+      document.getElementById('username').value,
+      document.getElementById('password').value,
+      document.getElementById('fullName').value,
+      document.getElementById('isAdmin').checked
+    );
+    showToast('Usuário cadastrado com sucesso!');
+    registerForm.reset();
+    loadUsers();
+  } catch (error) {
+    showToast(error.message, "danger");
+    // Se houve erro, tenta fazer login novamente como admin
     try {
-      await registerUser(
-        document.getElementById('username').value,
-        document.getElementById('password').value,
-        document.getElementById('fullName').value,
-        document.getElementById('isAdmin').checked
-      );
-      showToast('Usuário cadastrado com sucesso!');
-      registerForm.reset();
-      loadUsers();
-    } catch (error) {
-      showToast(error.message, "danger");
+      const adminData = await getCurrentUserData();
+      if (adminData) {
+        await loginUser(adminData.username, prompt("Sessão perdida. Digite sua senha de administrador:"));
+      }
+    } catch (loginError) {
+      console.error("Erro ao relogar:", loginError);
     }
-  });
+  }
+});
 
   // Alterar senha
   document.getElementById('savePasswordBtn').addEventListener('click', async () => {
