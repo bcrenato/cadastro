@@ -5,6 +5,17 @@ import {
   signInWithEmailAndPassword 
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
+// users.js (adicionar esta função)
+export async function deleteUser(userId) {
+  try {
+    // Remove dos dados do Realtime Database
+    await remove(ref(db, `users/${userId}`));
+    return true;
+  } catch (error) {
+    throw new Error(`Erro ao excluir usuário: ${error.message}`);
+  }
+}
+
 // Cadastra usuário com username (e-mail fictício)
 export async function registerUser(username, password, fullName, isAdmin = false) {
   const email = `${username}@igreja.local`;
