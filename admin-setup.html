@@ -1,19 +1,16 @@
-async function createFirstAdmin() {
-  const username = prompt("Digite o nome de usuário do administrador:");
-  const password = prompt("Digite a senha do administrador:");
-  const fullName = prompt("Digite o nome completo do administrador:");
+<script type="module">
+  import { registerUser } from './users.js';
   
-  if (!username || !password || !fullName) {
-    alert("Todos os campos são obrigatórios!");
-    return;
-  }
+  const username = prompt("Username do admin:");
+  const password = prompt("Senha do admin:");
+  const fullName = prompt("Nome completo do admin:");
   
-  try {
-    await registerUser(username, password, fullName, true);
-    alert("Administrador criado com sucesso!");
-  } catch (error) {
-    alert("Erro ao criar administrador: " + error.message);
+  if (username && password && fullName) {
+    try {
+      await registerUser(username, password, fullName, true);
+      alert('Admin criado! Agora: \n1. DELETE este arquivo \n2. Acesse login.html');
+    } catch (error) {
+      alert(`Erro: ${error.message}`);
+    }
   }
-}
-
-createFirstAdmin();
+</script>
