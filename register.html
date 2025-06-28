@@ -48,12 +48,119 @@
 </head>
 <body>
   <!-- Verificação de Admin -->
+  
   <script type="module">
-    import { checkAdminAuth } from './auth.js';
-    if (!await checkAdminAuth()) {
-      window.location.href = 'index.html';
+    import { db, auth } from './firebase-config.js';
+    import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { registerUser, getAllUsers, deleteUserFromDatabase } from './users.js';
+
+    const usersList = document.getElementById('usersList');
+    const registerForm = document.getElementById('registerForm');
+    const passwordForm = document.getElementById('passwordForm');
+
+    async function loadUsers() {
+      try {
+        const users = await getAllUsers();
+        usersList.innerHTML = '';
+
+        if (users.length === 0) {
+          usersList.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum usuário cadastrado</td></tr>';
+          return;
+        }
+
+        users.forEach(user => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${user.fullName || 'Não informado'}</td>
+            <td>${user.username}</td>
+            <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
+            <td class="action-buttons">
+              <button class="btn btn-sm btn-warning change-password" data-id="${user.id}">
+                <i class="fas fa-key"></i> Alterar Senha
+              </button>
+              <button class="btn btn-sm btn-danger ms-1 delete-user" data-id="${user.id}">
+                <i class="fas fa-trash"></i> Excluir
+              </button>
+            </td>
+          `;
+          usersList.appendChild(row);
+        });
+
+        document.querySelectorAll('.change-password').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.getElementById('userId').value = btn.getAttribute('data-id');
+            new bootstrap.Modal(document.getElementById('passwordModal')).show();
+          });
+        });
+
+        document.querySelectorAll('.delete-user').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const userId = btn.getAttribute('data-id');
+            if (confirm('Tem certeza que deseja excluir este usuário?')) {
+              try {
+                await deleteUserFromDatabase(userId);
+                alert('Usuário excluído com sucesso!');
+                loadUsers();
+              } catch (error) {
+                alert('Erro ao excluir usuário: ' + error.message);
+              }
+            }
+          });
+        });
+
+      } catch (error) {
+        console.error("Erro ao carregar usuários:", error);
+        alert("Erro ao carregar lista de usuários");
+      }
     }
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await registerUser(
+          document.getElementById('username').value,
+          document.getElementById('password').value,
+          document.getElementById('fullName').value,
+          document.getElementById('isAdmin').checked
+        );
+        alert('Usuário cadastrado com sucesso!');
+        registerForm.reset();
+        loadUsers();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    document.getElementById('savePasswordBtn').addEventListener('click', async () => {
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        alert('As senhas não coincidem!');
+        return;
+      }
+
+      try {
+        await updatePassword(auth.currentUser, newPassword);
+        alert('Senha alterada com sucesso!');
+        passwordForm.reset();
+        bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+      } catch (error) {
+        alert('Erro ao alterar senha: ' + error.message);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUsers();
+    });
+
+    window.togglePassword = (fieldId) => {
+      const field = document.getElementById(fieldId);
+      field.type = field.type === 'password' ? 'text' : 'password';
+    };
   </script>
+
 
   <!-- Navbar Administrativa -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-admin fixed-top">
@@ -211,125 +318,118 @@
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
 
+  
   <script type="module">
-  import { db, auth } from './firebase-config.js';
-  import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-  import { updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { registerUser, getAllUsers, deleteUserFromDatabase } from './users.js';
+    import { db, auth } from './firebase-config.js';
+    import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { registerUser, getAllUsers, deleteUserFromDatabase } from './users.js';
 
-  // Elementos da UI
-  const usersList = document.getElementById('usersList');
-  const registerForm = document.getElementById('registerForm');
-  const passwordForm = document.getElementById('passwordForm');
+    const usersList = document.getElementById('usersList');
+    const registerForm = document.getElementById('registerForm');
+    const passwordForm = document.getElementById('passwordForm');
 
-  // Carregar usuários
-  async function loadUsers() {
-    try {
-      const users = await getAllUsers();
-      usersList.innerHTML = '';
+    async function loadUsers() {
+      try {
+        const users = await getAllUsers();
+        usersList.innerHTML = '';
 
-      if (users.length === 0) {
-        usersList.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum usuário cadastrado</td></tr>';
+        if (users.length === 0) {
+          usersList.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum usuário cadastrado</td></tr>';
+          return;
+        }
+
+        users.forEach(user => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${user.fullName || 'Não informado'}</td>
+            <td>${user.username}</td>
+            <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
+            <td class="action-buttons">
+              <button class="btn btn-sm btn-warning change-password" data-id="${user.id}">
+                <i class="fas fa-key"></i> Alterar Senha
+              </button>
+              <button class="btn btn-sm btn-danger ms-1 delete-user" data-id="${user.id}">
+                <i class="fas fa-trash"></i> Excluir
+              </button>
+            </td>
+          `;
+          usersList.appendChild(row);
+        });
+
+        document.querySelectorAll('.change-password').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.getElementById('userId').value = btn.getAttribute('data-id');
+            new bootstrap.Modal(document.getElementById('passwordModal')).show();
+          });
+        });
+
+        document.querySelectorAll('.delete-user').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const userId = btn.getAttribute('data-id');
+            if (confirm('Tem certeza que deseja excluir este usuário?')) {
+              try {
+                await deleteUserFromDatabase(userId);
+                alert('Usuário excluído com sucesso!');
+                loadUsers();
+              } catch (error) {
+                alert('Erro ao excluir usuário: ' + error.message);
+              }
+            }
+          });
+        });
+
+      } catch (error) {
+        console.error("Erro ao carregar usuários:", error);
+        alert("Erro ao carregar lista de usuários");
+      }
+    }
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await registerUser(
+          document.getElementById('username').value,
+          document.getElementById('password').value,
+          document.getElementById('fullName').value,
+          document.getElementById('isAdmin').checked
+        );
+        alert('Usuário cadastrado com sucesso!');
+        registerForm.reset();
+        loadUsers();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    document.getElementById('savePasswordBtn').addEventListener('click', async () => {
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        alert('As senhas não coincidem!');
         return;
       }
 
-      users.forEach(user => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${user.fullName || 'Não informado'}</td>
-          <td>${user.username}</td>
-          <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
-          <td class="action-buttons">
-            <button class="btn btn-sm btn-warning change-password" data-id="${user.id}">
-              <i class="fas fa-key"></i> Alterar Senha
-            </button>
-            <button class="btn btn-sm btn-danger ms-1 delete-user" data-id="${user.id}">
-              <i class="fas fa-trash"></i> Excluir
-            </button>
-          </td>
-        `;
-        usersList.appendChild(row);
-      });
+      try {
+        await updatePassword(auth.currentUser, newPassword);
+        alert('Senha alterada com sucesso!');
+        passwordForm.reset();
+        bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+      } catch (error) {
+        alert('Erro ao alterar senha: ' + error.message);
+      }
+    });
 
-      // Evento para alterar senha
-      document.querySelectorAll('.change-password').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.getElementById('userId').value = btn.getAttribute('data-id');
-          new bootstrap.Modal(document.getElementById('passwordModal')).show();
-        });
-      });
-
-      // Evento para excluir usuário
-      document.querySelectorAll('.delete-user').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const userId = btn.getAttribute('data-id');
-          if (confirm('Tem certeza que deseja excluir este usuário?')) {
-            try {
-              await deleteUserFromDatabase(userId);
-              alert('Usuário excluído com sucesso!');
-              loadUsers();
-            } catch (error) {
-              alert('Erro ao excluir usuário: ' + error.message);
-            }
-          }
-        });
-      });
-
-    } catch (error) {
-      console.error("Erro ao carregar usuários:", error);
-      alert("Erro ao carregar lista de usuários");
-    }
-  }
-
-  // Registrar novo usuário
-  registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      await registerUser(
-        document.getElementById('username').value,
-        document.getElementById('password').value,
-        document.getElementById('fullName').value,
-        document.getElementById('isAdmin').checked
-      );
-      alert('Usuário cadastrado com sucesso!');
-      registerForm.reset();
+    document.addEventListener('DOMContentLoaded', () => {
       loadUsers();
-    } catch (error) {
-      alert(error.message);
-    }
-  });
+    });
 
-  // Alterar senha
-  document.getElementById('savePasswordBtn').addEventListener('click', async () => {
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-
-    if (newPassword !== confirmPassword) {
-      alert('As senhas não coincidem!');
-      return;
-    }
-
-    try {
-      await updatePassword(auth.currentUser, newPassword);
-      alert('Senha alterada com sucesso!');
-      passwordForm.reset();
-      bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
-    } catch (error) {
-      alert('Erro ao alterar senha: ' + error.message);
-    }
-  });
-
-  // Inicialização
-  document.addEventListener('DOMContentLoaded', () => {
-    loadUsers();
-  });
-
-  // Alternar visibilidade da senha
-  window.togglePassword = (fieldId) => {
-    const field = document.getElementById(fieldId);
-    field.type = field.type === 'password' ? 'text' : 'password';
-  };
-</script>
+    window.togglePassword = (fieldId) => {
+      const field = document.getElementById(fieldId);
+      field.type = field.type === 'password' ? 'text' : 'password';
+    };
+  </script>
 
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
