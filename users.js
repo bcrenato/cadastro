@@ -1,3 +1,4 @@
+import { deleteUser as deleteAuthUser } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { db, auth } from './firebase-config.js';
 import { ref, set, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { 
@@ -9,6 +10,14 @@ import {
 export async function registerUser(username, password, fullName, isAdmin = false) {
   const email = `${username}@igreja.local`;
   try {
+    // Primeiro verifica se o usuário já existe no Database
+    const users = await getAllUsers();
+    const userExists = users.some(user => user.username === username);
+    
+    if (userExists) {
+      throw new Error('Nome de usuário já está em uso');
+    }
+
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await set(ref(db, `users/${userCredential.user.uid}`), {
       username,
@@ -60,6 +69,10 @@ export async function getAllUsers() {
 // Excluir usuário
 export async function deleteUser(userId) {
   try {
+    // Remove do Authentication
+    await deleteAuthUser(auth.currentUser); // Só pode deletar o usuário atual
+    
+    // Remove do Realtime Database
     await set(ref(db, `users/${userId}`), null);
     return true;
   } catch (error) {
