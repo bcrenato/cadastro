@@ -9,14 +9,17 @@ import {
 // Função para excluir usuário (atualizada)
 export async function deleteUser(userId) {
   try {
-    // Remove do Realtime Database
-    await remove(ref(db, `users/${userId}`));
+    // Verifica se o usuário atual é admin
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error("Usuário não autenticado");
     
-    // Se quiser remover também da autenticação (requer privilégios admin)
-    const user = auth.currentUser;
-    if (user && user.uid === userId) {
-      await deleteAuthUser(user);
+    const currentUserData = await get(ref(db, `users/${currentUser.uid}`));
+    if (!currentUserData.exists() || !currentUserData.val().isAdmin) {
+      throw new Error("Apenas administradores podem excluir usuários");
     }
+
+    // Remove o usuário do Realtime Database
+    await remove(ref(db, `users/${userId}`));
     
     return true;
   } catch (error) {
