@@ -1,16 +1,18 @@
 <script type="module">
   import { registerUser } from './users.js';
   
-  const username = prompt("Username do admin:");
-  const password = prompt("Senha do admin:");
+  const username = prompt("Nome de usuário para o admin:");
+  const password = prompt("Senha para o admin:");
   const fullName = prompt("Nome completo do admin:");
   
   if (username && password && fullName) {
     try {
       await registerUser(username, password, fullName, true);
-      alert('Admin criado! Agora: \n1. DELETE este arquivo \n2. Acesse login.html');
+      alert('Administrador criado! Agora você pode: \n1. Deletar este arquivo \n2. Acessar o sistema pelo login.html');
     } catch (error) {
-      alert(`Erro: ${error.message}`);
+      alert('Erro: ' + error.message);
     }
+  } else {
+    alert('Todos os campos são obrigatórios!');
   }
 </script>
