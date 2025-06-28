@@ -1,11 +1,8 @@
 import { db, auth } from './firebase-config.js';
-import { ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { ref, set, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { 
   createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  deleteUser,
-  reauthenticateWithCredential,
-  EmailAuthProvider
+  signInWithEmailAndPassword 
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 // Cadastra usuário com username (e-mail fictício)
@@ -58,36 +55,4 @@ export async function getAllUsers() {
     });
   });
   return users;
-}
-
-// Deletar usuário (do database e authentication)
-export async function deleteUserAccount(userId, currentPassword = null) {
-  try {
-    // Primeiro deleta do Realtime Database
-    await remove(ref(db, `users/${userId}`));
-    
-    // Se for o usuário atual, deleta da autenticação
-    if (auth.currentUser && auth.currentUser.uid === userId) {
-      if (!currentPassword) {
-        throw new Error('Necessário fornecer a senha atual para deletar a conta');
-      }
-      
-      // Reautenticar o usuário
-      const credential = EmailAuthProvider.credential(
-        auth.currentUser.email,
-        currentPassword
-      );
-      await reauthenticateWithCredential(auth.currentUser, credential);
-      
-      // Deletar o usuário
-      await deleteUser(auth.currentUser);
-    } else {
-      // Para deletar outros usuários, precisamos de uma Cloud Function
-      throw new Error('Apenas o próprio usuário pode se deletar. Para deletar outros usuários, implemente uma Cloud Function.');
-    }
-    
-    return true;
-  } catch (error) {
-    throw new Error(`Erro ao deletar usuário: ${error.message}`);
-  }
 }
