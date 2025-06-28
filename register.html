@@ -303,7 +303,7 @@
     }
   });
 
-  // Excluir usuário
+  // Excluir usuário (atualizado)
   document.addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-user') || e.target.closest('.delete-user')) {
       const button = e.target.classList.contains('delete-user') ? e.target : e.target.closest('.delete-user');
@@ -315,7 +315,8 @@
           showToast('Usuário excluído com sucesso!', 'success');
           loadUsers();
         } catch (error) {
-          showToast('Erro ao excluir usuário: ' + error.message, 'danger');
+          console.error("Erro completo:", error);
+          showToast(error.message, 'danger');
         }
       }
     }
