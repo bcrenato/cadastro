@@ -1,9 +1,11 @@
 import { db, auth } from './firebase-config.js';
 import { ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import { deleteUser as deleteAuthUser } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  signInWithCredential,
+  EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 // Função para excluir usuário (atualizada)
@@ -32,13 +34,32 @@ export async function deleteUser(userId) {
 export async function registerUser(username, password, fullName, isAdmin = false) {
   const email = `${username}@igreja.local`;
   try {
+    // Salva o usuário atual
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error("Nenhum usuário autenticado");
+    
+    // Verifica se é admin
+    const currentUserData = await get(ref(db, `users/${currentUser.uid}`));
+    if (!currentUserData.exists() || !currentUserData.val().isAdmin) {
+      throw new Error("Apenas administradores podem cadastrar usuários");
+    }
+    
+    // Cria o novo usuário
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // Salva os dados no Realtime Database
     await set(ref(db, `users/${userCredential.user.uid}`), {
       username,
       fullName,
       isAdmin,
       createdAt: new Date().toISOString()
     });
+    
+    // Volta para o usuário admin original
+    const adminEmail = `${currentUserData.val().username}@igreja.local`;
+    const credential = EmailAuthProvider.credential(adminEmail, prompt("Digite sua senha de administrador para continuar:"));
+    await signInWithCredential(auth, credential);
+    
     return userCredential.user;
   } catch (error) {
     throw new Error(`Erro ao registrar: ${error.message}`);
