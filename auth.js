@@ -3,6 +3,17 @@ import { auth } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getCurrentUserData, isUserAdmin } from './users.js';
 
+
+export async function ensureAdminSession() {
+  const user = auth.currentUser;
+  if (!user || !(await isUserAdmin())) {
+    redirectToLogin();
+    return false;
+  }
+  return true;
+}
+
+
 // Verificação de autenticação básica
 export async function checkAuth() {
   return new Promise((resolve) => {
