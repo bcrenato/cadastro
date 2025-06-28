@@ -239,11 +239,14 @@
           <td>${user.fullName || 'Não informado'}</td>
           <td>${user.username}</td>
           <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
-          <td class="action-buttons">
-            <button class="btn btn-sm btn-warning change-password" data-id="${user.id}">
-              <i class="fas fa-key"></i> Alterar Senha
-            </button>
-          </td>
+         <td class="action-buttons">
+  <button class="btn btn-sm btn-warning change-password" data-id="${user.id}">
+    <i class="fas fa-key"></i> Alterar Senha
+  </button>
+  <button class="btn btn-sm btn-danger ms-1 delete-user" data-id="${user.id}">
+    <i class="fas fa-trash"></i> Excluir
+  </button>
+</td>
         `;
         usersList.appendChild(row);
       });
