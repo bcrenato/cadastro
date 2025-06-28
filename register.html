@@ -215,7 +215,7 @@
   import { db, auth } from './firebase-config.js';
   import { ref, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
   import { updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { registerUser, getAllUsers } from './users.js';
+  import { registerUser, getAllUsers, deleteUser } from './users.js';
 
   // Elementos da UI
   const usersList = document.getElementById('usersList');
@@ -240,8 +240,11 @@
           <td>${user.username}</td>
           <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
           <td class="action-buttons">
-            <button class="btn btn-sm btn-warning change-password" data-id="${user.id}">
+            <button class="btn btn-sm btn-warning change-password me-2" data-id="${user.id}">
               <i class="fas fa-key"></i> Alterar Senha
+            </button>
+            <button class="btn btn-sm btn-danger delete-user" data-id="${user.id}">
+              <i class="fas fa-trash"></i> Excluir
             </button>
           </td>
         `;
@@ -253,6 +256,22 @@
         btn.addEventListener('click', () => {
           document.getElementById('userId').value = btn.getAttribute('data-id');
           new bootstrap.Modal(document.getElementById('passwordModal')).show();
+        });
+      });
+
+      // Configurar eventos para deletar usuários
+      document.querySelectorAll('.delete-user').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const userId = btn.getAttribute('data-id');
+          if (confirm('Tem certeza que deseja excluir este usuário?')) {
+            try {
+              await deleteUser(userId);
+              showToast('Usuário excluído com sucesso!', 'success');
+              loadUsers();
+            } catch (error) {
+              showToast('Erro ao excluir usuário: ' + error.message, 'danger');
+            }
+          }
         });
       });
 
@@ -272,11 +291,11 @@
         document.getElementById('fullName').value,
         document.getElementById('isAdmin').checked
       );
-      alert('Usuário cadastrado com sucesso!');
+      showToast('Usuário cadastrado com sucesso!', 'success');
       registerForm.reset();
       loadUsers();
     } catch (error) {
-      alert(error.message);
+      showToast(error.message, 'danger');
     }
   });
 
@@ -286,19 +305,37 @@
     const confirmPassword = document.getElementById('confirmPassword').value;
 
     if (newPassword !== confirmPassword) {
-      alert('As senhas não coincidem!');
+      showToast('As senhas não coincidem!', 'warning');
       return;
     }
 
     try {
       await updatePassword(auth.currentUser, newPassword);
-      alert('Senha alterada com sucesso!');
+      showToast('Senha alterada com sucesso!', 'success');
       passwordForm.reset();
       bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
     } catch (error) {
-      alert('Erro ao alterar senha: ' + error.message);
+      showToast('Erro ao alterar senha: ' + error.message, 'danger');
     }
   });
+
+  // Função para mostrar notificações
+  function showToast(message, type = 'success') {
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast show align-items-center text-white bg-${type}`;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+    document.getElementById('toastContainer').appendChild(toastEl);
+    
+    setTimeout(() => {
+      toastEl.remove();
+    }, 5000);
+  }
 
   // Inicialização
   document.addEventListener('DOMContentLoaded', () => {
