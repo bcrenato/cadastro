@@ -32,13 +32,31 @@ export async function deleteUser(userId) {
 export async function registerUser(username, password, fullName, isAdmin = false) {
   const email = `${username}@igreja.local`;
   try {
+    // 1. Guarda o usuário atualmente logado
+    const currentUser = auth.currentUser;
+    const currentUserId = currentUser?.uid;
+    
+    // 2. Cria o novo usuário
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // 3. Volta a autenticar o usuário original (admin)
+    if (currentUserId) {
+      await signOut(auth);
+      const adminUser = await signInWithEmailAndPassword(
+        auth, 
+        `${currentUser.email}`, 
+        prompt("Digite sua senha de admin para continuar")
+      );
+    }
+    
+    // 4. Salva os dados do novo usuário
     await set(ref(db, `users/${userCredential.user.uid}`), {
       username,
       fullName,
       isAdmin,
       createdAt: new Date().toISOString()
     });
+    
     return userCredential.user;
   } catch (error) {
     throw new Error(`Erro ao registrar: ${error.message}`);
