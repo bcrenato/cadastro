@@ -204,6 +204,18 @@
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" id="savePasswordBtn" class="btn btn-primary">Salvar Alterações</button>
         </div>
+
+
+        <div class="mb-3 password-field">
+          <label for="adminPassword" class="form-label">
+            <i class="fas fa-lock me-1"></i> Sua Senha de Administrador
+          </label>
+          <input type="password" id="adminPassword" class="form-control" required>
+          <i class="fas fa-eye toggle-password" onclick="togglePassword('adminPassword')"></i>
+        </div>
+
+
+        
       </div>
     </div>
   </div>
