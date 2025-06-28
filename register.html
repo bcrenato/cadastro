@@ -159,6 +159,18 @@
       const field = document.getElementById(fieldId);
       field.type = field.type === 'password' ? 'text' : 'password';
     };
+
+    // Função logout
+    window.logout = () => {
+      import('./firebase-config.js').then(({ auth }) => {
+        import('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js').then(({ signOut }) => {
+          signOut(auth).then(() => {
+            window.location.href = 'index.html';
+          });
+        });
+      });
+    };
+
   </script>
 
 
@@ -193,7 +205,7 @@
             <span>Admin</span>
           </span>
           
-          <button id="logoutBtn" class="btn btn-sm btn-outline-warning">
+          <button id="logoutBtn" class="btn btn-sm btn-outline-warning" onclick="logout()">
             <i class="fas fa-sign-out-alt me-1"></i> Sair
           </button>
         </div>
@@ -429,6 +441,18 @@
       const field = document.getElementById(fieldId);
       field.type = field.type === 'password' ? 'text' : 'password';
     };
+
+    // Função logout
+    window.logout = () => {
+      import('./firebase-config.js').then(({ auth }) => {
+        import('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js').then(({ signOut }) => {
+          signOut(auth).then(() => {
+            window.location.href = 'index.html';
+          });
+        });
+      });
+    };
+
   </script>
 
 
