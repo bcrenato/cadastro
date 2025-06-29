@@ -1,28 +1,27 @@
-// auth.js
-import { auth } from './firebase-config.js';
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getCurrentUserData, isUserAdmin } from './users.js';
 
-// Verificação de autenticação básica
+// Verificação de autenticação
 export async function checkAuth() {
-  return new Promise((resolve) => {
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Atualiza a navbar com o nome do usuário
-        await updateUserDisplay();
-        resolve(user);
-      } else {
-        redirectToLogin();
-        resolve(null);
-      }
-    });
-  });
+  const userId = sessionStorage.getItem('userId');
+  if (!userId) {
+    redirectToLogin();
+    return null;
+  }
+  
+  try {
+    const userData = await getCurrentUserData(userId);
+    await updateUserDisplay(userData);
+    return userData;
+  } catch (error) {
+    redirectToLogin();
+    return null;
+  }
 }
 
-// Verificação específica para administradores
+// Verificação de admin
 export async function checkAdminAuth() {
-  const user = await checkAuth();
-  if (!user || !(await isUserAdmin())) {
+  const userId = sessionStorage.getItem('userId');
+  if (!userId || !(await isUserAdmin(userId))) {
     showAccessDenied();
     redirectToHome();
     return false;
@@ -30,37 +29,25 @@ export async function checkAdminAuth() {
   return true;
 }
 
-// Atualiza a exibição do usuário na navbar
-async function updateUserDisplay() {
+// Atualiza a navbar
+async function updateUserDisplay(userData) {
   try {
-    const userData = await getCurrentUserData();
     const userDisplay = document.getElementById('currentUserDisplay');
     const adminMenu = document.getElementById('adminMenu');
     
     if (userDisplay) {
-      userDisplay.textContent = userData?.fullName || 'Usuário';
+      userDisplay.textContent = userData?.fullName || userData?.username || 'Usuário';
     }
     
     if (adminMenu) {
-      adminMenu.style.display = (await isUserAdmin()) ? 'block' : 'none';
+      adminMenu.style.display = userData?.isAdmin ? 'block' : 'none';
     }
   } catch (error) {
-    console.error('Erro ao atualizar dados do usuário:', error);
+    console.error('Erro ao atualizar usuário:', error);
   }
 }
 
-// Logout com tratamento de erros
-export async function logout() {
-  try {
-    await signOut(auth);
-    redirectToLogin();
-  } catch (error) {
-    console.error('Erro ao fazer logout:', error);
-    alert('Ocorreu um erro ao tentar sair do sistema');
-  }
-}
-
-// Redirecionamentos
+// Funções auxiliares
 function redirectToLogin() {
   if (!window.location.pathname.includes('login.html')) {
     window.location.href = 'login.html';
@@ -77,15 +64,16 @@ function showAccessDenied() {
   }
 }
 
-// Configura o listener de logout quando o DOM carregar
+// Configura eventos
 document.addEventListener('DOMContentLoaded', () => {
-  // Listener para o botão de logout
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', logout);
+    logoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('userId');
+      redirectToLogin();
+    });
   }
   
-  // Verifica autenticação automaticamente em páginas protegidas
   if (!window.location.pathname.includes('login.html')) {
     checkAuth();
   }
