@@ -90,30 +90,6 @@
   <script type="module">
   import { loginUser } from './users.js';
 
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
-
-  console.log("Tentando login com:", username, password); // Debug 1
-
-  try {
-    const user = await loginUser(username, password);
-    console.log("Login bem-sucedido:", user); // Debug 2
-    
-    sessionStorage.setItem('userId', user.id);
-    window.location.href = 'index.html';
-    
-  } catch (error) {
-    console.error("Erro no login:", error); // Debug 3
-    alert(error.message); // Mostra o erro para o usuário
-  }
-});
-
-
-
-    
-  
   const loginForm = document.getElementById('loginForm');
   const errorMessage = document.getElementById('errorMessage');
   
@@ -127,10 +103,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     try {
       const user = await loginUser(username, password);
       
-      // Armazena o ID do usuário na sessão
       sessionStorage.setItem('userId', user.id);
       
-      // Lembrar usuário (opcional)
       if (remember) {
         localStorage.setItem('savedUsername', username);
       } else {
@@ -144,7 +118,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
   });
 
-  // Preenche username salvo
   document.addEventListener('DOMContentLoaded', () => {
     const savedUsername = localStorage.getItem('savedUsername');
     if (savedUsername) {
