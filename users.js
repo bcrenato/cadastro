@@ -1,6 +1,16 @@
 import { db } from './firebase-config.js';
 import { ref, set, get, remove, query, orderByChild, equalTo, update, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
+// No início do users.js, adicione:
+const bcrypt = window._bcrypt || {
+  compareSync: () => { throw new Error('BCrypt não carregado!') },
+  hashSync: () => { throw new Error('BCrypt não carregado!') },
+  genSaltSync: () => { throw new Error('BCrypt não carregado!') }
+};
+
+console.log('BCrypt no users.js:', bcrypt);
+
+
 // Modifique esta linha:
 const bcrypt = window.bcrypt; // Usando o bcrypt carregado pelo script no HTML
 
