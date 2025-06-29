@@ -36,30 +36,31 @@ export async function registerUser(username, password, fullName, isAdmin = false
 
 export async function loginUser(username, password) {
   try {
-    // 1. Busca o usuário no banco
+    // 1. Busca APENAS o usuário com o username correspondente
     const usersRef = ref(db, 'users');
-    const snapshot = await get(usersRef);
-    const users = snapshot.val();
+    const queryRef = query(usersRef, orderByChild('username'), equalTo(username));
+    const snapshot = await get(queryRef);
 
-    // 2. Procura o usuário pelo username
-    const userKey = Object.keys(users).find(key => 
-      users[key].username === username
-    );
+    if (!snapshot.exists()) throw new Error('Usuário não encontrado');
 
-    if (!userKey) throw new Error('Usuário não encontrado');
+    // 2. Pega o primeiro resultado (username é único)
+    let userData = null;
+    let userId = null;
+    snapshot.forEach((child) => {
+      userData = child.val();
+      userId = child.key;
+    });
 
-    const user = users[userKey];
+    // 3. Verifica a senha
+    const isValidPassword = bcrypt.compareSync(password, userData.passwordHash);
+    if (!isValidPassword) throw new Error('Senha incorreta');
 
-    // 3. Verifica a senha (bcrypt.compareSync)
-    const passwordMatch = bcrypt.compareSync(password, user.passwordHash);
-    if (!passwordMatch) throw new Error('Senha incorreta');
-
-    // 4. Retorna os dados do usuário (sem o hash)
-    const { passwordHash, ...userData } = user;
-    return { ...userData, id: userKey };
+    // 4. Retorna dados sem informações sensíveis
+    const { passwordHash, salt, ...safeUserData } = userData;
+    return { ...safeUserData, id: userId };
 
   } catch (error) {
-    throw new Error(error.message);
+    throw new Error(`Erro no login: ${error.message}`);
   }
 }
 
