@@ -37,64 +37,45 @@ export async function registerUser(username, password, fullName, isAdmin = false
 
 export async function loginUser(username, password) {
   try {
-    console.log("[Login] Iniciando processo para usuário:", username);
+    console.groupCollapsed(`[Login] Tentativa para: ${username}`);
     
-    // 1. Busca o usuário pelo username
     const usersRef = ref(db, 'users');
     const queryRef = query(usersRef, orderByChild('username'), equalTo(username));
     const snapshot = await get(queryRef);
-    
-    console.log("[Login] Resultado da consulta:", snapshot.exists() ? "usuário encontrado" : "usuário não encontrado");
 
     if (!snapshot.exists()) {
-      // Mesma mensagem para usuário não encontrado e senha inválida por segurança
       throw new Error('Credenciais inválidas');
     }
 
-    // 2. Extrai os dados do usuário
     let userData = null;
     let userId = null;
     snapshot.forEach((child) => {
       userData = child.val();
       userId = child.key;
-      console.log(`[Login] Usuário encontrado - ID: ${userId}, Admin: ${userData.isAdmin}`);
+      console.log('Dados completos do usuário:', userData);
     });
 
-    // 3. Verifica se os dados necessários existem
-    if (!userData || !userData.passwordHash || !userData.salt) {
-      console.error("[Login] Estrutura de dados do usuário inválida");
-      throw new Error('Erro no sistema. Contate o administrador.');
+    // Validação mais flexível da estrutura
+    if (!userData || typeof userData.passwordHash !== 'string') {
+      console.error('Estrutura inválida - campos ausentes:', {
+        hasPasswordHash: !!userData?.passwordHash,
+        hasSalt: !!userData?.salt
+      });
+      throw new Error('Configuração de usuário inválida no sistema');
     }
 
-    // 4. Compara a senha
-    console.log("[Login] Verificando senha...");
     const isValidPassword = bcrypt.compareSync(password, userData.passwordHash);
-    
     if (!isValidPassword) {
-      console.log("[Login] Senha inválida para usuário:", username);
       throw new Error('Credenciais inválidas');
     }
 
-    // 5. Retorna os dados seguros do usuário (sem passwordHash e salt)
     const { passwordHash, salt, ...safeUserData } = userData;
-    console.log("[Login] Autenticação bem-sucedida para:", username);
-    
-    return { 
-      ...safeUserData, 
-      id: userId 
-    };
+    console.groupEnd();
+    return { ...safeUserData, id: userId };
 
   } catch (error) {
-    console.error("[Login] Erro durante o processo:", error);
-    
-    // Mensagens amigáveis para diferentes tipos de erro
-    if (error.message.includes('Permission')) {
-      throw new Error('Sistema indisponível. Tente novamente mais tarde.');
-    } else if (error.message.includes('Credenciais')) {
-      throw error; // Mantém a mensagem original
-    } else {
-      throw new Error('Erro durante o login. Tente novamente.');
-    }
+    console.groupEnd();
+    throw error;
   }
 }
 
