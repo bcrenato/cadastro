@@ -212,17 +212,13 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <script type="module">
-  import { db, auth } from './firebase-config.js';
-  import { ref, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-  import { updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { registerUser, getAllUsers, deleteUser } from './users.js';
-
-  // Elementos da UI
+  import { registerUser, getAllUsers, deleteUser, changePassword } from './users.js';
+  
   const usersList = document.getElementById('usersList');
   const registerForm = document.getElementById('registerForm');
   const passwordForm = document.getElementById('passwordForm');
 
-  // Carregar usuários
+  // Carrega lista de usuários
   async function loadUsers() {
     try {
       const users = await getAllUsers();
@@ -251,7 +247,7 @@
         usersList.appendChild(row);
       });
 
-      // Configurar eventos de botões
+      // Configura eventos dos botões
       document.querySelectorAll('.change-password').forEach(btn => {
         btn.addEventListener('click', () => {
           document.getElementById('userId').value = btn.getAttribute('data-id');
@@ -260,12 +256,11 @@
       });
 
     } catch (error) {
-      console.error("Erro ao carregar usuários:", error);
-      showToast("Erro ao carregar lista de usuários", "danger");
+      showToast("Erro ao carregar usuários: " + error.message, "danger");
     }
   }
 
-  // Registrar novo usuário
+  // Cadastra novo usuário
   registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -283,10 +278,11 @@
     }
   });
 
-  // Alterar senha
+  // Altera senha
   document.getElementById('savePasswordBtn').addEventListener('click', async () => {
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+    const userId = document.getElementById('userId').value;
 
     if (newPassword !== confirmPassword) {
       showToast('As senhas não coincidem!', "danger");
@@ -294,7 +290,7 @@
     }
 
     try {
-      await updatePassword(auth.currentUser, newPassword);
+      await changePassword(userId, newPassword);
       showToast('Senha alterada com sucesso!');
       passwordForm.reset();
       bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
@@ -303,30 +299,28 @@
     }
   });
 
-  // Excluir usuário (atualizado)
+  // Exclui usuário
   document.addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-user') || e.target.closest('.delete-user')) {
       const button = e.target.classList.contains('delete-user') ? e.target : e.target.closest('.delete-user');
       const userId = button.getAttribute('data-id');
       
-      if (confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) {
+      if (confirm('Tem certeza que deseja excluir este usuário?')) {
         try {
           await deleteUser(userId);
           showToast('Usuário excluído com sucesso!', 'success');
           loadUsers();
         } catch (error) {
-          console.error("Erro completo:", error);
           showToast(error.message, 'danger');
         }
       }
     }
   });
 
-  // Função para mostrar toast
+  // Mostra notificação
   function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast show align-items-center text-white bg-${type}`;
-    toast.role = 'alert';
     toast.innerHTML = `
       <div class="d-flex">
         <div class="toast-body">${message}</div>
@@ -335,22 +329,11 @@
     `;
     document.getElementById('toastContainer').appendChild(toast);
     
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    setTimeout(() => toast.remove(), 3000);
   }
 
   // Inicialização
-  document.addEventListener('DOMContentLoaded', () => {
-    loadUsers();
-  });
-
-  // Alternar visibilidade da senha
-  window.togglePassword = (fieldId) => {
-    const field = document.getElementById(fieldId);
-    field.type = field.type === 'password' ? 'text' : 'password';
-  };
+  document.addEventListener('DOMContentLoaded', loadUsers);
 </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
