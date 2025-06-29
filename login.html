@@ -87,6 +87,12 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+<script>
+  // Cria um alias global único para o bcrypt
+  window.appBcrypt = window.bcrypt;
+  console.log('BCrypt carregado?', !!window.appBcrypt);
+</script>
+  
 <script type="module">
 import { loginUser } from './users.js';
 
