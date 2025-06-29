@@ -11,9 +11,6 @@ const bcrypt = window._bcrypt || {
 console.log('BCrypt no users.js:', bcrypt);
 
 
-// Modifique esta linha:
-const bcrypt = window.bcrypt; // Usando o bcrypt carregado pelo script no HTML
-
 const SALT_ROUNDS = 10;
 
 export async function registerUser(username, password, fullName, isAdmin = false) {
