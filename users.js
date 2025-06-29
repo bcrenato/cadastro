@@ -37,31 +37,64 @@ export async function registerUser(username, password, fullName, isAdmin = false
 
 export async function loginUser(username, password) {
   try {
-    // 1. Busca APENAS o usuário com o username correspondente
+    console.log("[Login] Iniciando processo para usuário:", username);
+    
+    // 1. Busca o usuário pelo username
     const usersRef = ref(db, 'users');
     const queryRef = query(usersRef, orderByChild('username'), equalTo(username));
     const snapshot = await get(queryRef);
+    
+    console.log("[Login] Resultado da consulta:", snapshot.exists() ? "usuário encontrado" : "usuário não encontrado");
 
-    if (!snapshot.exists()) throw new Error('Usuário não encontrado');
+    if (!snapshot.exists()) {
+      // Mesma mensagem para usuário não encontrado e senha inválida por segurança
+      throw new Error('Credenciais inválidas');
+    }
 
-    // 2. Pega o primeiro resultado (username é único)
+    // 2. Extrai os dados do usuário
     let userData = null;
     let userId = null;
     snapshot.forEach((child) => {
       userData = child.val();
       userId = child.key;
+      console.log(`[Login] Usuário encontrado - ID: ${userId}, Admin: ${userData.isAdmin}`);
     });
 
-    // 3. Verifica a senha
-    const isValidPassword = bcrypt.compareSync(password, userData.passwordHash);
-    if (!isValidPassword) throw new Error('Senha incorreta');
+    // 3. Verifica se os dados necessários existem
+    if (!userData || !userData.passwordHash || !userData.salt) {
+      console.error("[Login] Estrutura de dados do usuário inválida");
+      throw new Error('Erro no sistema. Contate o administrador.');
+    }
 
-    // 4. Retorna dados sem informações sensíveis
+    // 4. Compara a senha
+    console.log("[Login] Verificando senha...");
+    const isValidPassword = bcrypt.compareSync(password, userData.passwordHash);
+    
+    if (!isValidPassword) {
+      console.log("[Login] Senha inválida para usuário:", username);
+      throw new Error('Credenciais inválidas');
+    }
+
+    // 5. Retorna os dados seguros do usuário (sem passwordHash e salt)
     const { passwordHash, salt, ...safeUserData } = userData;
-    return { ...safeUserData, id: userId };
+    console.log("[Login] Autenticação bem-sucedida para:", username);
+    
+    return { 
+      ...safeUserData, 
+      id: userId 
+    };
 
   } catch (error) {
-    throw new Error(`Erro no login: ${error.message}`);
+    console.error("[Login] Erro durante o processo:", error);
+    
+    // Mensagens amigáveis para diferentes tipos de erro
+    if (error.message.includes('Permission')) {
+      throw new Error('Sistema indisponível. Tente novamente mais tarde.');
+    } else if (error.message.includes('Credenciais')) {
+      throw error; // Mantém a mensagem original
+    } else {
+      throw new Error('Erro durante o login. Tente novamente.');
+    }
   }
 }
 
