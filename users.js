@@ -1,14 +1,18 @@
 import { db } from './firebase-config.js';
 import { ref, set, get, remove, query, orderByChild, equalTo, update, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// No início do users.js, adicione:
-const bcrypt = window._bcrypt || {
-  compareSync: () => { throw new Error('BCrypt não carregado!') },
-  hashSync: () => { throw new Error('BCrypt não carregado!') },
-  genSaltSync: () => { throw new Error('BCrypt não carregado!') }
+// ↓↓↓ Substitua TODAS as declarações existentes de bcrypt por isto ↓↓↓
+const bcrypt = window.appBcrypt || {
+  compareSync: () => { throw new Error('BCrypt não carregado! Verifique o console.') },
+  hashSync: () => { throw new Error('BCrypt não carregado! Verifique o console.') },
+  genSaltSync: () => { throw new Error('BCrypt não carregado! Verifique o console.') }
 };
 
-console.log('BCrypt no users.js:', bcrypt);
+if (!window.appBcrypt) {
+  console.error('BCrypt não encontrado em window.appBcrypt. Verifique:');
+  console.log('window.bcrypt existe?', !!window.bcrypt);
+  console.log('window.appBcrypt existe?', !!window.appBcrypt);
+}
 
 
 const SALT_ROUNDS = 10;
