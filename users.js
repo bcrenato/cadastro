@@ -1,7 +1,8 @@
 import { db } from './firebase-config.js';
-import { ref, set, get, remove, query, orderByChild, equalTo, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { ref, set, get, remove, query, orderByChild, equalTo, update, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-const bcrypt = dcodeIO.bcrypt;
+// Use bcrypt diretamente (certifique-se que o script está incluído no HTML)
+const bcrypt = window.bcrypt;
 
 const SALT_ROUNDS = 10;
 
