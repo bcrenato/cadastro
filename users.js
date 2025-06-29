@@ -37,14 +37,15 @@ export async function registerUser(username, password, fullName, isAdmin = false
 
 export async function loginUser(username, password) {
   try {
-    console.groupCollapsed(`[Login] Tentativa para: ${username}`);
+    // --- CÓDIGO TEMPORÁRIO DE VERIFICAÇÃO ---
+    console.group('[DEBUG] Verificação do BCrypt');
+    console.log('BCrypt disponível?', typeof bcrypt !== 'undefined');
+    console.log('compareSync disponível?', bcrypt ? typeof bcrypt.compareSync !== 'undefined' : false);
+    console.log('Objeto bcrypt completo:', bcrypt);
+    console.groupEnd();
     
-    const usersRef = ref(db, 'users');
-    const queryRef = query(usersRef, orderByChild('username'), equalTo(username));
-    const snapshot = await get(queryRef);
-
-    if (!snapshot.exists()) {
-      throw new Error('Credenciais inválidas');
+    if (!bcrypt || !bcrypt.compareSync) {
+      throw new Error('Configuração inválida: Biblioteca BCrypt não carregada corretamente');
     }
 
     let userData = null;
