@@ -1,19 +1,16 @@
 import { db } from './firebase-config.js';
 import { ref, set, get, remove, query, orderByChild, equalTo, update, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// ↓↓↓ Substitua TODAS as declarações existentes de bcrypt por isto ↓↓↓
-const bcrypt = window.appBcrypt || {
-  compareSync: () => { throw new Error('BCrypt não carregado! Verifique o console.') },
-  hashSync: () => { throw new Error('BCrypt não carregado! Verifique o console.') },
-  genSaltSync: () => { throw new Error('BCrypt não carregado! Verifique o console.') }
-};
-
-if (!window.appBcrypt) {
-  console.error('BCrypt não encontrado em window.appBcrypt. Verifique:');
-  console.log('window.bcrypt existe?', !!window.bcrypt);
-  console.log('window.appBcrypt existe?', !!window.appBcrypt);
-}
-
+// Verificação robusta do bcrypt
+const bcrypt = window.appBcrypt || (() => {
+  const error = new Error('BCrypt não disponível - Verifique se o script foi carregado antes do módulo');
+  console.error('Erro de configuração:', {
+    windowBCrypt: window.bcrypt,
+    appBcrypt: window.appBcrypt,
+    error
+  });
+  throw error;
+})();
 
 const SALT_ROUNDS = 10;
 
@@ -40,53 +37,68 @@ export async function registerUser(username, password, fullName, isAdmin = false
       createdAt: new Date().toISOString()
     });
 
-    return newUserRef.key; // Retorna o ID do novo usuário
+    return newUserRef.key;
   } catch (error) {
+    console.error('Erro no registro:', error);
     throw new Error(`Erro ao registrar: ${error.message}`);
   }
 }
 
 export async function loginUser(username, password) {
   try {
-    // --- CÓDIGO TEMPORÁRIO DE VERIFICAÇÃO ---
-    console.group('[DEBUG] Verificação do BCrypt');
-    console.log('BCrypt disponível?', typeof bcrypt !== 'undefined');
-    console.log('compareSync disponível?', bcrypt ? typeof bcrypt.compareSync !== 'undefined' : false);
-    console.log('Objeto bcrypt completo:', bcrypt);
-    console.groupEnd();
+    console.group('[Login] Verificações iniciais');
+    console.log('BCrypt disponível?', !!bcrypt.compareSync);
     
-    if (!bcrypt || !bcrypt.compareSync) {
-      throw new Error('Configuração inválida: Biblioteca BCrypt não carregada corretamente');
+    // 1. Busca o usuário
+    const usersRef = ref(db, 'users');
+    const queryRef = query(usersRef, orderByChild('username'), equalTo(username));
+    const snapshot = await get(queryRef);
+
+    if (!snapshot.exists()) {
+      console.log('Usuário não encontrado');
+      throw new Error('Credenciais inválidas');
     }
 
+    // 2. Extrai dados do usuário
     let userData = null;
     let userId = null;
     snapshot.forEach((child) => {
       userData = child.val();
       userId = child.key;
-      console.log('Dados completos do usuário:', userData);
+      console.log('Dados do usuário:', { 
+        userId, 
+        username: userData.username,
+        hasPassword: !!userData.passwordHash
+      });
     });
 
-    // Validação mais flexível da estrutura
-    if (!userData || typeof userData.passwordHash !== 'string') {
-      console.error('Estrutura inválida - campos ausentes:', {
-        hasPasswordHash: !!userData?.passwordHash,
-        hasSalt: !!userData?.salt
-      });
-      throw new Error('Configuração de usuário inválida no sistema');
+    // 3. Valida estrutura
+    if (!userData?.passwordHash) {
+      console.error('Estrutura inválida:', userData);
+      throw new Error('Configuração de usuário inválida');
     }
 
+    // 4. Verifica senha
+    console.log('Iniciando verificação de senha...');
     const isValidPassword = bcrypt.compareSync(password, userData.passwordHash);
+    console.log('Senha válida?', isValidPassword);
+
     if (!isValidPassword) {
       throw new Error('Credenciais inválidas');
     }
 
+    // 5. Retorna dados seguros
     const { passwordHash, salt, ...safeUserData } = userData;
     console.groupEnd();
     return { ...safeUserData, id: userId };
 
   } catch (error) {
     console.groupEnd();
+    console.error('Erro no login:', {
+      username,
+      error: error.message,
+      stack: error.stack
+    });
     throw error;
   }
 }
