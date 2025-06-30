@@ -1,32 +1,49 @@
+// auth.js
 import { getCurrentUserData, isUserAdmin } from './users.js';
 
-// Verificação de autenticação
 export async function checkAuth() {
-  const userId = sessionStorage.getItem('userId');
-  if (!userId) {
-    redirectToLogin();
-    return null;
-  }
-  
   try {
+    const userId = sessionStorage.getItem('userId');
+    if (!userId) {
+      redirectToLogin();
+      return null;
+    }
+    
     const userData = await getCurrentUserData(userId);
+    if (!userData) {
+      redirectToLogin();
+      return null;
+    }
+    
     await updateUserDisplay(userData);
     return userData;
   } catch (error) {
+    console.error('Erro na verificação de autenticação:', error);
     redirectToLogin();
     return null;
   }
 }
 
-// Verificação de admin
 export async function checkAdminAuth() {
-  const userId = sessionStorage.getItem('userId');
-  if (!userId || !(await isUserAdmin(userId))) {
-    showAccessDenied();
-    redirectToHome();
+  try {
+    const userId = sessionStorage.getItem('userId');
+    if (!userId) {
+      redirectToLogin();
+      return false;
+    }
+    
+    const isAdmin = await isUserAdmin(userId);
+    if (!isAdmin) {
+      showAccessDenied();
+      redirectToHome();
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erro na verificação de admin:', error);
     return false;
   }
-  return true;
 }
 
 // Atualiza a navbar
