@@ -1,17 +1,31 @@
 import { db } from './firebase-config.js';
 import { ref, set, get, remove, query, orderByChild, equalTo, update, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// Verificação robusta do bcrypt
-const bcrypt = window.appBcrypt || (() => {
-  const error = new Error('BCrypt não disponível - Verifique se o script foi carregado antes do módulo');
-  console.error('Erro de configuração:', {
-    windowBCrypt: window.bcrypt,
-    appBcrypt: window.appBcrypt,
-    error
-  });
-  throw error;
-})();
+// Solução definitiva para carregamento do BCrypt
+const getBCrypt = () => {
+  // Tenta acessar o BCrypt de 3 formas diferentes
+  const bcrypt = window._secureBCrypt || window.bcrypt || window.dcodeIO?.bcrypt;
+  
+  if (!bcrypt) {
+    const error = new Error(`
+      BCrypt não disponível. Verifique:
+      1. O script foi carregado antes deste módulo?
+      2. Há bloqueadores de script (adblockers)?
+      3. O CDN está acessível?
+    `);
+    console.error('Falha no BCrypt:', {
+      windowSecure: window._secureBCrypt,
+      windowGlobal: window.bcrypt,
+      dcodeIO: window.dcodeIO?.bcrypt,
+      error
+    });
+    throw error;
+  }
 
+  return bcrypt;
+};
+
+const bcrypt = getBCrypt();
 const SALT_ROUNDS = 10;
 
 export async function registerUser(username, password, fullName, isAdmin = false) {
