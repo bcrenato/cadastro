@@ -209,17 +209,22 @@
       aniversariantes.sort((a, b) => a.dia - b.dia);
 
       for (const m of aniversariantes) {
-        if (m.fotoURL) {
-          const img = await carregarImagem(m.fotoURL);
-          doc.addImage(img, "JPEG", 15, y - 10, 15, 15);
-        }
-        doc.text(`${m.nome} - ${m.dia}/${mesSelecionado}`, 35, y);
-        y += 20;
-        if (y > 270) {
-          doc.addPage();
-          y = 20;
-        }
-      }
+  if (m.fotoURL) {
+    const img = await carregarImagem(m.fotoURL);
+    // Desenhar imagem "redonda" com bordas suavizadas
+    doc.setDrawColor(255, 255, 255);
+    doc.setFillColor(255, 255, 255);
+    doc.circle(22.5, y - 2.5, 8, 'F'); // círculo branco como fundo
+    doc.addImage(img, "JPEG", 15, y - 10, 15, 15);
+  }
+  doc.text(`${m.nome} - ${m.dia}/${mesSelecionado}`, 35, y);
+  y += 20;
+  if (y > 270) {
+    doc.addPage();
+    y = 20;
+  }
+}
+
 
       doc.setFontSize(10);
       doc.text(`Impresso em: ${dataAtual}`, 15, 290);
@@ -227,15 +232,24 @@
       doc.save(`Aniversariantes-${mesNome}.pdf`);
     });
 
-    async function carregarImagem(url) {
-      const img = await fetch(url);
-      const blob = await img.blob();
-      return await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-    }
+   async function carregarImagem(url) {
+  const img = await new Promise((resolve) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.src = url;
+  });
+
+  // Reduz para 50x50 px usando canvas
+  const canvas = document.createElement("canvas");
+  canvas.width = 50;
+  canvas.height = 50;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, 50, 50);
+
+  return canvas.toDataURL("image/jpeg", 0.5); // qualidade 50%
+}
+
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
