@@ -280,7 +280,10 @@ btnExportar.addEventListener("click", async () => {  // Adiciona evento de cliqu
     // Dados formatados
     const dados = [  // Array com dados formatados do membro
       `Nome: ${membro.nome || 'Não informado'}`,  // Nome ou fallback
-      `Endereço: ${membro.endereco || 'Não informado'}`,  // Endereço ou fallback
+     `Endereço: ${membro.endereco || ''}${membro.numero ? ', ' + membro.numero : ''}${
+      [membro.bairro, membro.cidade, membro.estado]
+        .filter(Boolean).join(', ')
+    }` || 'Não informado',  // Endereço ou fallback
       `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,  // Data formatada
       `Batismo: ${membro.dataBatismo ? new Date(membro.dataBatismo).toLocaleDateString('pt-BR') : 'Não informado'}`,  // Data formatada
       `Função: ${membro.funcao || 'Não informado'}`,  // Função ou fallback
