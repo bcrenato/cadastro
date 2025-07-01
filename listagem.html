@@ -227,7 +227,7 @@ btnExportar.addEventListener("click", async () => {  // Adiciona evento de cliqu
 
   // Estilos
   const styles = {  // Define estilos reutilizáveis
-    titleFontSize: 16,  // Tamanho da fonte do título principal
+    titleFontSize: 12,  // Tamanho da fonte do título principal
     subtitleFontSize: 12,  // Tamanho da fonte do subtítulo
     textFontSize: 10,  // Tamanho da fonte do conteúdo
     margin: 15,  // Margem das páginas
@@ -245,7 +245,7 @@ btnExportar.addEventListener("click", async () => {  // Adiciona evento de cliqu
   // Linha divisória
   doc.setDrawColor(200, 200, 200);  // Define cor cinza claro para a linha
   doc.setLineWidth(0.3);  // Define espessura fina da linha (0.3mm)
-  doc.line(styles.margin, 30, 210 - styles.margin, 30);  // Desenha linha horizontal entre margens
+  doc.line(styles.margin, 33, 210 - styles.margin, 33);  // Desenha linha horizontal entre margens
 
   // Carrega os dados
   const snapshot = await new Promise(resolve =>  // Aguarda carregamento dos dados
