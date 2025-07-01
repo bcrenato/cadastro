@@ -181,39 +181,55 @@
       const dataAtual = new Date().toLocaleDateString('pt-BR');
       
       // Cabeçalho com logo
-      try {
-        const logo = await loadImage("./logo.png", true);
-        if (logo) {
-          const logoWidth = 80; // Largura do logo definida como 80mm (bem grande)
-          const logoHeight = (logo.height * logoWidth) / logo.width; // Mantém proporção original
-          const logoX = (210 - logoWidth) / 2; // Centraliza horizontalmente (considerando página A4 = 210mm)
-          doc.addImage(logo, "PNG", logoX, 10, logoWidth, logoHeight, undefined, 'FAST');
-         
-        }
-      } catch (e) {
-        console.warn("Logo não carregada:", e);
-      }
-      // Títulos
-     let currentY = 200; // Variável definida mas não utilizada (inconsistência)
-      // Os títulos estão com posições y fixas, não usando a currentY
-      
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(styles.titleFontSize);
-      doc.text("Igreja Exemplo da Fé", 105, 30, { align: "center" });
-      // Título principal em y=45 (30mm abaixo do logo)
-      
-      doc.setFontSize(styles.subtitleFontSize);
-      doc.text("Lista de Aniversariantes", 105, 40, { align: "center" });
-      // Subtítulo em y=57 (12mm após o título principal)
-      
-      doc.setFont("helvetica", "bolditalic");
-      doc.text(`Mês de ${mesNome}`, 105, 50, { align: "center" });
-      // Nome do mês em y=69 (12mm após o subtítulo)
+try {
+  const logo = await loadImage("./logo.png", true); // Carrega a imagem do logo de forma assíncrona
+  if (logo) { // Verifica se o logo foi carregado com sucesso
+    const logoWidth = 80; // Define a largura do logo como 80mm
+    const logoHeight = (logo.height * logoWidth) / logo.width; // Calcula a altura proporcional mantendo a aspect ratio
+    const logoX = (210 - logoWidth) / 2; // Calcula a posição X para centralizar o logo (considerando página A4 = 210mm de largura)
+    doc.addImage(logo, "PNG", logoX, 15, logoWidth, logoHeight, undefined, 'FAST'); // Insere o logo no PDF:
+      // logo: imagem carregada
+      // 'PNG': formato da imagem
+      // logoX: posição horizontal (centralizada)
+      // 15: posição vertical (15mm do topo)
+      // logoWidth: 80mm de largura
+      // logoHeight: altura calculada
+      // 'FAST': modo de renderização rápido
+  }
+} catch (e) {
+  console.warn("Logo não carregada:", e); // Trata erros no carregamento do logo
+}
 
-      // Linha divisória
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.5);
-      doc.line(styles.margin, 58, 210 - styles.margin, 58);
+// Títulos
+
+// Primeiro título (nome da igreja)
+doc.setFont("helvetica", "bold"); // Define fonte Helvetica negrito
+doc.setFontSize(styles.titleFontSize); // Aplica tamanho da fonte definido em styles (16)
+doc.text("Igreja Exemplo da Fé", 105, 20, { align: "center" }); // Adiciona texto:
+  // "Igreja Exemplo da Fé": conteúdo
+  // 105: posição X centralizada (210/2)
+  // 45: posição Y (45mm do topo)
+  // align: "center": alinhamento centralizado
+
+// Segundo título (descrição)
+doc.setFontSize(styles.subtitleFontSize); // Aplica tamanho menor (12)
+doc.text("Lista de Aniversariantes", 105, 40, { align: "center" }); // Adiciona subtítulo:
+  // 57: posicionado 12mm abaixo do anterior (45+12)
+
+// Terceiro título (mês)
+doc.setFont("helvetica", "bolditalic"); // Aplica fonte em itálico e negrito
+doc.text(`Mês de ${mesNome}`, 105, 50, { align: "center" }); // Adiciona nome do mês:
+  // 69: posicionado 12mm abaixo do anterior (57+12)
+  // ${mesNome}: variável com nome do mês
+
+// Linha divisória
+doc.setDrawColor(200, 200, 200); // Define cor RGB cinza claro para a linha
+doc.setLineWidth(0.5); // Define espessura da linha como 0.5mm
+doc.line(styles.margin, 58, 210 - styles.margin, 58); // Desenha linha horizontal:
+  // styles.margin: 15mm da esquerda (início da linha)
+  // 75: posição Y (75mm do topo = 6mm abaixo do último título)
+  // 210-styles.margin: 195mm (termina 15mm antes da borda direita)
+  // 75: mantém mesma posição Y para linha reta
      
 
       // Carrega dados
