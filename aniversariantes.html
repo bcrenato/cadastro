@@ -32,7 +32,7 @@
 </head>
 <body>
 
-  <!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO (NOVO) -->
+  <!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO -->
   <script type="module">
     import { checkAuth } from './auth.js';
     checkAuth();
@@ -62,7 +62,7 @@
   </nav>
 
   <!-- 🔹 Conteúdo -->
-  <div class="container mt-5 pt-4"> <!-- Adicionado pt-4 para compensar a navbar fixa -->
+  <div class="container mt-5 pt-4">
     <h3 class="mb-3">Selecione o mês:</h3>
     
     <div class="export-container">
@@ -165,23 +165,12 @@
             const item = document.createElement("div");
             item.className = "membro-item";
             
-            // Criar elemento de imagem com fallback
+            // Criar elemento de imagem
             const img = document.createElement("img");
             img.className = "foto-miniatura";
             img.alt = "Foto de " + m.nome;
-            
-            if (m.fotoURL) {
-              img.src = m.fotoURL;
-              img.onerror = function() {
-                // Se a imagem não carregar, mostrar placeholder
-                this.src = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23ddd'/%3E%3Ctext x='30' y='35' font-family='Arial' font-size='20' text-anchor='middle' fill='%23666'%3E" + 
-                  (m.nome.charAt(0).toUpperCase() + "%3C/text%3E%3C/svg%3E";
-              };
-            } else {
-              // Mostrar placeholder se não houver fotoURL
-              img.src = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23ddd'/%3E%3Ctext x='30' y='35' font-family='Arial' font-size='20' text-anchor='middle' fill='%23666'%3E" + 
-                (m.nome.charAt(0).toUpperCase() + "%3C/text%3E%3C/svg%3E";
-            }
+            img.src = m.fotoURL || "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23ddd'/%3E%3Ctext x='30' y='35' font-family='Arial' font-size='20' text-anchor='middle' fill='%23666'%3E" + 
+              (m.nome.charAt(0).toUpperCase() + "%3C/text%3E%3C/svg%3E";
             
             item.appendChild(img);
             
@@ -241,7 +230,7 @@
           yPos = 20;
         }
         
-        // Adicionar nome e data
+        // Adicionar item
         doc.text(`${index + 1}. ${membro.nome}`, 20, yPos);
         doc.text(`Dia: ${membro.dia}`, 150, yPos);
         
