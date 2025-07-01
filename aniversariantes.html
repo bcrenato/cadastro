@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -121,121 +120,188 @@
     });
 
     exportarBtn.addEventListener("click", async () => {
-  const mesSelecionado = parseInt(mesSelect.value);
-  if (!mesSelecionado) return alert("Selecione um mês para exportar.");
+      const mesSelecionado = parseInt(mesSelect.value);
+      if (!mesSelecionado) return alert("Selecione um mês para exportar.");
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4",
-    compress: true // Ativa compressão no PDF
-  });
+      // Configurações de alta qualidade
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        filters: ["ASCIIHexEncode"],
+        compress: true
+      });
 
-  const igrejaNome = "Igreja Exemplo da Fé";
-  const textoIntro = "Segue abaixo a lista de aniversariantes do mês.";
-  const mesNome = mesesNomes[mesSelecionado];
-  const dataAtual = new Date().toLocaleDateString();
+      // Definições de estilo
+      const styles = {
+        titleFontSize: 16,
+        subtitleFontSize: 12,
+        textFontSize: 11,
+        photoSize: 20, // tamanho da foto em mm
+        lineHeight: 15,
+        margin: 15,
+        photoQuality: 0.7 // qualidade das fotos (0.7 = 70%)
+      };
 
-  // Otimização: Verifica se a logo existe antes de tentar carregar
-  try {
-    const logo = new Image();
-    logo.crossOrigin = "anonymous";
-    logo.src = "./logo.png";
-    await new Promise((resolve, reject) => {
-      logo.onload = resolve;
-      logo.onerror = reject;
-    });
-    doc.addImage(logo, "PNG", 80, 10, 50, 25);
-  } catch (e) {
-    console.warn("Logo não carregada, continuando sem ela...");
-  }
-
-  doc.setFontSize(12); // Reduzindo um pouco o tamanho da fonte
-  doc.text(igrejaNome, 105, 40, null, null, "center");
-  doc.setFontSize(10);
-  doc.text(textoIntro, 105, 48, null, null, "center");
-  doc.setFontSize(12);
-  doc.text(`Aniversariantes de ${mesNome}`, 105, 60, null, null, "center");
-
-  const snapshot = await new Promise(resolve =>
-    onValue(ref(db, "membros"), resolve, { onlyOnce: true })
-  );
-  const data = snapshot.val();
-  const aniversariantes = [];
-  
-  // Filtra membros sem nascimento primeiro para reduzir processamento
-  for (const id in data) {
-    const membro = data[id];
-    if (membro.nascimento) {
-      const nascimento = new Date(membro.nascimento);
-      if ((nascimento.getMonth() + 1) === mesSelecionado) {
-        aniversariantes.push({
-          nome: membro.nome,
-          dia: nascimento.getDate(),
-          fotoURL: membro.fotoURL || ""
-        });
-      }
-    }
-  }
-
-  aniversariantes.sort((a, b) => a.dia - b.dia);
-  let y = 70;
-
-  // Opção para desativar fotos se houver muitas
-  const incluirFotos = aniversariantes.length < 50; // Só inclui fotos se menos de 50 aniversariantes
-  
-  for (const m of aniversariantes) {
-    if (incluirFotos && m.fotoURL) {
+      const mesNome = mesesNomes[mesSelecionado];
+      const dataAtual = new Date().toLocaleDateString('pt-BR');
+      
+      // Cabeçalho com logo
       try {
-        const imgData = await carregarImagem(m.fotoURL);
-        if (imgData) {
-          doc.addImage(imgData, "JPEG", 15, y - 10, 15, 15);
+        const logo = await loadImage("./logo.png", true);
+        if (logo) {
+          // Posiciona a logo centralizada
+          const logoWidth = 40;
+          const logoHeight = (logo.height * logoWidth) / logo.width;
+          const logoX = (210 - logoWidth) / 2; // Centraliza em A4 (210mm wide)
+          
+          doc.addImage(logo, "PNG", logoX, 10, logoWidth, logoHeight, undefined, 'FAST');
         }
       } catch (e) {
-        console.error(`Erro ao carregar foto de ${m.nome}`, e);
+        console.warn("Logo não carregada:", e);
       }
-    }
-    
-    doc.text(`${m.dia.toString().padStart(2, '0')}/${mesSelecionado.toString().padStart(2, '0')} - ${m.nome}`, 
-             incluirFotos ? 35 : 20, y);
-    
-    y += 10; // Reduzindo espaçamento entre linhas de 20 para 10
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
-    }
-  }
 
-  doc.setFontSize(8); // Fonte menor para dados de impressão
-  doc.text(`Impresso em: ${dataAtual}`, 15, 290);
-  doc.save(`Aniversariantes-${mesNome}.pdf`);
-});
+      // Títulos
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(styles.titleFontSize);
+      doc.text("Igreja Exemplo da Fé", 105, 40, { align: "center" });
+      
+      doc.setFontSize(styles.subtitleFontSize);
+      doc.text("Lista de Aniversariantes", 105, 47, { align: "center" });
+      
+      doc.setFont("helvetica", "bolditalic");
+      doc.text(`Mês de ${mesNome}`, 105, 54, { align: "center" });
 
-    async function carregarImagem(url) {
-  try {
-    const img = await new Promise((resolve, reject) => {
-      const image = new Image();
-      image.crossOrigin = "anonymous";
-      image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error('Falha ao carregar imagem'));
-      image.src = url;
+      // Linha divisória
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.line(styles.margin, 58, 210 - styles.margin, 58);
+
+      // Carrega dados
+      const snapshot = await new Promise(resolve =>
+        onValue(ref(db, "membros"), resolve, { onlyOnce: true })
+      );
+      
+      const aniversariantes = [];
+      for (const id in snapshot.val()) {
+        const membro = snapshot.val()[id];
+        if (membro.nascimento) {
+          const nascimento = new Date(membro.nascimento);
+          if ((nascimento.getMonth() + 1) === mesSelecionado) {
+            aniversariantes.push({
+              nome: membro.nome,
+              dia: nascimento.getDate(),
+              fotoURL: membro.fotoURL || ""
+            });
+          }
+        }
+      }
+
+      aniversariantes.sort((a, b) => a.dia - b.dia);
+      
+      // Configurações de página
+      let yPosition = 65; // Posição inicial após cabeçalho
+      const photoX = styles.margin;
+      const textX = styles.margin + styles.photoSize + 5;
+
+      // Função para adicionar novo cabeçalho quando mudar de página
+      const addNewPageHeader = () => {
+        doc.addPage();
+        yPosition = 20;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(styles.subtitleFontSize);
+        doc.text(`Aniversariantes de ${mesNome} (cont.)`, 105, yPosition, { align: "center" });
+        yPosition += 10;
+        doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
+        yPosition += 15;
+      };
+
+      // Adiciona cada aniversariante
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(styles.textFontSize);
+      
+      for (const membro of aniversariantes) {
+        // Verifica se precisa de nova página
+        if (yPosition > 270) {
+          addNewPageHeader();
+        }
+
+        // Adiciona foto (se existir)
+        if (membro.fotoURL) {
+          try {
+            const foto = await loadImage(membro.fotoURL, false);
+            if (foto) {
+              // Adiciona moldura circular à foto
+              doc.setFillColor(240, 240, 240);
+              doc.circle(
+                photoX + styles.photoSize/2, 
+                yPosition + styles.photoSize/2, 
+                styles.photoSize/2, 
+                'F'
+              );
+              
+              doc.addImage(
+                foto, 
+                "JPEG", 
+                photoX, 
+                yPosition, 
+                styles.photoSize, 
+                styles.photoSize,
+                undefined,
+                'MEDIUM'
+              );
+            }
+          } catch (e) {
+            console.error(`Erro ao carregar foto de ${membro.nome}`, e);
+          }
+        }
+
+        // Adiciona texto
+        const diaFormatado = membro.dia.toString().padStart(2, '0');
+        const mesFormatado = mesSelecionado.toString().padStart(2, '0');
+        
+        doc.text(`${diaFormatado}/${mesFormatado}`, textX, yPosition + 5);
+        doc.setFont("helvetica", "bold");
+        doc.text(membro.nome, textX + 20, yPosition + 5);
+        doc.setFont("helvetica", "normal");
+
+        yPosition += styles.lineHeight;
+      }
+
+      // Rodapé
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Gerado em ${dataAtual} • Igreja Exemplo da Fé`, 105, 287, { align: "center" });
+
+      // Salva o PDF
+      doc.save(`Aniversariantes_${mesNome}_${new Date().getFullYear()}.pdf`);
     });
 
-    // Reduz ainda mais o tamanho da imagem
-    const canvas = document.createElement("canvas");
-    canvas.width = 30;  // Reduzindo de 50 para 30 pixels
-    canvas.height = 30; // Reduzindo de 50 para 30 pixels
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, 30, 30);
-
-    return canvas.toDataURL("image/jpeg", 0.3); // Reduzindo qualidade para 30%
-  } catch (error) {
-    console.error('Erro ao carregar imagem:', error);
-    return null;
-  }
-}
-
+    // Função melhorada para carregar imagens com qualidade
+    async function loadImage(url, isLogo) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          // Redimensiona diferente para logo vs fotos
+          const targetSize = isLogo ? 800 : 400;
+          const ratio = Math.min(targetSize / img.width, targetSize / img.height);
+          
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width * ratio;
+          canvas.height = img.height * ratio;
+          
+          const ctx = canvas.getContext("2d");
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          resolve(canvas);
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    }
   </script>
 </body>
 </html>
