@@ -19,20 +19,11 @@
       padding: 10px;
       border-bottom: 1px solid #eee;
     }
-    .export-container {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .export-container select {
-      flex: 0 0 300px;
-    }
   </style>
 </head>
 <body>
 
-  <!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO -->
+  <!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO (NOVO) -->
   <script type="module">
     import { checkAuth } from './auth.js';
     checkAuth();
@@ -61,57 +52,46 @@
     </div>
   </nav>
 
-  <!-- 🔹 Conteúdo -->
-  <div class="container mt-5 pt-4">
-    <h3 class="mb-3">Selecione o mês:</h3>
-    
-    <div class="export-container">
-      <select id="mes" class="form-select" style="max-width: 300px;">
-        <option value="">-- Escolha o mês --</option>
-        <option value="1">Janeiro</option>
-        <option value="2">Fevereiro</option>
-        <option value="3">Março</option>
-        <option value="4">Abril</option>
-        <option value="5">Maio</option>
-        <option value="6">Junho</option>
-        <option value="7">Julho</option>
-        <option value="8">Agosto</option>
-        <option value="9">Setembro</option>
-        <option value="10">Outubro</option>
-        <option value="11">Novembro</option>
-        <option value="12">Dezembro</option>
-      </select>
-      
-      <button id="exportarPdf" class="btn btn-success" disabled>Exportar para PDF</button>
-    </div>
 
-    <div id="lista-aniversariantes" class="mt-3"></div>
+  <!-- 🔹 Conteúdo -->
+  <div class="container mt-4">
+    <h3 class="mb-3">Selecione o mês:</h3>
+    <select id="mes" class="form-select mb-4" style="max-width: 300px;">
+      <option value="">-- Escolha o mês --</option>
+      <option value="1">Janeiro</option>
+      <option value="2">Fevereiro</option>
+      <option value="3">Março</option>
+      <option value="4">Abril</option>
+      <option value="5">Maio</option>
+      <option value="6">Junho</option>
+      <option value="7">Julho</option>
+      <option value="8">Agosto</option>
+      <option value="9">Setembro</option>
+      <option value="10">Outubro</option>
+      <option value="11">Novembro</option>
+      <option value="12">Dezembro</option>
+    </select>
+
+    <div id="lista-aniversariantes"></div>
   </div>
 
   <!-- 🔹 Script -->
   <script type="module">
     import { db } from './firebase-config.js';
     import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-    import { jsPDF } from "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 
     const mesSelect = document.getElementById("mes");
     const listaDiv = document.getElementById("lista-aniversariantes");
-    const exportarPdfBtn = document.getElementById("exportarPdf");
 
     const mesesNomes = [
       "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
     ];
 
-    let aniversariantesAtuais = [];
-
     mesSelect.addEventListener("change", () => {
       const mesSelecionado = parseInt(mesSelect.value);
-      exportarPdfBtn.disabled = !mesSelecionado;
-      
       if (!mesSelecionado) {
         listaDiv.innerHTML = "";
-        aniversariantesAtuais = [];
         return;
       }
 
@@ -120,33 +100,19 @@
         const data = snapshot.val();
         listaDiv.innerHTML = "";
 
-        aniversariantesAtuais = [];
-
-        if (!data) {
-          listaDiv.innerHTML = `<p class="text-muted">Nenhum membro cadastrado.</p>`;
-          return;
-        }
+        const aniversariantesDoMes = [];
 
         for (const id in data) {
           const membro = data[id];
           if (!membro.nascimento) continue;
 
-          // Verificar se a data de nascimento é válida
-          let dataNasc;
-          try {
-            dataNasc = new Date(membro.nascimento);
-            if (isNaN(dataNasc.getTime())) continue;
-          } catch (e) {
-            console.error("Data de nascimento inválida:", membro.nascimento);
-            continue;
-          }
-
+          const dataNasc = new Date(membro.nascimento);
           const mes = dataNasc.getMonth() + 1;
 
           if (mes === mesSelecionado) {
-            aniversariantesAtuais.push({
+            aniversariantesDoMes.push({
               id,
-              nome: membro.nome || "Nome não informado",
+              nome: membro.nome,
               fotoURL: membro.fotoURL || "",
               dia: dataNasc.getDate(),
               mesNome: mesesNomes[mes]
@@ -155,98 +121,35 @@
         }
 
         // Ordenar por dia de nascimento
-        aniversariantesAtuais.sort((a, b) => a.dia - b.dia);
+        aniversariantesDoMes.sort((a, b) => a.dia - b.dia);
 
         // Exibir na tela
-        if (aniversariantesAtuais.length === 0) {
-          listaDiv.innerHTML = `<p class="text-muted">Nenhum aniversariante encontrado para este mês.</p>`;
-        } else {
-          aniversariantesAtuais.forEach((m) => {
-            const item = document.createElement("div");
-            item.className = "membro-item";
-            
-            // Criar elemento de imagem
-            const img = document.createElement("img");
-            img.className = "foto-miniatura";
-            img.alt = "Foto de " + m.nome;
-            img.src = m.fotoURL || "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23ddd'/%3E%3Ctext x='30' y='35' font-family='Arial' font-size='20' text-anchor='middle' fill='%23666'%3E" + 
-              (m.nome.charAt(0).toUpperCase() + "%3C/text%3E%3C/svg%3E";
-            
-            item.appendChild(img);
-            
-            const infoDiv = document.createElement("div");
-            infoDiv.innerHTML = `
+        aniversariantesDoMes.forEach((m) => {
+          const item = document.createElement("div");
+          item.className = "membro-item";
+          item.innerHTML = `
+            <img src="${m.fotoURL}" class="foto-miniatura" alt="Foto">
+            <div>
               <strong>${m.nome}</strong><br>
               <small>Nascimento: ${m.dia} de ${m.mesNome}</small>
-            `;
-            item.appendChild(infoDiv);
-            
-            listaDiv.appendChild(item);
-          });
+            </div>
+          `;
+          listaDiv.appendChild(item);
+        });
+
+        if (aniversariantesDoMes.length === 0) {
+          listaDiv.innerHTML = `<p class="text-muted">Nenhum aniversariante encontrado.</p>`;
         }
       }, {
         onlyOnce: true
       });
-    });
-
-    exportarPdfBtn.addEventListener("click", () => {
-      if (aniversariantesAtuais.length === 0) {
-        alert("Nenhum aniversariante para exportar!");
-        return;
-      }
-      
-      const mesSelecionado = parseInt(mesSelect.value);
-      const mesNome = mesesNomes[mesSelecionado];
-      
-      // Criar o PDF
-      const doc = new jsPDF();
-      
-      // Adicionar cabeçalho
-      doc.setFontSize(18);
-      doc.setTextColor(0, 0, 128);
-      doc.text("Igreja Batista Central", 105, 20, { align: 'center' });
-      
-      // Texto descritivo
-      doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0);
-      doc.text("Relação de Aniversariantes", 105, 30, { align: 'center' });
-      
-      // Mês selecionado
-      doc.setFontSize(16);
-      doc.setTextColor(0, 0, 128);
-      doc.text(`Mês: ${mesNome}`, 105, 40, { align: 'center' });
-      
-      // Lista de aniversariantes
-      let yPos = 50;
-      const pageHeight = doc.internal.pageSize.height - 20;
-      
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      
-      aniversariantesAtuais.forEach((membro, index) => {
-        // Verificar se precisa de nova página
-        if (yPos > pageHeight) {
-          doc.addPage();
-          yPos = 20;
-        }
-        
-        // Adicionar item
-        doc.text(`${index + 1}. ${membro.nome}`, 20, yPos);
-        doc.text(`Dia: ${membro.dia}`, 150, yPos);
-        
-        yPos += 10;
-      });
-      
-      // Rodapé com data de impressão
-      const dataAtual = new Date().toLocaleDateString('pt-BR');
-      doc.setFontSize(10);
-      doc.text(`Impresso em: ${dataAtual}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
-      
-      // Salvar o PDF
-      doc.save(`Aniversariantes_${mesNome}.pdf`);
     });
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+
+
+  
