@@ -133,7 +133,7 @@
 
       const logo = new Image();
       logo.crossOrigin = "anonymous";
-      logo.src = "https://via.placeholder.com/150x50.png?text=LOGO";
+      logo.src = "./logo.png";
       await new Promise(resolve => logo.onload = resolve);
       doc.addImage(logo, "PNG", 80, 10, 50, 25);
 
