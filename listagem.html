@@ -307,6 +307,7 @@ btnExportar.addEventListener("click", async () => {  // Adiciona evento de cliqu
     // Linha divisória entre membros
     doc.setDrawColor(220, 220, 220);  // Cor cinza mais claro
     doc.setLineWidth(0.8);  // Espessura da linha (0.8mm)
+    yPosition += 10; // Adiciona espaço antes da linha
     doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);  // Desenha linha horizontal
     
     yPosition += 10;  // Adiciona espaço após cada membro
