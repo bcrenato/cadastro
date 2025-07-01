@@ -184,7 +184,7 @@
       try {
         const logo = await loadImage("./logo.png", true);
         if (logo) {
-          const logoWidth = 40;
+          const logoWidth =80;
           const logoHeight = (logo.height * logoWidth) / logo.width;
           const logoX = (210 - logoWidth) / 2;
           doc.addImage(logo, "PNG", logoX, 10, logoWidth, logoHeight, undefined, 'FAST');
