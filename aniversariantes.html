@@ -207,17 +207,17 @@
       // Título principal em y=45 (30mm abaixo do logo)
       
       doc.setFontSize(styles.subtitleFontSize);
-      doc.text("Lista de Aniversariantes", 105, 30, { align: "center" });
+      doc.text("Lista de Aniversariantes", 105, 50, { align: "center" });
       // Subtítulo em y=57 (12mm após o título principal)
       
       doc.setFont("helvetica", "bolditalic");
-      doc.text(`Mês de ${mesNome}`, 105, 30, { align: "center" });
+      doc.text(`Mês de ${mesNome}`, 105, 70, { align: "center" });
       // Nome do mês em y=69 (12mm após o subtítulo)
 
       // Linha divisória
       doc.setDrawColor(200, 200, 200); // Cor cinza claro (RGB)
       doc.setLineWidth(0.5); // Espessura fina (0.5mm)
-      doc.line(styles.margin, 75, 210 - styles.margin, 100);
+      doc.line(styles.margin, 10, 210 - styles.margin, 100);
       // Linha horizontal:
       // - y=75 (6mm após o último título)
       // - Começa em x=styles.margin (15mm)
