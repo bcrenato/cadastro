@@ -1,0 +1,22 @@
+{
+  "rules": {
+    "users": {
+      ".read": "auth != null && root.child('users').hasChild(auth.uid)",
+      "$uid": {
+        ".read": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('isAdmin').val() == true)",
+        ".write": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('isAdmin').val() == true)",
+        ".validate": "newData.hasChildren(['username', 'fullName', 'isAdmin']) &&
+                     newData.child('username').isString() &&
+                     newData.child('fullName').isString() &&
+                     newData.child('isAdmin').isBoolean()"
+      }
+    },
+    "membros": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() == true",
+      "$membroId": {
+        ".validate": "newData.hasChildren(['nome', 'cep', 'endereco', 'fotoURL'])"
+      }
+    }
+  }
+}
