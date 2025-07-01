@@ -209,17 +209,21 @@
       aniversariantes.sort((a, b) => a.dia - b.dia);
 
       for (const m of aniversariantes) {
-        if (m.fotoURL) {
-          const img = await carregarImagem(m.fotoURL);
-          doc.addImage(img, "JPEG", 15, y - 10, 15, 15);
-        }
-        doc.text(`${m.nome} - ${m.dia}/${mesSelecionado}`, 35, y);
-        y += 20;
-        if (y > 270) {
-          doc.addPage();
-          y = 20;
-        }
-      }
+  if (m.fotoURL) {
+    const img = await carregarImagem(m.fotoURL);
+    // Desenhar imagem "redonda" com bordas suavizadas
+    doc.setDrawColor(255, 255, 255);
+    doc.setFillColor(255, 255, 255);
+    doc.circle(22.5, y - 2.5, 8, 'F'); // círculo branco como fundo
+    doc.addImage(img, "JPEG", 15, y - 10, 15, 15);
+  }
+  doc.text(`${m.nome} - ${m.dia}/${mesSelecionado}`, 35, y);
+  y += 20;
+  if (y > 270) {
+    doc.addPage();
+    y = 20;
+  }
+}
 
       doc.setFontSize(10);
       doc.text(`Impresso em: ${dataAtual}`, 15, 290);
