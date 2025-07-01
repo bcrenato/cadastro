@@ -216,66 +216,94 @@
     });
 
     // Exportar para PDF
-    btnExportar.addEventListener("click", async () => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-        compress: true
-      });
+btnExportar.addEventListener("click", async () => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+    compress: true
+  });
 
-      // Estilos
-      const styles = {
-        titleFontSize: 12,
-        subtitleFontSize: 12,
-        textFontSize: 10,
-        margin: 15,
-        lineHeight: 4,
-      };
+  // Estilos
+  const styles = {
+    titleFontSize: 12,
+    subtitleFontSize: 12,
+    textFontSize: 10,
+    margin: 15,
+    lineHeight: 4,
+  };
 
-      // Cabeçalho com logo acima do título
-      try {
-        const logoUrl = './logo.png'; // Altere para o caminho do seu logo
-        const logoResponse = await fetch(logoUrl);
-        const logoBlob = await logoResponse.blob();
-        const logoDataUrl = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(logoBlob);
-        });
-        
-        // Adiciona o logo centralizado acima do título
-        const logoWidth = 30; // Largura do logo em mm
-        const logoHeight = 15; // Altura do logo em mm
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const logoX = (pageWidth - logoWidth) / 2; // Centraliza horizontalmente
-        
-        doc.addImage(logoDataUrl, 'PNG', logoX, 10, logoWidth, logoHeight);
-        
-        // Texto do cabeçalho abaixo do logo
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(styles.titleFontSize);
-        doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 30, { align: "center" });
-        
-        doc.setFontSize(styles.subtitleFontSize);
-        doc.text("Lista Completa de Membros", 105, 38, { align: "center" });
-      } catch (error) {
-        console.error("Erro ao carregar o logo:", error);
-        // Se houver erro no logo, usa apenas o texto
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(styles.titleFontSize);
-        doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" });
-        
-        doc.setFontSize(styles.subtitleFontSize);
-        doc.text("Lista Completa de Membros", 105, 28, { align: "center" });
-      }
+  // Cabeçalho com logo acima do título
+  try {
+    const logoUrl = './logo.png'; // Altere para o caminho do seu logo
+    const logoResponse = await fetch(logoUrl);
+    const logoBlob = await logoResponse.blob();
+    const logoDataUrl = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(logoBlob);
+    });
+    
+    // Criar uma imagem temporária para obter as dimensões originais
+    const img = new Image();
+    img.src = logoDataUrl;
+    await new Promise((resolve) => {
+      img.onload = resolve;
+    });
+    
+    // Dimensões originais do logo
+    const originalWidth = img.width;
+    const originalHeight = img.height;
+    const aspectRatio = originalHeight / originalWidth;
+    
+    // Largura desejada para o logo no PDF (em mm)
+    const desiredWidth = 30; // Você pode ajustar este valor
+    
+    // Calcular altura proporcional
+    const proportionalHeight = desiredWidth * aspectRatio;
+    
+    // Adiciona o logo centralizado acima do título
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const logoX = (pageWidth - desiredWidth) / 2; // Centraliza horizontalmente
+    
+    doc.addImage(logoDataUrl, 'PNG', logoX, 10, desiredWidth, proportionalHeight);
+    
+    // Texto do cabeçalho abaixo do logo
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(styles.titleFontSize);
+    doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 10 + proportionalHeight + 5, { align: "center" });
+    
+    doc.setFontSize(styles.subtitleFontSize);
+    doc.text("Lista Completa de Membros", 105, 10 + proportionalHeight + 13, { align: "center" });
+    
+    // Linha divisória (ajustada para ficar abaixo do título)
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    const lineY = 10 + proportionalHeight + 20;
+    doc.line(styles.margin, lineY, 210 - styles.margin, lineY);
+    
+    // Ajusta a posição inicial do conteúdo
+    let yPosition = lineY + 10;
 
-      // Linha divisória
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.3);
-      doc.line(styles.margin, 43, 210 - styles.margin, 43);
-
+  } catch (error) {
+    console.error("Erro ao carregar o logo:", error);
+    // Se houver erro no logo, usa apenas o texto
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(styles.titleFontSize);
+    doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" });
+    
+    doc.setFontSize(styles.subtitleFontSize);
+    doc.text("Lista Completa de Membros", 105, 28, { align: "center" });
+    
+    // Linha divisória
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.line(styles.margin, 33, 210 - styles.margin, 33);
+    
+    // Posição inicial do conteúdo sem logo
+    let yPosition = 40;
+  }
       // Carrega os dados
       const snapshot = await new Promise(resolve =>
         onValue(ref(db, "membros"), resolve, { onlyOnce: true })
