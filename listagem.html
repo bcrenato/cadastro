@@ -234,27 +234,6 @@ btnExportar.addEventListener("click", async () => {  // Adiciona evento de cliqu
     lineHeight: 3  // Altura da linha entre textos
   };
 
-
-   // Cabeçalho com logo
-    try {
-      const logo = await loadImage("./logo.png", true); // Carrega a imagem do logo de forma assíncrona
-      if (logo) { // Verifica se o logo foi carregado com sucesso
-        const logoWidth = 80; // Define a largura do logo como 80mm
-        const logoHeight = (logo.height * logoWidth) / logo.width; // Calcula a altura proporcional mantendo a aspect ratio
-        const logoX = (210 - logoWidth) / 2; // Calcula a posição X para centralizar o logo (considerando página A4 = 210mm de largura)
-        doc.addImage(logo, "PNG", logoX, 10, logoWidth, logoHeight, undefined, 'FAST'); // Insere o logo no PDF:
-          // logo: imagem carregada
-          // 'PNG': formato da imagem
-          // logoX: posição horizontal (centralizada)
-          // 15: posição vertical (15mm do topo)
-          // logoWidth: 80mm de largura
-          // logoHeight: altura calculada
-          // 'FAST': modo de renderização rápido
-      }
-    } catch (e) {
-      console.warn("Logo não carregada:", e); // Trata erros no carregamento do logo
-    }
-    
       
   // Cabeçalho
   doc.setFont("helvetica", "bold");  // Define fonte Helvetica negrito
