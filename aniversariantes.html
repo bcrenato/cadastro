@@ -3,367 +3,338 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Aniversariantes do Mês</title>
+  <title>Lista de Membros</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
-    .membro-item {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
-      margin-bottom: 10px;
+    body {
+      padding-top: 70px;
     }
-    .membro-foto {
-      width: 70px;
-      height: 70px;
+    .foto-miniatura {
+      width: 50px;
+      height: 50px;
       object-fit: cover;
       border-radius: 50%;
-      margin-right: 15px;
-      border: 2px solid #f0f0f0;
+      margin-right: 10px;
     }
-    .membro-info {
+    .membro-item {
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
     }
-    .membro-detalhes {
-      line-height: 1.6;
+    .info-membro {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: inherit;
+      flex-grow: 1;
+    }
+    .checkbox-selecao {
+      display: none;
     }
   </style>
 </head>
 <body>
 
+  <!-- Script de verificação de autenticação -->
   <script type="module">
     import { checkAuth } from './auth.js';
-    checkAuth();
+    import { isUserAdmin } from './users.js';
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      
+      // Mostrar menu admin se o usuário for administrador
+      if (user && await isUserAdmin()) {
+        document.getElementById('adminMenuItem').style.display = 'block';
+      }
+
+      // Mostrar nome do usuário logado
+      if (user) {
+        document.getElementById('currentUserDisplay').querySelector('span').textContent = user.email || 'Usuário';
+      }
+
+      // Configurar logout
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        firebase.auth().signOut().then(() => {
+          window.location.href = 'login.html';
+        });
+      });
+    });
   </script>
 
+  <!-- Navbar fixa no topo -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
     <div class="container">
-      <a class="navbar-brand" href="#">Aniversariantes</a>
+      <a class="navbar-brand" href="index.html">Listagem</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="index.html">Cadastro</a></li>
-          <li class="nav-item"><a class="nav-link" href="listagem.html">Listagem</a></li>
-          <li class="nav-item"><a class="nav-link active" href="aniversariantes.html">Aniversariantes</a></li>
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">
+              <i class="fas fa-user-plus me-1"></i> Cadastro
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="listagem.html">
+              <i class="fas fa-list me-1"></i> Listagem
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="aniversariantes.html">
+              <i class="fas fa-birthday-cake me-1"></i> Aniversariantes
+            </a>
+          </li>
+          
+          <!-- Menu de Admin (só aparece para administradores) -->
+          <li class="nav-item" id="adminMenuItem" style="display: none;">
+            <a class="nav-link" href="register.html">
+              <i class="fas fa-user-shield me-1"></i> Cadastrar Usuários
+            </a>
+          </li>
         </ul>
+        
+        <div class="d-flex align-items-center">
+          <!-- Nome do usuário logado -->
+          <span class="navbar-text text-white me-3" id="currentUserDisplay">
+            <i class="fas fa-user-circle me-1"></i>
+            <span>Carregando...</span>
+          </span>
+          
+          <!-- Botão de Logout -->
+          <button id="logoutBtn" class="btn btn-sm btn-outline-light">
+            <i class="fas fa-sign-out-alt me-1"></i> Sair
+          </button>
+        </div>
       </div>
     </div>
   </nav>
 
-  <div class="container mt-5 pt-4">
-    <h3 class="mb-3">Selecione o mês:</h3>
-    <div class="d-flex align-items-center gap-3 mb-4">
-      <select id="mes" class="form-select" style="max-width: 300px;">
-        <option value="">-- Escolha o mês --</option>
-        <option value="1">Janeiro</option>
-        <option value="2">Fevereiro</option>
-        <option value="3">Março</option>
-        <option value="4">Abril</option>
-        <option value="5">Maio</option>
-        <option value="6">Junho</option>
-        <option value="7">Julho</option>
-        <option value="8">Agosto</option>
-        <option value="9">Setembro</option>
-        <option value="10">Outubro</option>
-        <option value="11">Novembro</option>
-        <option value="12">Dezembro</option>
-      </select>
-      <button id="btn-exportar" class="btn btn-danger">Exportar PDF</button>
+  <!-- Conteúdo -->
+  <div class="container mt-4">
+    <!-- Botões de ação -->
+    <div class="mb-3 d-flex justify-content-between">
+      <button id="btnSelecionar" class="btn btn-secondary">Selecionar Cadastros</button>
+      <div>
+        <button id="btnExcluir" class="btn btn-danger d-none me-2">Excluir Selecionados</button>
+        <button id="btnExportar" class="btn btn-success">
+          <i class="fas fa-file-pdf me-1"></i> Exportar PDF
+        </button>
+      </div>
     </div>
 
-    <div id="lista-aniversariantes" class="mt-4"></div>
+    <!-- Lista de membros -->
+    <div id="lista-membros" class="list-group"></div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
+  <!-- Firebase + lógica -->
   <script type="module">
     import { db } from './firebase-config.js';
-    import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    const mesSelect = document.getElementById("mes");
-    const listaDiv = document.getElementById("lista-aniversariantes");
-    const exportarBtn = document.getElementById("btn-exportar");
+    const lista = document.getElementById("lista-membros");
+    const btnSelecionar = document.getElementById("btnSelecionar");
+    const btnExcluir = document.getElementById("btnExcluir");
+    const btnExportar = document.getElementById("btnExportar");
+    let modoSelecao = false;
 
-    const mesesNomes = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const membrosRef = ref(db, "membros");
 
-    // Função para exibir os aniversariantes na tela
-    mesSelect.addEventListener("change", () => {
-      const mesSelecionado = parseInt(mesSelect.value);
-      if (!mesSelecionado) {
-        listaDiv.innerHTML = "";
+    // Função para carregar os membros
+    function carregarMembros(data) {
+      lista.innerHTML = "";
+
+      if (!data) {
+        lista.innerHTML = "<p class='text-center'>Nenhum membro cadastrado.</p>";
         return;
       }
 
-      const membrosRef = ref(db, "membros");
-      onValue(membrosRef, (snapshot) => {
-        const data = snapshot.val();
-        listaDiv.innerHTML = "";
-        
-        if (!data) {
-          listaDiv.innerHTML = "<p class='text-muted'>Nenhum membro cadastrado.</p>";
-          return;
-        }
+      for (const id in data) {
+        const membro = data[id];
+        const item = document.createElement("div");
+        item.className = "list-group-item membro-item";
 
-        const aniversariantes = [];
-        for (const id in data) {
-          const membro = data[id];
-          if (membro.nascimento) {
-            const dataNasc = new Date(membro.nascimento);
-            const mes = dataNasc.getMonth() + 1;
-            if (mes === mesSelecionado) {
-              aniversariantes.push({
-                id: id,
-                nome: membro.nome,
-                fotoURL: membro.fotoURL || "./sem-foto.jpg",
-                dia: dataNasc.getDate(),
-                mes: mes,
-                mesNome: mesesNomes[mes]
-              });
-            }
-          }
-        }
+        item.innerHTML = `
+          <input type="checkbox" class="form-check-input me-2 checkbox-selecao" data-id="${id}">
+          <a href="ficha.html?id=${id}" class="info-membro">
+            <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto" onerror="this.src='./sem-foto.jpg'">
+            <div>
+              <div><strong>${membro.nome}</strong></div>
+              <small>${membro.funcao}</small>
+            </div>
+          </a>
+        `;
 
-        if (aniversariantes.length === 0) {
-          listaDiv.innerHTML = `<div class="alert alert-info">Nenhum aniversariante encontrado em ${mesesNomes[mesSelecionado]}</div>`;
-          return;
-        }
+        lista.appendChild(item);
+      }
 
-        // Ordena por dia do mês
-        aniversariantes.sort((a, b) => a.dia - b.dia);
+      atualizarVisibilidadeCheckboxes();
+    }
 
-        // Exibe na tela
-        aniversariantes.forEach((membro) => {
-          const item = document.createElement("div");
-          item.className = "membro-item shadow-sm rounded";
-          item.innerHTML = `
-            <div class="membro-info">
-              <img src="${membro.fotoURL}" class="membro-foto" onerror="this.src='./sem-foto.jpg'"/>
-              <div class="membro-detalhes">
-                <h5 class="mb-1">${membro.nome}</h5>
-                <small class="text-muted">Nascimento: ${membro.dia.toString().padStart(2, '0')} de ${membro.mesNome}</small>
-              </div>
-            </div>`;
-          listaDiv.appendChild(item);
-        });
+    // Alterna visibilidade dos checkboxes
+    function atualizarVisibilidadeCheckboxes() {
+      const checkboxes = document.querySelectorAll(".checkbox-selecao");
+      checkboxes.forEach(cb => {
+        cb.style.display = modoSelecao ? "inline-block" : "none";
+      });
 
-      }, { onlyOnce: true });
+      btnExcluir.classList.toggle("d-none", !modoSelecao);
+      btnSelecionar.textContent = modoSelecao ? "Cancelar Seleção" : "Selecionar Cadastros";
+    }
+
+    // Alternar seleção
+    btnSelecionar.addEventListener("click", () => {
+      modoSelecao = !modoSelecao;
+      atualizarVisibilidadeCheckboxes();
     });
 
-    exportarBtn.addEventListener("click", async () => {
-      const mesSelecionado = parseInt(mesSelect.value);
-      if (!mesSelecionado) return alert("Selecione um mês para exportar.");
+    // Excluir selecionados
+    btnExcluir.addEventListener("click", () => {
+      const selecionados = document.querySelectorAll(".checkbox-selecao:checked");
+      if (selecionados.length === 0) {
+        alert("Nenhum cadastro selecionado.");
+        return;
+      }
 
+      if (!confirm("Tem certeza que deseja excluir os cadastros selecionados?")) return;
+
+      selecionados.forEach(cb => {
+        const id = cb.getAttribute("data-id");
+        remove(ref(db, `membros/${id}`));
+      });
+    });
+
+    // Exportar para PDF
+    btnExportar.addEventListener("click", async () => {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
-        filters: ["ASCIIHexEncode"],
         compress: true
       });
 
+      // Estilos
       const styles = {
-        titleFontSize: 12,
-        subtitleFontSize: 15,
-        textFontSize: 11,
-        photoSize: 20,
-        lineHeight: 25,
+        titleFontSize: 16,
+        subtitleFontSize: 12,
+        textFontSize: 10,
         margin: 15,
-        photoQuality: 0.7,
-        photoMargin: 5
+        lineHeight: 8
       };
 
-      const mesNome = mesesNomes[mesSelecionado];
-      const dataAtual = new Date().toLocaleDateString('pt-BR');
+      // Cabeçalho
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(styles.titleFontSize);
+      doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" });
       
-      // Cabeçalho com logo
-try {
-  const logo = await loadImage("./logo.png", true); // Carrega a imagem do logo de forma assíncrona
-  if (logo) { // Verifica se o logo foi carregado com sucesso
-    const logoWidth = 80; // Define a largura do logo como 80mm
-    const logoHeight = (logo.height * logoWidth) / logo.width; // Calcula a altura proporcional mantendo a aspect ratio
-    const logoX = (210 - logoWidth) / 2; // Calcula a posição X para centralizar o logo (considerando página A4 = 210mm de largura)
-    doc.addImage(logo, "PNG", logoX, 10, logoWidth, logoHeight, undefined, 'FAST'); // Insere o logo no PDF:
-      // logo: imagem carregada
-      // 'PNG': formato da imagem
-      // logoX: posição horizontal (centralizada)
-      // 15: posição vertical (15mm do topo)
-      // logoWidth: 80mm de largura
-      // logoHeight: altura calculada
-      // 'FAST': modo de renderização rápido
-  }
-} catch (e) {
-  console.warn("Logo não carregada:", e); // Trata erros no carregamento do logo
-}
+      doc.setFontSize(styles.subtitleFontSize);
+      doc.text("Lista Completa de Membros", 105, 28, { align: "center" });
+      
+      // Linha divisória
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.3);
+      doc.line(styles.margin, 32, 210 - styles.margin, 32);
 
-// Títulos
-
-// Primeiro título (nome da igreja)
-doc.setFont("helvetica", "bold"); // Define fonte Helvetica negrito
-doc.setFontSize(styles.titleFontSize); // Aplica tamanho da fonte definido em styles (16)
-doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 30, { align: "center" }); // Adiciona texto:
-  // "Igreja Exemplo da Fé": conteúdo
-  // 105: posição X centralizada (210/2)
-  // 30: posição Y (30mm do topo)
-  // align: "center": alinhamento centralizado
-
-// Segundo título (descrição)
-doc.setFontSize(styles.subtitleFontSize); // Aplica tamanho menor (12)
-doc.text("Lista de Aniversariantes", 105, 40, { align: "center" }); // Adiciona subtítulo:
-  // 40: posicionado 10mm abaixo do anterior (30+10)
-
-// Terceiro título (mês)
-doc.setFont("helvetica", "bolditalic"); // Aplica fonte em itálico e negrito
-doc.text(`Mês de ${mesNome}`, 105, 50, { align: "center" }); // Adiciona nome do mês:
-  // 50: posicionado 10mm abaixo do anterior (40+10)
-  // ${mesNome}: variável com nome do mês
-
-// Linha divisória
-doc.setDrawColor(200, 200, 200); // Define cor RGB cinza claro para a linha
-doc.setLineWidth(0.5); // Define espessura da linha como 0.5mm
-doc.line(styles.margin, 58, 210 - styles.margin, 58); // Desenha linha horizontal:
-  // styles.margin: 15mm da esquerda (início da linha)
-  // 75: posição Y (75mm do topo = 6mm abaixo do último título)
-  // 210-styles.margin: 195mm (termina 15mm antes da borda direita)
-  // 75: mantém mesma posição Y para linha reta
-     
-
-      // Carrega dados
-      const snapshot = await new Promise(resolve =>
+      // Carrega os dados
+      const snapshot = await new Promise(resolve => 
         onValue(ref(db, "membros"), resolve, { onlyOnce: true })
       );
       
-      const aniversariantes = [];
+      const membros = [];
       for (const id in snapshot.val()) {
-        const membro = snapshot.val()[id];
-        if (membro.nascimento) {
-          const nascimento = new Date(membro.nascimento);
-          if ((nascimento.getMonth() + 1) === mesSelecionado) {
-            aniversariantes.push({
-              nome: membro.nome,
-              dia: nascimento.getDate(),
-              fotoURL: membro.fotoURL || ""
-            });
-          }
-        }
+        membros.push(snapshot.val()[id]);
       }
 
-      aniversariantes.sort((a, b) => a.dia - b.dia);
+      // Ordena por nome
+      membros.sort((a, b) => a.nome.localeCompare(b.nome));
+
+      // Configurações da tabela
+      let yPosition = 40;
+      const col1 = styles.margin;
+      const colWidth = (210 - (2 * styles.margin)) / 2;
       
-      // Configurações de página
-      let yPosition = 65;
-      const photoX = styles.margin;
-      const textX = styles.margin + styles.photoSize + 8;
-
-      // Função para adicionar novo cabeçalho quando mudar de página
-      const addNewPageHeader = () => {
-        doc.addPage();
-        yPosition = 20;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(styles.subtitleFontSize);
-        doc.text(`Aniversariantes de ${mesNome} (cont.)`, 105, yPosition, { align: "center" });
-        yPosition += 10;
-        doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-        yPosition += 5;
-      };
-
-      // Adiciona cada aniversariante
+      // Adiciona membros
       doc.setFont("helvetica", "normal");
       doc.setFontSize(styles.textFontSize);
       
-      for (const membro of aniversariantes) {
+      membros.forEach((membro, index) => {
+        // Quebra de página se necessário
         if (yPosition > 270) {
-          addNewPageHeader();
+          doc.addPage();
+          yPosition = 20;
         }
-
-        if (membro.fotoURL) {
-          try {
-            const foto = await loadImage(membro.fotoURL, false);
-            if (foto) {
-              doc.setFillColor(240, 240, 240);
-              doc.circle(
-                photoX + styles.photoSize/2, 
-                yPosition + styles.photoSize/2 + styles.photoMargin, 
-                styles.photoSize/2, 
-                'F'
-              );
-              
-              doc.addImage(
-                foto, 
-                "JPEG", 
-                photoX, 
-                yPosition + styles.photoMargin, 
-                styles.photoSize, 
-                styles.photoSize,
-                undefined,
-                'MEDIUM'
-              );
-            }
-          } catch (e) {
-            console.error(`Erro ao carregar foto de ${membro.nome}`, e);
-          }
-        }
-
-        const diaFormatado = membro.dia.toString().padStart(2, '0');
-        const mesFormatado = mesSelecionado.toString().padStart(2, '0');
         
-        doc.text(`${diaFormatado}/${mesFormatado}`, textX, yPosition + styles.photoMargin + 10);
-        doc.setFont("helvetica", "bold");
-        doc.text(membro.nome, textX + 20, yPosition + styles.photoMargin + 10);
-        doc.setFont("helvetica", "normal");
+        // Dados formatados
+        const dados = [
+          `Nome: ${membro.nome || 'Não informado'}`,
+          `Endereço: ${membro.endereco || 'Não informado'}`,
+          `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
+          `Batismo: ${membro.dataBatismo ? new Date(membro.dataBatismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
+          `Função: ${membro.funcao || 'Não informado'}`,
+          `Telefone: ${membro.telefone || 'Não informado'}`,
+          `Sexo: ${membro.sexo === 'M' ? 'Masculino' : membro.sexo === 'F' ? 'Feminino' : 'Não informado'}`
+        ];
 
-        yPosition += styles.lineHeight;
-      }
-
-    // Rodapé corrigido e melhorado
-    const dataHoraFormatada = new Date().toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).replace(',', ' às'); // Transforma "dd/mm/aaaa, hh:mm" em "dd/mm/aaaa às hh:mm"
-    
-    doc.setFontSize(9);
-    doc.setTextColor(150, 150, 150);
-    doc.text(`Gerado em ${dataHoraFormatada} • Igreja Critã Nova Esperança`, 105, 287, {
-      align: "center"
-    });
-      // Exemplo: "Gerado em 05/03/2024 às 14:30 • Igreja Exemplo da Fé"
-
-
-      
-      // Salva o PDF
-      doc.save(`Aniversariantes_${mesNome}_${new Date().getFullYear()}.pdf`);
-    });
-
-    async function loadImage(url, isLogo) {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const targetSize = isLogo ? 800 : 400;
-          const ratio = Math.min(targetSize / img.width, targetSize / img.height);
+        // Adiciona os dados em duas colunas
+        let x = col1;
+        let maxHeight = 0;
+        
+        dados.forEach((texto, i) => {
+          const textHeight = doc.splitTextToSize(texto, colWidth - 5).length * styles.lineHeight;
+          doc.text(texto, x, yPosition, { maxWidth: colWidth - 5 });
           
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width * ratio;
-          canvas.height = img.height * ratio;
-          
-          const ctx = canvas.getContext("2d");
-          ctx.imageSmoothingQuality = "high";
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          
-          resolve(canvas);
-        };
-        img.onerror = () => resolve(null);
-        img.src = url;
+          if (i % 2 === 1) {
+            yPosition += Math.max(styles.lineHeight * 2, textHeight);
+            x = col1;
+          } else {
+            x += colWidth;
+            maxHeight = Math.max(maxHeight, textHeight);
+          }
+        });
+        
+        // Linha divisória entre membros
+        doc.setDrawColor(220, 220, 220);
+        doc.setLineWidth(0.1);
+        doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
+        
+        yPosition += 5;
       });
-    }
+
+      // Rodapé
+      const dataHora = new Date().toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).replace(',', ' às');
+      
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Gerado em ${dataHora} • Famílias Vivendo na Graça e Unção do Espírito`, 105, 287, { align: "center" });
+
+      // Salva o PDF
+      doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);
+    });
+
+    // Carrega os dados do Firebase
+    onValue(membrosRef, (snapshot) => {
+      const data = snapshot.val();
+      carregarMembros(data);
+    });
   </script>
 </body>
 </html>
