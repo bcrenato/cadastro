@@ -207,18 +207,14 @@
       // Subtítulo em y=57 (12mm após o título principal)
       
       doc.setFont("helvetica", "bolditalic");
-      doc.text(`Mês de ${mesNome}`, 105, 40, { align: "center" });
+      doc.text(`Mês de ${mesNome}`, 105, 50, { align: "center" });
       // Nome do mês em y=69 (12mm após o subtítulo)
 
       // Linha divisória
       doc.setDrawColor(200, 200, 200); // Cor cinza claro (RGB)
       doc.setLineWidth(0.5); // Espessura fina (0.5mm)
       doc.line(styles.margin, 5, 210 - styles.margin, 100);
-      // Linha horizontal:
-      // - y=75 (6mm após o último título)
-      // - Começa em x=styles.margin (15mm)
-      // - Termina em x=210-styles.margin (195mm)
-      // - Total de 180mm de comprimento (210-2*15)
+     
 
       // Carrega dados
       const snapshot = await new Promise(resolve =>
