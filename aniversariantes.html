@@ -187,7 +187,7 @@
           const logoWidth = 80; // Largura do logo definida como 80mm (bem grande)
           const logoHeight = (logo.height * logoWidth) / logo.width; // Mantém proporção original
           const logoX = (210 - logoWidth) / 2; // Centraliza horizontalmente (considerando página A4 = 210mm)
-          doc.addImage(logo, "PNG", logoX, 15, logoWidth, logoHeight, undefined, 'FAST');
+          doc.addImage(logo, "PNG", logoX, 5, logoWidth, logoHeight, undefined, 'FAST');
           // Posiciona o logo em:
           // x = logoX (centralizado)
           // y = 15mm do topo
@@ -198,7 +198,7 @@
         console.warn("Logo não carregada:", e);
       }
       // Títulos
-     let currentY = 10; // Variável definida mas não utilizada (inconsistência)
+     let currentY = 5; // Variável definida mas não utilizada (inconsistência)
       // Os títulos estão com posições y fixas, não usando a currentY
       
       doc.setFont("helvetica", "bold");
@@ -217,7 +217,7 @@
       // Linha divisória
       doc.setDrawColor(200, 200, 200); // Cor cinza claro (RGB)
       doc.setLineWidth(0.5); // Espessura fina (0.5mm)
-      doc.line(styles.margin, 75, 210 - styles.margin, 75);
+      doc.line(styles.margin, 75, 210 - styles.margin, 100);
       // Linha horizontal:
       // - y=75 (6mm após o último título)
       // - Começa em x=styles.margin (15mm)
