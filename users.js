@@ -47,7 +47,37 @@ export async function registerUser(username, password, fullName, isAdmin = false
 
 export async function loginUser(username, password) {
   const email = `${username}@igreja.local`;
-  return await signInWithEmailAndPassword(auth, email, password);
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    // Verifica/Cria registro do usuário
+    const userRef = ref(db, `users/${user.uid}`);
+    const snapshot = await get(userRef);
+    
+    if (!snapshot.exists()) {
+      await set(userRef, {
+        username,
+        fullName: username,
+        isAdmin: false,
+        createdAt: new Date().toISOString()
+      });
+    }
+    
+    return user;
+  } catch (error) {
+    console.error("Erro detalhado no login:", error);
+    throw new Error(formatFirebaseError(error));
+  }
+}
+
+function formatFirebaseError(error) {
+  switch(error.code) {
+    case 'auth/user-not-found': return 'Usuário não encontrado';
+    case 'auth/wrong-password': return 'Senha incorreta';
+    case 'auth/too-many-requests': return 'Muitas tentativas. Tente mais tarde';
+    default: return 'Erro ao fazer login';
+  }
 }
 
 export async function isUserAdmin() {
