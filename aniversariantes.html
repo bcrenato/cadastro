@@ -319,11 +319,23 @@ doc.line(styles.margin, 58, 210 - styles.margin, 58); // Desenha linha horizonta
         yPosition += styles.lineHeight;
       }
 
-      // Rodapé
-      doc.setFontSize(9);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`Gerado em ${dataAtual} • Igreja Exemplo da Fé`, 105, 287, { align: "center" });
+     // Rodapé com data e hora no formato solicitado
+    const dataAtual = new Date().toLocaleDateString('pt-BR'); // Formato dd/mm/aaaa
+    const horaAtual = new Date().toLocaleTimeString('pt-BR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false // Formato 24h
+    });
+    
+    doc.setFontSize(9);
+    doc.setTextColor(150, 150, 150); // Cinza médio
+    doc.text(`Gerado em ${dataAtual} às ${horaAtual} • Igreja Exemplo da Fé`, 105, 287, { 
+      align: "center" 
+    });
+      // Exemplo: "Gerado em 05/03/2024 às 14:30 • Igreja Exemplo da Fé"
 
+
+      
       // Salva o PDF
       doc.save(`Aniversariantes_${mesNome}_${new Date().getFullYear()}.pdf`);
     });
