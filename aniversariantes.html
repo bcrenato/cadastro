@@ -153,7 +153,6 @@
       }, { onlyOnce: true });
     });
 
-    // [O restante do código para gerar PDF permanece igual ao anterior]
     exportarBtn.addEventListener("click", async () => {
       const mesSelecionado = parseInt(mesSelect.value);
       if (!mesSelecionado) return alert("Selecione um mês para exportar.");
@@ -293,10 +292,6 @@
         doc.setFont("helvetica", "bold");
         doc.text(membro.nome, textX + 20, yPosition + styles.photoMargin + 10);
         doc.setFont("helvetica", "normal");
-
-        doc.setDrawColor(220, 220, 220);
-        doc.setLineWidth(0.2);
-        doc.line(styles.margin, yPosition + styles.lineHeight - 5, 210 - styles.margin, yPosition + styles.lineHeight - 5);
 
         yPosition += styles.lineHeight;
       }
