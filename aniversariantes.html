@@ -167,8 +167,8 @@
       });
 
       const styles = {
-        titleFontSize: 16,
-        subtitleFontSize: 12,
+        titleFontSize: 12,
+        subtitleFontSize: 16,
         textFontSize: 11,
         photoSize: 20,
         lineHeight: 25,
@@ -205,21 +205,21 @@ try {
 // Primeiro título (nome da igreja)
 doc.setFont("helvetica", "bold"); // Define fonte Helvetica negrito
 doc.setFontSize(styles.titleFontSize); // Aplica tamanho da fonte definido em styles (16)
-doc.text("Igreja Exemplo da Fé", 105, 20, { align: "center" }); // Adiciona texto:
+doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 30, { align: "center" }); // Adiciona texto:
   // "Igreja Exemplo da Fé": conteúdo
   // 105: posição X centralizada (210/2)
-  // 45: posição Y (45mm do topo)
+  // 30: posição Y (30mm do topo)
   // align: "center": alinhamento centralizado
 
 // Segundo título (descrição)
 doc.setFontSize(styles.subtitleFontSize); // Aplica tamanho menor (12)
 doc.text("Lista de Aniversariantes", 105, 40, { align: "center" }); // Adiciona subtítulo:
-  // 57: posicionado 12mm abaixo do anterior (45+12)
+  // 40: posicionado 10mm abaixo do anterior (30+10)
 
 // Terceiro título (mês)
 doc.setFont("helvetica", "bolditalic"); // Aplica fonte em itálico e negrito
 doc.text(`Mês de ${mesNome}`, 105, 50, { align: "center" }); // Adiciona nome do mês:
-  // 69: posicionado 12mm abaixo do anterior (57+12)
+  // 50: posicionado 10mm abaixo do anterior (40+10)
   // ${mesNome}: variável com nome do mês
 
 // Linha divisória
