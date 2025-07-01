@@ -187,21 +187,27 @@
     });
 
     async function carregarImagem(url) {
-  const img = await new Promise((resolve) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.src = url;
-  });
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Falha ao carregar imagem'));
+      image.src = url;
+    });
 
-  // Reduz para 50x50 px usando canvas
-  const canvas = document.createElement("canvas");
-  canvas.width = 50;
-  canvas.height = 50;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0, 50, 50);
+    // Reduz ainda mais o tamanho da imagem
+    const canvas = document.createElement("canvas");
+    canvas.width = 30;  // Reduzindo de 50 para 30 pixels
+    canvas.height = 30; // Reduzindo de 50 para 30 pixels
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, 30, 30);
 
-  return canvas.toDataURL("image/jpeg", 0.5); // qualidade 50%
+    return canvas.toDataURL("image/jpeg", 0.3); // Reduzindo qualidade para 30%
+  } catch (error) {
+    console.error('Erro ao carregar imagem:', error);
+    return null;
+  }
 }
 
   </script>
