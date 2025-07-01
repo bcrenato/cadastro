@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lista de Membros</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
     body {
       padding-top: 70px;
@@ -37,84 +38,107 @@
 </head>
 <body>
 
- <!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO (ATUALIZADO) -->
-<script type="module">
-  import { checkAuth } from './auth.js';
-  import { isUserAdmin } from './users.js';
-  
-  document.addEventListener('DOMContentLoaded', async () => {
-    const user = await checkAuth();
+  <!-- Script de verificação de autenticação -->
+  <script type="module">
+    import { checkAuth } from './auth.js';
+    import { isUserAdmin } from './users.js';
     
-    // Mostrar menu admin se o usuário for administrador
-    if (user && await isUserAdmin()) {
-      document.getElementById('adminMenuItem').style.display = 'block';
-    }
-  });
-</script>
-
-  <!-- 🔹 Navbar fixa no topo -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-  <div class="container">
-    <a class="navbar-brand" href="index.html">Listagem</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="index.html">
-            <i class="fas fa-user-plus me-1"></i> Cadastro
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link active" href="listagem.html">
-            <i class="fas fa-list me-1"></i> Listagem
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="aniversariantes.html">
-            <i class="fas fa-birthday-cake me-1"></i> Aniversariantes
-          </a>
-        </li>
-        
-        <!-- Menu de Admin (só aparece para administradores) -->
-        <li class="nav-item" id="adminMenuItem" style="display: none;">
-          <a class="nav-link" href="register.html">
-            <i class="fas fa-user-shield me-1"></i> Cadastrar Usuários
-          </a>
-        </li>
-      </ul>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
       
-      <div class="d-flex align-items-center">
-        <!-- Nome do usuário logado -->
-        <span class="navbar-text text-white me-3" id="currentUserDisplay">
-          <i class="fas fa-user-circle me-1"></i>
-          <span>Carregando...</span>
-        </span>
+      // Mostrar menu admin se o usuário for administrador
+      if (user && await isUserAdmin()) {
+        document.getElementById('adminMenuItem').style.display = 'block';
+      }
+
+      // Mostrar nome do usuário logado
+      if (user) {
+        document.getElementById('currentUserDisplay').querySelector('span').textContent = user.email || 'Usuário';
+      }
+
+      // Configurar logout
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        firebase.auth().signOut().then(() => {
+          window.location.href = 'login.html';
+        });
+      });
+    });
+  </script>
+
+  <!-- Navbar fixa no topo -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">Listagem</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">
+              <i class="fas fa-user-plus me-1"></i> Cadastro
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="listagem.html">
+              <i class="fas fa-list me-1"></i> Listagem
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="aniversariantes.html">
+              <i class="fas fa-birthday-cake me-1"></i> Aniversariantes
+            </a>
+          </li>
+          
+          <!-- Menu de Admin (só aparece para administradores) -->
+          <li class="nav-item" id="adminMenuItem" style="display: none;">
+            <a class="nav-link" href="register.html">
+              <i class="fas fa-user-shield me-1"></i> Cadastrar Usuários
+            </a>
+          </li>
+        </ul>
         
-        <!-- Botão de Logout -->
-        <button id="logoutBtn" class="btn btn-sm btn-outline-light">
-          <i class="fas fa-sign-out-alt me-1"></i> Sair
-        </button>
+        <div class="d-flex align-items-center">
+          <!-- Nome do usuário logado -->
+          <span class="navbar-text text-white me-3" id="currentUserDisplay">
+            <i class="fas fa-user-circle me-1"></i>
+            <span>Carregando...</span>
+          </span>
+          
+          <!-- Botão de Logout -->
+          <button id="logoutBtn" class="btn btn-sm btn-outline-light">
+            <i class="fas fa-sign-out-alt me-1"></i> Sair
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
-  <!-- 🔹 Conteúdo -->
+  <!-- Conteúdo -->
   <div class="container mt-4">
-
     <!-- Botões de ação -->
     <div class="mb-3 d-flex justify-content-between">
       <button id="btnSelecionar" class="btn btn-secondary">Selecionar Cadastros</button>
-      <button id="btnExcluir" class="btn btn-danger d-none">Excluir Selecionados</button>
+      <div>
+        <button id="btnExcluir" class="btn btn-danger d-none me-2">Excluir Selecionados</button>
+        <button id="btnExportar" class="btn btn-success">
+          <i class="fas fa-file-pdf me-1"></i> Exportar PDF
+        </button>
+      </div>
     </div>
 
     <!-- Lista de membros -->
     <div id="lista-membros" class="list-group"></div>
   </div>
 
-  <!-- 🔹 Firebase + lógica -->
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- Firebase + lógica -->
   <script type="module">
     import { db } from './firebase-config.js';
     import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
@@ -122,6 +146,7 @@
     const lista = document.getElementById("lista-membros");
     const btnSelecionar = document.getElementById("btnSelecionar");
     const btnExcluir = document.getElementById("btnExcluir");
+    const btnExportar = document.getElementById("btnExportar");
     let modoSelecao = false;
 
     const membrosRef = ref(db, "membros");
@@ -143,7 +168,7 @@
         item.innerHTML = `
           <input type="checkbox" class="form-check-input me-2 checkbox-selecao" data-id="${id}">
           <a href="ficha.html?id=${id}" class="info-membro">
-            <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
+            <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto" onerror="this.src='./sem-foto.jpg'">
             <div>
               <div><strong>${membro.nome}</strong></div>
               <small>${membro.funcao}</small>
@@ -190,13 +215,126 @@
       });
     });
 
+    // Exportar para PDF
+    btnExportar.addEventListener("click", async () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        compress: true
+      });
+
+      // Estilos
+      const styles = {
+        titleFontSize: 16,
+        subtitleFontSize: 12,
+        textFontSize: 10,
+        margin: 15,
+        lineHeight: 8
+      };
+
+      // Cabeçalho
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(styles.titleFontSize);
+      doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" });
+      
+      doc.setFontSize(styles.subtitleFontSize);
+      doc.text("Lista Completa de Membros", 105, 28, { align: "center" });
+      
+      // Linha divisória
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.3);
+      doc.line(styles.margin, 32, 210 - styles.margin, 32);
+
+      // Carrega os dados
+      const snapshot = await new Promise(resolve => 
+        onValue(ref(db, "membros"), resolve, { onlyOnce: true })
+      );
+      
+      const membros = [];
+      for (const id in snapshot.val()) {
+        membros.push(snapshot.val()[id]);
+      }
+
+      // Ordena por nome
+      membros.sort((a, b) => a.nome.localeCompare(b.nome));
+
+      // Configurações da tabela
+      let yPosition = 40;
+      const col1 = styles.margin;
+      const colWidth = (210 - (2 * styles.margin)) / 2;
+      
+      // Adiciona membros
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(styles.textFontSize);
+      
+      membros.forEach((membro, index) => {
+        // Quebra de página se necessário
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        // Dados formatados
+        const dados = [
+          `Nome: ${membro.nome || 'Não informado'}`,
+          `Endereço: ${membro.endereco || 'Não informado'}`,
+          `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
+          `Batismo: ${membro.dataBatismo ? new Date(membro.dataBatismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
+          `Função: ${membro.funcao || 'Não informado'}`,
+          `Telefone: ${membro.telefone || 'Não informado'}`,
+          `Sexo: ${membro.sexo === 'M' ? 'Masculino' : membro.sexo === 'F' ? 'Feminino' : 'Não informado'}`
+        ];
+
+        // Adiciona os dados em duas colunas
+        let x = col1;
+        let maxHeight = 0;
+        
+        dados.forEach((texto, i) => {
+          const textHeight = doc.splitTextToSize(texto, colWidth - 5).length * styles.lineHeight;
+          doc.text(texto, x, yPosition, { maxWidth: colWidth - 5 });
+          
+          if (i % 2 === 1) {
+            yPosition += Math.max(styles.lineHeight * 2, textHeight);
+            x = col1;
+          } else {
+            x += colWidth;
+            maxHeight = Math.max(maxHeight, textHeight);
+          }
+        });
+        
+        // Linha divisória entre membros
+        doc.setDrawColor(220, 220, 220);
+        doc.setLineWidth(0.1);
+        doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
+        
+        yPosition += 5;
+      });
+
+      // Rodapé
+      const dataHora = new Date().toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).replace(',', ' às');
+      
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Gerado em ${dataHora} • Famílias Vivendo na Graça e Unção do Espírito`, 105, 287, { align: "center" });
+
+      // Salva o PDF
+      doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);
+    });
+
     // Carrega os dados do Firebase
     onValue(membrosRef, (snapshot) => {
       const data = snapshot.val();
       carregarMembros(data);
     });
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
