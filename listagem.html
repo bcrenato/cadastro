@@ -216,119 +216,119 @@
     });
 
     // Exportar para PDF
-    btnExportar.addEventListener("click", async () => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-        compress: true
-      });
+btnExportar.addEventListener("click", async () => {  // Adiciona evento de clique no botão Exportar PDF
+  const { jsPDF } = window.jspdf;  // Obtém a biblioteca jsPDF do objeto global
+  const doc = new jsPDF({  // Cria novo documento PDF
+    orientation: "portrait",  // Orientação retrato
+    unit: "mm",  // Unidade de medida em milímetros
+    format: "a4",  // Formato A4
+    compress: true  // Ativa compressão para reduzir tamanho do arquivo
+  });
 
-      // Estilos
-      const styles = {
-        titleFontSize: 16,
-        subtitleFontSize: 12,
-        textFontSize: 10,
-        margin: 15,
-        lineHeight: 3
-      };
+  // Estilos
+  const styles = {  // Define estilos reutilizáveis
+    titleFontSize: 16,  // Tamanho da fonte do título principal
+    subtitleFontSize: 12,  // Tamanho da fonte do subtítulo
+    textFontSize: 10,  // Tamanho da fonte do conteúdo
+    margin: 15,  // Margem das páginas
+    lineHeight: 3  // Altura da linha entre textos
+  };
 
-      // Cabeçalho
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(styles.titleFontSize);
-      doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" });
-      
-      doc.setFontSize(styles.subtitleFontSize);
-      doc.text("Lista Completa de Membros", 105, 28, { align: "center" });
-      
-      // Linha divisória
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.3);
-      doc.line(styles.margin, 35, 210 - styles.margin, 35);
+  // Cabeçalho
+  doc.setFont("helvetica", "bold");  // Define fonte Helvetica negrito
+  doc.setFontSize(styles.titleFontSize);  // Aplica tamanho do título
+  doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" });  // Adiciona título centralizado
+  
+  doc.setFontSize(styles.subtitleFontSize);  // Aplica tamanho do subtítulo
+  doc.text("Lista Completa de Membros", 105, 28, { align: "center" });  // Adiciona subtítulo centralizado
+  
+  // Linha divisória
+  doc.setDrawColor(200, 200, 200);  // Define cor cinza claro para a linha
+  doc.setLineWidth(0.3);  // Define espessura fina da linha (0.3mm)
+  doc.line(styles.margin, 35, 210 - styles.margin, 35);  // Desenha linha horizontal entre margens
 
-      // Carrega os dados
-      const snapshot = await new Promise(resolve => 
-        onValue(ref(db, "membros"), resolve, { onlyOnce: true })
-      );
+  // Carrega os dados
+  const snapshot = await new Promise(resolve =>  // Aguarda carregamento dos dados
+    onValue(ref(db, "membros"), resolve, { onlyOnce: true })  // Obtém dados dos membros uma vez
+  );
+  
+  const membros = [];  // Array para armazenar membros
+  for (const id in snapshot.val()) {  // Itera pelos membros no banco de dados
+    membros.push(snapshot.val()[id]);  // Adiciona cada membro ao array
+  }
+
+  // Ordena por nome
+  membros.sort((a, b) => a.nome.localeCompare(b.nome));  // Ordena membros alfabeticamente
+
+  // Configurações da tabela
+  let yPosition = 40;  // Posição vertical inicial do conteúdo
+  const col1 = styles.margin;  // Posição X da primeira coluna (margem esquerda)
+  const colWidth = (210 - (2 * styles.margin)) / 2;  // Largura de cada coluna
+  
+  // Adiciona membros
+  doc.setFont("helvetica", "normal");  // Define fonte normal para conteúdo
+  doc.setFontSize(styles.textFontSize);  // Aplica tamanho da fonte do conteúdo
+  
+  membros.forEach((membro, index) => {  // Itera por cada membro
+    // Quebra de página se necessário
+    if (yPosition > 270) {  // Se atingir o final da página
+      doc.addPage();  // Adiciona nova página
+      yPosition = 20;  // Reinicia posição vertical
+    }
+    
+    // Dados formatados
+    const dados = [  // Array com dados formatados do membro
+      `Nome: ${membro.nome || 'Não informado'}`,  // Nome ou fallback
+      `Endereço: ${membro.endereco || 'Não informado'}`,  // Endereço ou fallback
+      `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,  // Data formatada
+      `Batismo: ${membro.dataBatismo ? new Date(membro.dataBatismo).toLocaleDateString('pt-BR') : 'Não informado'}`,  // Data formatada
+      `Função: ${membro.funcao || 'Não informado'}`,  // Função ou fallback
+      `Telefone: ${membro.telefone || 'Não informado'}`,  // Telefone ou fallback
+      `Sexo: ${membro.sexo === 'M' ? 'Masculino' : membro.sexo === 'F' ? 'Feminino' : 'Não informado'}`  // Sexo formatado
+    ];
+
+    // Adiciona os dados em duas colunas
+    let x = col1;  // Posição X inicial (primeira coluna)
+    let maxHeight = 0;  // Controla altura máxima da linha
+    
+    dados.forEach((texto, i) => {  // Itera por cada dado do membro
+      const textHeight = doc.splitTextToSize(texto, colWidth - 5).length * styles.lineHeight;  // Calcula altura do texto
+      doc.text(texto, x, yPosition, { maxWidth: colWidth - 5 });  // Adiciona texto com largura máxima
       
-      const membros = [];
-      for (const id in snapshot.val()) {
-        membros.push(snapshot.val()[id]);
+      if (i % 2 === 1) {  // Se for item ímpar (segunda coluna)
+        yPosition += Math.max(styles.lineHeight * 2, textHeight);  // Move para próxima linha
+        x = col1;  // Volta para primeira coluna
+      } else {  // Se for item par (primeira coluna)
+        x += colWidth;  // Move para segunda coluna
+        maxHeight = Math.max(maxHeight, textHeight);  // Atualiza altura máxima
       }
-
-      // Ordena por nome
-      membros.sort((a, b) => a.nome.localeCompare(b.nome));
-
-      // Configurações da tabela
-      let yPosition = 40;
-      const col1 = styles.margin;
-      const colWidth = (210 - (2 * styles.margin)) / 2;
-      
-      // Adiciona membros
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(styles.textFontSize);
-      
-      membros.forEach((membro, index) => {
-        // Quebra de página se necessário
-        if (yPosition > 270) {
-          doc.addPage();
-          yPosition = 20;
-        }
-        
-        // Dados formatados
-        const dados = [
-          `Nome: ${membro.nome || 'Não informado'}`,
-          `Endereço: ${membro.endereco || 'Não informado'}`,
-          `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
-          `Batismo: ${membro.dataBatismo ? new Date(membro.dataBatismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
-          `Função: ${membro.funcao || 'Não informado'}`,
-          `Telefone: ${membro.telefone || 'Não informado'}`,
-          `Sexo: ${membro.sexo === 'M' ? 'Masculino' : membro.sexo === 'F' ? 'Feminino' : 'Não informado'}`
-        ];
-
-        // Adiciona os dados em duas colunas
-        let x = col1;
-        let maxHeight = 0;
-        
-        dados.forEach((texto, i) => {
-          const textHeight = doc.splitTextToSize(texto, colWidth - 5).length * styles.lineHeight;
-          doc.text(texto, x, yPosition, { maxWidth: colWidth - 5 });
-          
-          if (i % 2 === 1) {
-            yPosition += Math.max(styles.lineHeight * 2, textHeight);
-            x = col1;
-          } else {
-            x += colWidth;
-            maxHeight = Math.max(maxHeight, textHeight);
-          }
-        });
-        
-        // Linha divisória entre membros
-        doc.setDrawColor(220, 220, 220);
-        doc.setLineWidth(0.8);
-        doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-        
-        yPosition += 10;
-      });
-
-      // Rodapé
-      const dataHora = new Date().toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      }).replace(',', ' às');
-      
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`Gerado em ${dataHora} • Famílias Vivendo na Graça e Unção do Espírito`, 105, 287, { align: "center" });
-
-      // Salva o PDF
-      doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);
     });
+    
+    // Linha divisória entre membros
+    doc.setDrawColor(220, 220, 220);  // Cor cinza mais claro
+    doc.setLineWidth(0.8);  // Espessura da linha (0.8mm)
+    doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);  // Desenha linha horizontal
+    
+    yPosition += 10;  // Adiciona espaço após cada membro
+  });
+
+  // Rodapé
+  const dataHora = new Date().toLocaleString('pt-BR', {  // Formata data e hora
+    day: '2-digit',  // Dia com 2 dígitos
+    month: '2-digit',  // Mês com 2 dígitos
+    year: 'numeric',  // Ano com 4 dígitos
+    hour: '2-digit',  // Hora com 2 dígitos
+    minute: '2-digit',  // Minutos com 2 dígitos
+    hour12: false  // Formato 24 horas
+  }).replace(',', ' às');  // Substitui vírgula por "às"
+  
+  doc.setFontSize(8);  // Tamanho pequeno para rodapé
+  doc.setTextColor(150, 150, 150);  // Cor cinza médio
+  doc.text(`Gerado em ${dataHora} • Famílias Vivendo na Graça e Unção do Espírito`, 105, 287, { align: "center" });  // Texto centralizado no rodapé
+
+  // Salva o PDF
+  doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);  // Gera e baixa o PDF
+});
 
     // Carrega os dados do Firebase
     onValue(membrosRef, (snapshot) => {
