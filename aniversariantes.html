@@ -23,13 +23,13 @@
 </head>
 <body>
 
-  <!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO (NOVO) -->
+  <!-- 🔒 Verificação de login -->
   <script type="module">
     import { checkAuth } from './auth.js';
     checkAuth();
   </script>
 
-  <!-- 🔹 Navbar fixa no topo -->
+  <!-- 🔹 Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
     <div class="container">
       <a class="navbar-brand" href="#">Aniversariantes</a>
@@ -38,45 +38,40 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="index.html">Cadastro</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="listagem.html">Listagem</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="aniversariantes.html">Aniversariantes</a>
-          </li>
+          <li class="nav-item"><a class="nav-link" href="index.html">Cadastro</a></li>
+          <li class="nav-item"><a class="nav-link" href="listagem.html">Listagem</a></li>
+          <li class="nav-item"><a class="nav-link active" href="aniversariantes.html">Aniversariantes</a></li>
         </ul>
       </div>
     </div>
   </nav>
 
-
   <!-- 🔹 Conteúdo -->
-  <div class="container mt-4">
+  <div class="container mt-5 pt-4">
     <h3 class="mb-3">Selecione o mês:</h3>
-    <select id="mes" class="form-select mb-4" style="max-width: 300px;">
-      <option value="">-- Escolha o mês --</option>
-      <option value="1">Janeiro</option>
-      <option value="2">Fevereiro</option>
-      <option value="3">Março</option>
-      <option value="4">Abril</option>
-      <option value="5">Maio</option>
-      <option value="6">Junho</option>
-      <option value="7">Julho</option>
-      <option value="8">Agosto</option>
-      <option value="9">Setembro</option>
-      <option value="10">Outubro</option>
-      <option value="11">Novembro</option>
-      <option value="12">Dezembro</option>
-    </select>
-  <button id="btn-exportar" class="btn btn-danger">Exportar PDF</button>
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <select id="mes" class="form-select" style="max-width: 300px;">
+        <option value="">-- Escolha o mês --</option>
+        <option value="1">Janeiro</option>
+        <option value="2">Fevereiro</option>
+        <option value="3">Março</option>
+        <option value="4">Abril</option>
+        <option value="5">Maio</option>
+        <option value="6">Junho</option>
+        <option value="7">Julho</option>
+        <option value="8">Agosto</option>
+        <option value="9">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+      </select>
+      <button id="btn-exportar" class="btn btn-danger">Exportar PDF</button>
+    </div>
 
     <div id="lista-aniversariantes"></div>
   </div>
 
-  <!-- 🔹 Script -->
+  <!-- 🔹 Firebase + Listagem -->
   <script type="module">
     import { db } from './firebase-config.js';
     import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
@@ -121,10 +116,8 @@
           }
         }
 
-        // Ordenar por dia de nascimento
         aniversariantesDoMes.sort((a, b) => a.dia - b.dia);
 
-        // Exibir na tela
         aniversariantesDoMes.forEach((m) => {
           const item = document.createElement("div");
           item.className = "membro-item";
@@ -147,10 +140,104 @@
     });
   </script>
 
+  <!-- 🔹 Exportar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script type="module">
+    import { db } from './firebase-config.js';
+    import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+    const exportarBtn = document.getElementById("btn-exportar");
+
+    exportarBtn.addEventListener("click", async () => {
+      const mesSelecionado = parseInt(document.getElementById("mes").value);
+      if (!mesSelecionado) {
+        alert("Selecione um mês para exportar.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const mesesNomes = [
+        "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+      ];
+
+      const igrejaNome = "Igreja Exemplo da Fé";
+      const textoIntro = "Segue abaixo a lista de aniversariantes do mês.";
+      const mesNome = mesesNomes[mesSelecionado];
+      const dataAtual = new Date().toLocaleDateString();
+
+      // Logo (ajuste o caminho conforme necessário)
+      const logo = new Image();
+      logo.src = "./logo.png";
+      await new Promise(resolve => logo.onload = resolve);
+      doc.addImage(logo, "PNG", 80, 10, 50, 25);
+
+      doc.setFontSize(14);
+      doc.text(igrejaNome, 105, 40, null, null, "center");
+
+      doc.setFontSize(11);
+      doc.text(textoIntro, 105, 48, null, null, "center");
+
+      doc.setFontSize(13);
+      doc.text(`Aniversariantes de ${mesNome}`, 105, 60, null, null, "center");
+
+      let y = 70;
+
+      // Buscar membros
+      const snapshot = await new Promise(resolve =>
+        onValue(ref(db, "membros"), resolve, { onlyOnce: true })
+      );
+      const data = snapshot.val();
+      const aniversariantes = [];
+
+      for (const id in data) {
+        const membro = data[id];
+        if (!membro.nascimento) continue;
+        const nascimento = new Date(membro.nascimento);
+        if ((nascimento.getMonth() + 1) === mesSelecionado) {
+          aniversariantes.push({
+            nome: membro.nome,
+            dia: nascimento.getDate(),
+            fotoURL: membro.fotoURL || ""
+          });
+        }
+      }
+
+      aniversariantes.sort((a, b) => a.dia - b.dia);
+
+      for (const m of aniversariantes) {
+        if (m.fotoURL) {
+          const img = await carregarImagem(m.fotoURL);
+          doc.addImage(img, "JPEG", 15, y - 10, 15, 15);
+        }
+        doc.text(`${m.nome} - ${m.dia}/${mesSelecionado}`, 35, y);
+        y += 20;
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      }
+
+      doc.setFontSize(10);
+      doc.text(`Impresso em: ${dataAtual}`, 15, 290);
+
+      doc.save(`Aniversariantes-${mesNome}.pdf`);
+    });
+
+    async function carregarImagem(url) {
+      const img = await fetch(url);
+      const blob = await img.blob();
+      return await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
-
-  
