@@ -19,6 +19,15 @@
       padding: 10px;
       border-bottom: 1px solid #eee;
     }
+    .export-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .export-container select {
+      flex: 0 0 300px;
+    }
   </style>
 </head>
 <body>
@@ -56,21 +65,26 @@
   <!-- 🔹 Conteúdo -->
   <div class="container mt-4">
     <h3 class="mb-3">Selecione o mês:</h3>
-    <select id="mes" class="form-select mb-4" style="max-width: 300px;">
-      <option value="">-- Escolha o mês --</option>
-      <option value="1">Janeiro</option>
-      <option value="2">Fevereiro</option>
-      <option value="3">Março</option>
-      <option value="4">Abril</option>
-      <option value="5">Maio</option>
-      <option value="6">Junho</option>
-      <option value="7">Julho</option>
-      <option value="8">Agosto</option>
-      <option value="9">Setembro</option>
-      <option value="10">Outubro</option>
-      <option value="11">Novembro</option>
-      <option value="12">Dezembro</option>
-    </select>
+    
+    <div class="export-container">
+      <select id="mes" class="form-select" style="max-width: 300px;">
+        <option value="">-- Escolha o mês --</option>
+        <option value="1">Janeiro</option>
+        <option value="2">Fevereiro</option>
+        <option value="3">Março</option>
+        <option value="4">Abril</option>
+        <option value="5">Maio</option>
+        <option value="6">Junho</option>
+        <option value="7">Julho</option>
+        <option value="8">Agosto</option>
+        <option value="9">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+      </select>
+      
+      <button id="exportarPdf" class="btn btn-success" disabled>Exportar para PDF</button>
+    </div>
 
     <div id="lista-aniversariantes"></div>
   </div>
@@ -79,19 +93,27 @@
   <script type="module">
     import { db } from './firebase-config.js';
     import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { jsPDF } from "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    import { toPng } from 'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js';
 
     const mesSelect = document.getElementById("mes");
     const listaDiv = document.getElementById("lista-aniversariantes");
+    const exportarPdfBtn = document.getElementById("exportarPdf");
 
     const mesesNomes = [
       "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
     ];
 
+    let aniversariantesAtuais = [];
+
     mesSelect.addEventListener("change", () => {
       const mesSelecionado = parseInt(mesSelect.value);
+      exportarPdfBtn.disabled = !mesSelecionado;
+      
       if (!mesSelecionado) {
         listaDiv.innerHTML = "";
+        aniversariantesAtuais = [];
         return;
       }
 
@@ -100,7 +122,7 @@
         const data = snapshot.val();
         listaDiv.innerHTML = "";
 
-        const aniversariantesDoMes = [];
+        aniversariantesAtuais = [];
 
         for (const id in data) {
           const membro = data[id];
@@ -110,7 +132,7 @@
           const mes = dataNasc.getMonth() + 1;
 
           if (mes === mesSelecionado) {
-            aniversariantesDoMes.push({
+            aniversariantesAtuais.push({
               id,
               nome: membro.nome,
               fotoURL: membro.fotoURL || "",
@@ -121,10 +143,10 @@
         }
 
         // Ordenar por dia de nascimento
-        aniversariantesDoMes.sort((a, b) => a.dia - b.dia);
+        aniversariantesAtuais.sort((a, b) => a.dia - b.dia);
 
         // Exibir na tela
-        aniversariantesDoMes.forEach((m) => {
+        aniversariantesAtuais.forEach((m) => {
           const item = document.createElement("div");
           item.className = "membro-item";
           item.innerHTML = `
@@ -137,19 +159,104 @@
           listaDiv.appendChild(item);
         });
 
-        if (aniversariantesDoMes.length === 0) {
+        if (aniversariantesAtuais.length === 0) {
           listaDiv.innerHTML = `<p class="text-muted">Nenhum aniversariante encontrado.</p>`;
         }
       }, {
         onlyOnce: true
       });
     });
+
+    exportarPdfBtn.addEventListener("click", async () => {
+      if (aniversariantesAtuais.length === 0) return;
+      
+      const mesSelecionado = parseInt(mesSelect.value);
+      const mesNome = mesesNomes[mesSelecionado];
+      
+      // Criar o PDF
+      const doc = new jsPDF();
+      
+      // Adicionar logo (substitua pela URL do logo da sua igreja)
+      // Se você tiver o logo como base64 ou URL, pode adicionar assim:
+      // doc.addImage(logoData, 'JPEG', 85, 10, 40, 40);
+      
+      // Nome da igreja
+      doc.setFontSize(18);
+      doc.setTextColor(0, 0, 128); // Azul escuro
+      doc.text("Igreja Batista Central", 105, 60, { align: 'center' });
+      
+      // Texto descritivo
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0); // Preto
+      doc.text("Relação de Aniversariantes", 105, 70, { align: 'center' });
+      
+      // Mês selecionado
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 128); // Azul escuro
+      doc.text(`Mês: ${mesNome}`, 105, 80, { align: 'center' });
+      
+      // Lista de aniversariantes
+      let yPos = 90;
+      const pageHeight = doc.internal.pageSize.height - 20;
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0); // Preto
+      
+      for (const membro of aniversariantesAtuais) {
+        // Verificar se precisa de nova página
+        if (yPos > pageHeight) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        try {
+          // Adicionar foto (se existir)
+          if (membro.fotoURL) {
+            // Converter imagem para base64 (pode não funcionar para todas as URLs devido a políticas CORS)
+            const imgData = await getBase64Image(membro.fotoURL);
+            doc.addImage(imgData, 'JPEG', 20, yPos - 10, 20, 20);
+          }
+        } catch (e) {
+          console.error("Erro ao carregar imagem:", e);
+        }
+        
+        // Adicionar nome e data
+        doc.text(`${membro.nome}`, 45, yPos);
+        doc.text(`Dia: ${membro.dia}`, 150, yPos);
+        
+        yPos += 10;
+      }
+      
+      // Rodapé com data de impressão
+      const dataAtual = new Date().toLocaleDateString('pt-BR');
+      doc.setFontSize(10);
+      doc.text(`Impresso em: ${dataAtual}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+      
+      // Salvar o PDF
+      doc.save(`Aniversariantes_${mesNome}.pdf`);
+    });
+    
+    // Função auxiliar para converter imagem em base64
+    function getBase64Image(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = this.naturalWidth;
+          canvas.height = this.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(this, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg'));
+        };
+        img.onerror = function() {
+          reject(new Error('Erro ao carregar imagem'));
+        };
+        img.src = url;
+      });
+    }
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
-
-  
