@@ -6,16 +6,7 @@
   <title>Aniversariantes do Mês</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
-    .foto-miniatura {
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
-      border-radius: 50%;
-      margin-right: 15px;
-    }
     .membro-item {
-      display: flex;
-      align-items: center;
       padding: 10px;
       border-bottom: 1px solid #eee;
     }
@@ -23,13 +14,13 @@
 </head>
 <body>
 
-  <!-- 🔒 Verificação de login -->
+  <!-- Verificação de login -->
   <script type="module">
     import { checkAuth } from './auth.js';
     checkAuth();
   </script>
 
-  <!-- 🔹 Navbar -->
+  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
     <div class="container">
       <a class="navbar-brand" href="#">Aniversariantes</a>
@@ -46,7 +37,7 @@
     </div>
   </nav>
 
-  <!-- 🔹 Conteúdo -->
+  <!-- Conteúdo -->
   <div class="container mt-5 pt-4">
     <h3 class="mb-3">Selecione o mês:</h3>
     <div class="d-flex align-items-center gap-3 mb-4">
@@ -71,43 +62,39 @@
     <div id="lista-aniversariantes"></div>
   </div>
 
-  <!-- 🔹 Firebase + Listagem -->
+  <!-- Scripts necessários -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Script principal embutido -->
   <script type="module">
     import { db } from './firebase-config.js';
     import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const mesSelect = document.getElementById("mes");
     const listaDiv = document.getElementById("lista-aniversariantes");
+    const exportarBtn = document.getElementById("btn-exportar");
 
-    const mesesNomes = [
-      "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-    ];
+    const mesesNomes = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
     mesSelect.addEventListener("change", () => {
       const mesSelecionado = parseInt(mesSelect.value);
-      if (!mesSelecionado) {
-        listaDiv.innerHTML = "";
-        return;
-      }
+      if (!mesSelecionado) return (listaDiv.innerHTML = "");
 
       const membrosRef = ref(db, "membros");
       onValue(membrosRef, (snapshot) => {
         const data = snapshot.val();
         listaDiv.innerHTML = "";
-
-        const aniversariantesDoMes = [];
-
+        const aniversariantes = [];
         for (const id in data) {
           const membro = data[id];
           if (!membro.nascimento) continue;
-
           const dataNasc = new Date(membro.nascimento);
           const mes = dataNasc.getMonth() + 1;
-
           if (mes === mesSelecionado) {
-            aniversariantesDoMes.push({
-              id,
+            aniversariantes.push({
               nome: membro.nome,
               fotoURL: membro.fotoURL || "",
               dia: dataNasc.getDate(),
@@ -116,83 +103,44 @@
           }
         }
 
-        aniversariantesDoMes.sort((a, b) => a.dia - b.dia);
-
-        aniversariantesDoMes.forEach((m) => {
+        aniversariantes.sort((a, b) => a.dia - b.dia);
+        aniversariantes.forEach((m) => {
           const item = document.createElement("div");
           item.className = "membro-item";
           item.innerHTML = `
-            <img src="${m.fotoURL}" class="foto-miniatura" alt="Foto">
-            <div>
-              <strong>${m.nome}</strong><br>
-              <small>Nascimento: ${m.dia} de ${m.mesNome}</small>
-            </div>
-          `;
+            <div><strong style="font-size: 1.2rem;">${m.nome}</strong><br><small>Nascimento: ${m.dia} de ${m.mesNome}</small></div>`;
           listaDiv.appendChild(item);
         });
 
-        if (aniversariantesDoMes.length === 0) {
-          listaDiv.innerHTML = `<p class="text-muted">Nenhum aniversariante encontrado.</p>`;
+        if (aniversariantes.length === 0) {
+          listaDiv.innerHTML = "<p class='text-muted'>Nenhum aniversariante encontrado.</p>";
         }
-      }, {
-        onlyOnce: true
-      });
+      }, { onlyOnce: true });
     });
-  </script>
-
-  <!-- 🔹 Exportar PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script type="module">
-    import { db } from './firebase-config.js';
-    import { ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
-    const exportarBtn = document.getElementById("btn-exportar");
 
     exportarBtn.addEventListener("click", async () => {
-      const mesSelecionado = parseInt(document.getElementById("mes").value);
-      if (!mesSelecionado) {
-        alert("Selecione um mês para exportar.");
-        return;
-      }
+      const mesSelecionado = parseInt(mesSelect.value);
+      if (!mesSelecionado) return alert("Selecione um mês para exportar.");
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-
-      const mesesNomes = [
-        "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-      ];
-
-      const igrejaNome = "Ministério Internacional Nova Esperança";
-      const textoIntro = "Famílias vivendo na Graça e unção do Espírito";
+      const igrejaNome = "Igreja Exemplo da Fé";
+      const textoIntro = "Segue abaixo a lista de aniversariantes do mês.";
       const mesNome = mesesNomes[mesSelecionado];
       const dataAtual = new Date().toLocaleDateString();
 
-      // Logo (ajuste o caminho conforme necessário)
-      const logo = new Image();
-      logo.src = "./logo.png";
-      await new Promise(resolve => logo.onload = resolve);
-      doc.addImage(logo, "PNG", 80, 10, 50, 25);
-
       doc.setFontSize(14);
-      doc.text(igrejaNome, 105, 40, null, null, "center");
-
+      doc.text(igrejaNome, 105, 20, null, null, "center");
       doc.setFontSize(11);
-      doc.text(textoIntro, 105, 48, null, null, "center");
-
+      doc.text(textoIntro, 105, 28, null, null, "center");
       doc.setFontSize(13);
-      doc.text(`Aniversariantes de ${mesNome}`, 105, 60, null, null, "center");
+      doc.text(`Aniversariantes de ${mesNome}`, 105, 38, null, null, "center");
 
-      let y = 70;
-
-      // Buscar membros
       const snapshot = await new Promise(resolve =>
         onValue(ref(db, "membros"), resolve, { onlyOnce: true })
       );
       const data = snapshot.val();
       const aniversariantes = [];
-
       for (const id in data) {
         const membro = data[id];
         if (!membro.nascimento) continue;
@@ -207,50 +155,44 @@
       }
 
       aniversariantes.sort((a, b) => a.dia - b.dia);
+      let y = 50;
 
       for (const m of aniversariantes) {
-  if (m.fotoURL) {
-    const img = await carregarImagem(m.fotoURL);
-    // Desenhar imagem "redonda" com bordas suavizadas
-    doc.setDrawColor(255, 255, 255);
-    doc.setFillColor(255, 255, 255);
-    doc.circle(22.5, y - 2.5, 8, 'F'); // círculo branco como fundo
-    doc.addImage(img, "JPEG", 15, y - 10, 15, 15);
-  }
-  doc.text(`${m.nome} - ${m.dia}/${mesSelecionado}`, 35, y);
-  y += 20;
-  if (y > 270) {
-    doc.addPage();
-    y = 20;
-  }
-}
+        if (m.fotoURL) {
+          const img = await carregarImagem(m.fotoURL);
+          doc.setDrawColor(255, 255, 255);
+          doc.setFillColor(255, 255, 255);
+          doc.circle(22.5, y - 2.5, 8, 'F');
+          doc.addImage(img, "JPEG", 15, y - 10, 15, 15);
+        }
+        doc.text(`${m.nome} - ${m.dia}/${mesSelecionado}`, 35, y);
+        y += 20;
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      }
 
       doc.setFontSize(10);
       doc.text(`Impresso em: ${dataAtual}`, 15, 290);
-
       doc.save(`Aniversariantes-${mesNome}.pdf`);
     });
 
     async function carregarImagem(url) {
-  const img = await new Promise((resolve) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.src = url;
-  });
+      const img = await new Promise((resolve) => {
+        const image = new Image();
+        image.crossOrigin = "anonymous";
+        image.onload = () => resolve(image);
+        image.src = url;
+      });
 
-  // Reduz para 50x50 px usando canvas
-  const canvas = document.createElement("canvas");
-  canvas.width = 50;
-  canvas.height = 50;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0, 50, 50);
-
-  return canvas.toDataURL("image/jpeg", 0.5); // qualidade 50%
-}
-
+      const canvas = document.createElement("canvas");
+      canvas.width = 50;
+      canvas.height = 50;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, 50, 50);
+      return canvas.toDataURL("image/jpeg", 0.5);
+    }
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
