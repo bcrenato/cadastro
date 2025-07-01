@@ -5,15 +5,25 @@ import { getCurrentUserData, isUserAdmin } from './users.js';
 
 // Verificação de autenticação básica
 export async function checkAuth() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Atualiza a navbar com o nome do usuário
-        await updateUserDisplay();
-        resolve(user);
-      } else {
+      try {
+        if (user) {
+          // Verifica se o token é válido
+          await user.getIdToken(true);
+          
+          // Atualiza a exibição do usuário
+          await updateUserDisplay();
+          resolve(user);
+        } else {
+          redirectToLogin();
+          resolve(null);
+        }
+      } catch (error) {
+        console.error('Erro na verificação de autenticação:', error);
+        await auth.signOut();
         redirectToLogin();
-        resolve(null);
+        reject(error);
       }
     });
   });
