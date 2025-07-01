@@ -234,8 +234,7 @@
         lineHeight: 4,
       };
 
-      // Cabeçalho com logo
-      // Primeiro adicionamos o logo (substitua a URL pela imagem do seu logo)
+      // Cabeçalho com logo acima do título
       try {
         const logoUrl = './logo.png'; // Altere para o caminho do seu logo
         const logoResponse = await fetch(logoUrl);
@@ -246,16 +245,21 @@
           reader.readAsDataURL(logoBlob);
         });
         
-        // Adiciona o logo no cabeçalho
-        doc.addImage(logoDataUrl, 'PNG', styles.margin, 10, 30, 15);
+        // Adiciona o logo centralizado acima do título
+        const logoWidth = 30; // Largura do logo em mm
+        const logoHeight = 15; // Altura do logo em mm
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const logoX = (pageWidth - logoWidth) / 2; // Centraliza horizontalmente
         
-        // Texto do cabeçalho ao lado do logo
+        doc.addImage(logoDataUrl, 'PNG', logoX, 10, logoWidth, logoHeight);
+        
+        // Texto do cabeçalho abaixo do logo
         doc.setFont("helvetica", "bold");
         doc.setFontSize(styles.titleFontSize);
-        doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" });
+        doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 30, { align: "center" });
         
         doc.setFontSize(styles.subtitleFontSize);
-        doc.text("Lista Completa de Membros", 105, 28, { align: "center" });
+        doc.text("Lista Completa de Membros", 105, 38, { align: "center" });
       } catch (error) {
         console.error("Erro ao carregar o logo:", error);
         // Se houver erro no logo, usa apenas o texto
@@ -270,7 +274,7 @@
       // Linha divisória
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.3);
-      doc.line(styles.margin, 33, 210 - styles.margin, 33);
+      doc.line(styles.margin, 43, 210 - styles.margin, 43);
 
       // Carrega os dados
       const snapshot = await new Promise(resolve =>
@@ -286,7 +290,7 @@
       membros.sort((a, b) => a.nome.localeCompare(b.nome));
 
       // Configurações da tabela
-      let yPosition = 40;
+      let yPosition = 50; // Aumentado para acomodar o logo
       const col1 = styles.margin;
       const colWidth = (210 - (2 * styles.margin)) / 2;
       
