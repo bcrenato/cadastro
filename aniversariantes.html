@@ -168,7 +168,7 @@
 
       const styles = {
         titleFontSize: 12,
-        subtitleFontSize: 16,
+        subtitleFontSize: 15,
         textFontSize: 11,
         photoSize: 20,
         lineHeight: 25,
@@ -187,7 +187,7 @@ try {
     const logoWidth = 80; // Define a largura do logo como 80mm
     const logoHeight = (logo.height * logoWidth) / logo.width; // Calcula a altura proporcional mantendo a aspect ratio
     const logoX = (210 - logoWidth) / 2; // Calcula a posição X para centralizar o logo (considerando página A4 = 210mm de largura)
-    doc.addImage(logo, "PNG", logoX, 15, logoWidth, logoHeight, undefined, 'FAST'); // Insere o logo no PDF:
+    doc.addImage(logo, "PNG", logoX, 10, logoWidth, logoHeight, undefined, 'FAST'); // Insere o logo no PDF:
       // logo: imagem carregada
       // 'PNG': formato da imagem
       // logoX: posição horizontal (centralizada)
