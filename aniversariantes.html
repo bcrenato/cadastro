@@ -120,29 +120,29 @@
     });
 
     exportarBtn.addEventListener("click", async () => {
-      const mesSelecionado = parseInt(mesSelect.value);
-      if (!mesSelecionado) return alert("Selecione um mês para exportar.");
+  const mesSelecionado = parseInt(mesSelect.value);
+  if (!mesSelecionado) return alert("Selecione um mês para exportar.");
 
-      // Configurações de alta qualidade
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-        filters: ["ASCIIHexEncode"],
-        compress: true
-      });
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+    filters: ["ASCIIHexEncode"],
+    compress: true
+  });
 
-      // Definições de estilo
-      const styles = {
-        titleFontSize: 16,
-        subtitleFontSize: 12,
-        textFontSize: 11,
-        photoSize: 20, // tamanho da foto em mm
-        lineHeight: 15,
-        margin: 15,
-        photoQuality: 0.7 // qualidade das fotos (0.7 = 70%)
-      };
+  // Configurações de estilo com espaçamento aumentado
+  const styles = {
+    titleFontSize: 16,
+    subtitleFontSize: 12,
+    textFontSize: 11,
+    photoSize: 20,
+    lineHeight: 25,  // Aumentado de 15 para 25mm
+    margin: 15,
+    photoQuality: 0.7,
+    photoMargin: 5   // Margem em volta da foto
+  };
 
       const mesNome = mesesNomes[mesSelecionado];
       const dataAtual = new Date().toLocaleDateString('pt-BR');
@@ -201,9 +201,14 @@
       aniversariantes.sort((a, b) => a.dia - b.dia);
       
       // Configurações de página
-      let yPosition = 65; // Posição inicial após cabeçalho
-      const photoX = styles.margin;
-      const textX = styles.margin + styles.photoSize + 5;
+      let yPosition = 65;
+  const photoX = styles.margin;
+  const textX = styles.margin + styles.photoSize + 8; // Aumentei de 5 para 8
+
+  for (const membro of aniversariantes) {
+    if (yPosition > 270) {
+      addNewPageHeader();
+    }
 
       // Função para adicionar novo cabeçalho quando mudar de página
       const addNewPageHeader = () => {
@@ -229,45 +234,49 @@
 
         // Adiciona foto (se existir)
         if (membro.fotoURL) {
-          try {
-            const foto = await loadImage(membro.fotoURL, false);
-            if (foto) {
-              // Adiciona moldura circular à foto
-              doc.setFillColor(240, 240, 240);
-              doc.circle(
-                photoX + styles.photoSize/2, 
-                yPosition + styles.photoSize/2, 
-                styles.photoSize/2, 
-                'F'
-              );
-              
-              doc.addImage(
-                foto, 
-                "JPEG", 
-                photoX, 
-                yPosition, 
-                styles.photoSize, 
-                styles.photoSize,
-                undefined,
-                'MEDIUM'
-              );
-            }
-          } catch (e) {
-            console.error(`Erro ao carregar foto de ${membro.nome}`, e);
-          }
+      try {
+        const foto = await loadImage(membro.fotoURL, false);
+        if (foto) {
+          doc.setFillColor(240, 240, 240);
+          doc.circle(
+            photoX + styles.photoSize/2, 
+            yPosition + styles.photoSize/2 + styles.photoMargin, 
+            styles.photoSize/2, 
+            'F'
+          );
+          
+          doc.addImage(
+            foto, 
+            "JPEG", 
+            photoX, 
+            yPosition + styles.photoMargin, 
+            styles.photoSize, 
+            styles.photoSize,
+            undefined,
+            'MEDIUM'
+          );
         }
+      } catch (e) {
+        console.error(`Erro ao carregar foto de ${membro.nome}`, e);
+      }
+    }
 
         // Adiciona texto
         const diaFormatado = membro.dia.toString().padStart(2, '0');
-        const mesFormatado = mesSelecionado.toString().padStart(2, '0');
-        
-        doc.text(`${diaFormatado}/${mesFormatado}`, textX, yPosition + 5);
-        doc.setFont("helvetica", "bold");
-        doc.text(membro.nome, textX + 20, yPosition + 5);
-        doc.setFont("helvetica", "normal");
+    const mesFormatado = mesSelecionado.toString().padStart(2, '0');
+    
+    doc.text(`${diaFormatado}/${mesFormatado}`, textX, yPosition + styles.photoMargin + 10);
+    doc.setFont("helvetica", "bold");
+    doc.text(membro.nome, textX + 20, yPosition + styles.photoMargin + 10);
+    doc.setFont("helvetica", "normal");
 
-        yPosition += styles.lineHeight;
-      }
+    // Linha divisória sutil entre itens
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.2);
+    doc.line(styles.margin, yPosition + styles.lineHeight - 5, 210 - styles.margin, yPosition + styles.lineHeight - 5);
+
+    yPosition += styles.lineHeight;
+  }
 
       // Rodapé
       doc.setFontSize(9);
