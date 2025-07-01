@@ -246,8 +246,8 @@
         });
         
         // Adiciona o logo centralizado acima do título
-        const logoWidth = 30; // Largura do logo em mm
-        const logoHeight = 15; // Altura do logo em mm
+        const logoWidth = 80; // Define a largura do logo como 80mm
+        const logoHeight = (logo.height * logoWidth) / logo.width; // Calcula a altura proporcional mantendo a aspect ratio
         const pageWidth = doc.internal.pageSize.getWidth();
         const logoX = (pageWidth - logoWidth) / 2; // Centraliza horizontalmente
         
