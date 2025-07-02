@@ -193,46 +193,59 @@
             });
 
             doc.autoTable({
-              startY: cabecalhoY,
-              head: [[
-                "Nome", "Nascimento", "Sexo", "Telefone", "Função",
-                "Batismo", "Endereço completo"
-              ]],
-              body: membrosArray,
-              styles: { fontSize: 10, cellPadding: 2 },
-              margin: { top: cabecalhoY, bottom: 15 },
-              didDrawPage: function (data) {
-                const pageCount = doc.internal.getNumberOfPages();
-                const pageSize = doc.internal.pageSize;
-                const pageHeight = pageSize.getHeight();
-                const pageWidth = pageSize.getWidth();
+  startY: cabecalhoY,
+  head: [[
+    "Nome", "Nascimento", "Sexo", "Telefone", "Função",
+    "Batismo", "Endereço completo"
+  ]],
+  body: membrosArray,
+  styles: { fontSize: 10, cellPadding: 2 },
+  margin: { top: 15, bottom: 15 }, // Ajuste aqui - margin top fixo para todas páginas
+  didDrawPage: function (data) {
+    const pageCount = doc.internal.getNumberOfPages();
+    const pageSize = doc.internal.pageSize;
+    const pageHeight = pageSize.getHeight();
+    const pageWidth = pageSize.getWidth();
+    const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
 
-                const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
+    // Só adiciona cabeçalho completo na primeira página
+    if (currentPage === 1) {
+      doc.addImage(img, 'PNG', logoX, 10, logoWidth, logoHeight);
+      doc.setFontSize(13);
+      doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 10 + logoHeight + 7, { align: "center" });
+      doc.text("Lista completa de membros", pageWidth / 2, 10 + logoHeight + 15, { align: "center" });
+    }
 
-                doc.setFontSize(8);
-                doc.text(`Página ${currentPage} de ${pageCount}`, pageWidth / 2, pageHeight - 7, { align: "center" });
+    // Rodapé em todas as páginas
+    doc.setFontSize(8);
+    doc.text(`Página ${currentPage} de ${pageCount}`, pageWidth / 2, pageHeight - 7, { align: "center" });
 
-                const now = new Date();
-                const geradoEm = now.toLocaleString("pt-BR", {
-                  day: "2-digit", month: "2-digit", year: "numeric",
-                  hour: "2-digit", minute: "2-digit"
-                });
-                doc.text(`Gerado em: ${geradoEm}`, pageWidth - 10, pageHeight - 7, { align: "right" });
-              },
-              headStyles: {
-                fillColor: [41, 128, 185],
-                halign: 'center'
-              },
-              columnStyles: {
-                0: { cellWidth: 66 }, // Nome
-                1: { cellWidth: 25 }, // Nascimento
-                2: { cellWidth: 20 }, // Sexo
-                3: { cellWidth: 30 }, // Telefone
-                4: { cellWidth: 25 }, // Função
-                5: { cellWidth: 25 }, // Batismo
-                6: { cellWidth: 80 }  // Endereço completo
-              }
-            });
+    const now = new Date();
+    const geradoEm = now.toLocaleString("pt-BR", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+    doc.text(`Gerado em: ${geradoEm}`, pageWidth - 10, pageHeight - 7, { align: "right" });
+
+    // Ajusta o startY para páginas seguintes
+    if (currentPage > 1) {
+      data.table.startY = 15; // Posição fixa mais próxima do topo para páginas 2+
+    }
+  },
+  headStyles: {
+    fillColor: [41, 128, 185],
+    halign: 'center'
+  },
+  columnStyles: {
+    0: { cellWidth: 66 }, // Nome
+    1: { cellWidth: 25 }, // Nascimento
+    2: { cellWidth: 20 }, // Sexo
+    3: { cellWidth: 30 }, // Telefone
+    4: { cellWidth: 25 }, // Função
+    5: { cellWidth: 25 }, // Batismo
+    6: { cellWidth: 80 }  // Endereço completo
+  }
+});
 
             doc.save("lista_membros.pdf");
           });
