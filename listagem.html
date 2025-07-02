@@ -155,107 +155,120 @@
 
 <!-- 🔹 Exportar PDF -->
 <script>
-  document.getElementById("btnExportarPDF").addEventListener("click", () => {
-  const doc = new window.jsPDFGlobal({ orientation: "landscape", unit: "mm", format: "a4" });
+  document.getElementById("btnExportarPDF").addEventListener("click", async () => {
+  try {
+    // 1. Configuração inicial do documento
+    const doc = new window.jsPDFGlobal({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4"
+    });
 
-  const logoUrl = "./logo.png";
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.src = logoUrl;
-
-  img.onload = function () {
+    // 2. Carregar a logo
+    const logoUrl = "./logo.png";
+    const img = await loadImage(logoUrl);
     const pageWidth = doc.internal.pageSize.getWidth();
     const logoWidth = 80;
     const logoHeight = (img.height / img.width) * logoWidth;
     const logoX = (pageWidth - logoWidth) / 2;
 
-    // Variável para controlar o total de páginas
-    let totalPages = 1;
+    // 3. Obter dados do Firebase
+    const { db } = await import("./firebase-config.js");
+    const firebase = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js");
+    const snapshot = await firebase.get(firebase.child(firebase.ref(db), "membros"));
 
-    import("./firebase-config.js").then(({ db }) => {
-      import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js").then(firebase => {
-        const { ref, get, child } = firebase;
+    if (!snapshot.exists()) {
+      alert("Nenhum membro encontrado.");
+      return;
+    }
 
-        get(child(ref(db), "membros")).then(snapshot => {
-          if (!snapshot.exists()) return alert("Nenhum membro encontrado.");
-
-          const data = snapshot.val();
-          const membrosArray = Object.values(data).map(m => {
-            const enderecoCompleto = `${m.endereco || ''}${m.numero ? ', ' + m.numero : ''}${m.bairro ? ', ' + m.bairro : ''},\n${m.cidade || ''}, ${m.estado || ''}`;
-            return [
-              m.nome || "", m.nascimento || "", m.sexo || "", m.telefone || "",
-              m.funcao || "", m.batismo || "", enderecoCompleto
-            ];
-          });
-
-          // Calcula a posição Y após o cabeçalho
-          const alturaCabecalho = 10 + logoHeight + 25;
-          
-          doc.autoTable({
-            startY: alturaCabecalho,
-            head: [[
-              "Nome", "Nascimento", "Sexo", "Telefone", "Função",
-              "Batismo", "Endereço completo"
-            ]],
-            body: membrosArray,
-            styles: { fontSize: 10, cellPadding: 2 },
-            margin: { top: 15, bottom: 20 },
-            didDrawPage: function (data) {
-              const pageHeight = doc.internal.pageSize.getHeight();
-              const pageWidth = doc.internal.pageSize.getWidth();
-              
-              // Só desenha o cabeçalho completo na primeira página
-              if (data.pageNumber === 1) {
-                doc.addImage(img, 'PNG', logoX, 10, logoWidth, logoHeight);
-                doc.setFontSize(13);
-                doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 10 + logoHeight + 7, { align: "center" });
-                doc.text("Lista completa de membros", pageWidth / 2, 10 + logoHeight + 15, { align: "center" });
-              }
-              
-              // Atualiza o total de páginas
-              totalPages = doc.internal.getNumberOfPages();
-              
-              // Adiciona rodapé em todas as páginas
-              doc.setFontSize(8);
-              doc.text(`Página ${data.pageNumber} de ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: "center" });
-              
-              const now = new Date();
-              const geradoEm = now.toLocaleString("pt-BR", {
-                day: "2-digit", month: "2-digit", year: "numeric",
-                hour: "2-digit", minute: "2-digit"
-              });
-              doc.text(`Gerado em: ${geradoEm}`, pageWidth - 10, pageHeight - 10, { align: "right" });
-
-              // Ajusta a posição inicial para páginas seguintes
-              if (data.pageNumber > 1) {
-                data.table.startY = 20; // Posição mais alta nas páginas seguintes
-              }
-            },
-            headStyles: {
-              fillColor: [41, 128, 185],
-              halign: 'center',
-              textColor: [255, 255, 255]
-            },
-            columnStyles: {
-              0: { cellWidth: 66 }, // Nome
-              1: { cellWidth: 25 }, // Nascimento
-              2: { cellWidth: 20 }, // Sexo
-              3: { cellWidth: 30 }, // Telefone
-              4: { cellWidth: 25 }, // Função
-              5: { cellWidth: 25 }, // Batismo
-              6: { cellWidth: 80 }  // Endereço completo
-            },
-            // Configurações para evitar problemas de paginação
-            showHead: 'firstPage',
-            tableOverflow: 'linebreak'
-          });
-
-          doc.save("lista_membros.pdf");
-        });
-      });
+    // 4. Preparar os dados
+    const membrosArray = Object.values(snapshot.val()).map(m => {
+      const enderecoCompleto = `${m.endereco || ''}${m.numero ? ', ' + m.numero : ''}${m.bairro ? ', ' + m.bairro : ''},\n${m.cidade || ''}, ${m.estado || ''}`;
+      return [
+        m.nome || "", 
+        m.nascimento || "", 
+        m.sexo || "", 
+        m.telefone || "",
+        m.funcao || "", 
+        m.batismo || "", 
+        enderecoCompleto
+      ];
     });
-  };
+
+    // 5. Configurações da tabela
+    const tableConfig = {
+      head: [["Nome", "Nascimento", "Sexo", "Telefone", "Função", "Batismo", "Endereço completo"]],
+      body: membrosArray,
+      startY: 45, // Posição inicial após o cabeçalho
+      margin: { top: 15, bottom: 20 },
+      styles: { 
+        fontSize: 10, 
+        cellPadding: 2,
+        overflow: "linebreak"
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        halign: "center",
+        textColor: [255, 255, 255]
+      },
+      columnStyles: {
+        0: { cellWidth: 66 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 25 },
+        6: { cellWidth: 80 }
+      },
+      didDrawPage: function(data) {
+        const pageHeight = doc.internal.pageSize.getHeight();
+        
+        // Cabeçalho apenas na primeira página
+        if (data.pageNumber === 1) {
+          doc.addImage(img, "PNG", logoX, 10, logoWidth, logoHeight);
+          doc.setFontSize(13);
+          doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 35, { align: "center" });
+          doc.text("Lista completa de membros", pageWidth / 2, 42, { align: "center" });
+        }
+
+        // Rodapé em todas as páginas
+        doc.setFontSize(8);
+        const totalPages = doc.internal.getNumberOfPages();
+        doc.text(`Página ${data.pageNumber} de ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: "center" });
+        
+        const now = new Date();
+        doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, pageHeight - 10, { align: "right" });
+
+        // Ajuste para páginas seguintes
+        if (data.pageNumber > 1) {
+          data.table.startY = 20;
+        }
+      }
+    };
+
+    // 6. Gerar a tabela
+    doc.autoTable(tableConfig);
+    
+    // 7. Salvar o PDF
+    doc.save("lista_membros.pdf");
+
+  } catch (error) {
+    console.error("Erro ao gerar PDF:", error);
+    alert("Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.");
+  }
 });
+
+// Função auxiliar para carregar imagens
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
 </script>
 
 
