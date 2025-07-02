@@ -347,9 +347,10 @@ btnExportar.addEventListener("click", async () => {
             || 'Não informado'
           }`,
           `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
-          `Batismo: ${membro.batismo ? new Date(membro.batismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
+         
           `Função: ${membro.funcao || 'Não informado'}`,
           `Telefone: ${membro.telefone || 'Não informado'}`,
+           `Batismo: ${membro.batismo ? new Date(membro.batismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
           `Sexo: ${membro.sexo === 'M' ? 'Masculino' : membro.sexo === 'F' ? 'Feminino' : 'Não informado'}`
         ];
     
