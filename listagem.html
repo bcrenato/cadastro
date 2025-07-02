@@ -160,49 +160,47 @@
   });
 
   // Exportar PDF
-  document.getElementById("btnExportarPDF").addEventListener("click", async () => {
-    const { jsPDF } = await import("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
-    const { autoTable } = window.jspdf;
+  document.getElementById("btnExportarPDF").addEventListener("click", () => {
+  const doc = new window.jspdf.jsPDF();
+  const logoUrl = "https://via.placeholder.com/100x50.png?text=Logo"; // Substitua pela sua logo
 
-    const doc = new jsPDF();
-    const logoUrl = "https://via.placeholder.com/100x50.png?text=Logo"; // Substitua pela URL da sua logo
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = logoUrl;
 
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = logoUrl;
+  img.onload = () => {
+    doc.addImage(img, 'PNG', 10, 10, 40, 20);
+    doc.setFontSize(14);
+    doc.text("Igreja XXX", 10, 35);
+    doc.text("Lista completa de membros", 10, 45);
 
-    img.onload = () => {
-      doc.addImage(img, 'PNG', 10, 10, 40, 20);
-      doc.setFontSize(14);
-      doc.text("Igreja XXX", 10, 35);
-      doc.text("Lista completa de membros", 10, 45);
+    const cabecalhoY = 55;
 
-      const cabecalhoY = 55;
+    onValue(membrosRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return alert("Nenhum membro encontrado.");
 
-      onValue(membrosRef, (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return alert("Nenhum membro encontrado.");
+      const membrosArray = Object.values(data).map(m => ([
+        m.nome || "", m.nascimento || "", m.sexo || "", m.telefone || "",
+        m.funcao || "", m.batismo || "", m.endereco || "", m.bairro || "",
+        m.cidade || "", m.estado || ""
+      ]));
 
-        const membrosArray = Object.values(data).map(m => ([
-          m.nome || "", m.nascimento || "", m.sexo || "", m.telefone || "",
-          m.funcao || "", m.batismo || "", m.endereco || "", m.bairro || "",
-          m.cidade || "", m.estado || ""
-        ]));
+      window.jspdf.autoTable(doc, {
+        startY: cabecalhoY,
+        head: [[
+          "Nome", "Nascimento", "Sexo", "Telefone", "Função", 
+          "Batismo", "Endereço", "Bairro", "Cidade", "Estado"
+        ]],
+        body: membrosArray,
+        styles: { fontSize: 8, cellPadding: 2 }
+      });
 
-        autoTable(doc, {
-          startY: cabecalhoY,
-          head: [[
-            "Nome", "Nascimento", "Sexo", "Telefone", "Função", 
-            "Batismo", "Endereço", "Bairro", "Cidade", "Estado"
-          ]],
-          body: membrosArray,
-          styles: { fontSize: 8, cellPadding: 2 }
-        });
+      doc.save("lista_membros.pdf");
+    }, { onlyOnce: true });
+  };
+});
 
-        doc.save("lista_membros.pdf");
-      }, { onlyOnce: true });
-    };
-  });
 </script>
 
 <!-- Bibliotecas externas -->
