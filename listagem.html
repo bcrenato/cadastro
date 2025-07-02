@@ -231,8 +231,8 @@
         subtitleFontSize: 14,
         textFontSize: 12,  // Tamanho da fonte
         margin: 15,
-        lineHeight: 8, // AUMENTE ESTE VALOR para mais espaço entre linhas (era 3.5)
-        cellPadding: 8 // AUMENTE ESTE VALOR para mais espaço entre campos (era 1.5)
+        lineHeight: 6, // AUMENTE ESTE VALOR para mais espaço entre linhas (era 3.5)
+        cellPadding: 6 // AUMENTE ESTE VALOR para mais espaço entre campos (era 1.5)
       };
 
       // Cabeçalho com logo acima do título
@@ -327,7 +327,7 @@
           label: "Endereço", 
           field: ["endereco", "bairro", "cidade", "estado"], 
           format: (vals) => vals.filter(Boolean).join(', ') || 'Não informado',
-          fontSize: 10
+          fontSize: 12
         }
       ];
 
