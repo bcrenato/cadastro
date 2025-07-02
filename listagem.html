@@ -215,186 +215,199 @@
       });
     });
 
-    // Exportar para PDF
-btnExportar.addEventListener("click", async () => {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4",
-    compress: true
-  });
-
-
-  // Estilos
-  const styles = {
-    titleFontSize: 12,
-    subtitleFontSize: 12,
-    textFontSize: 10,
-    margin: 15,
-    lineHeight: 5,
-  };
-
-  // Cabeçalho com logo acima do título
-try {
-    const logoUrl = './logo.png'; // Define o caminho para a imagem do logo
-    const logoResponse = await fetch(logoUrl); // Faz uma requisição para buscar o arquivo do logo
-    const logoBlob = await logoResponse.blob(); // Converte a resposta em um objeto Blob (binário)
-    const logoDataUrl = await new Promise((resolve) => {
-      const reader = new FileReader(); // Cria um leitor de arquivos
-      reader.onload = () => resolve(reader.result); // Resolve a Promise quando o carregamento estiver completo
-      reader.readAsDataURL(logoBlob); // Lê o Blob como URL de dados (base64)
-    }); // Converte o Blob para uma URL de dados que pode ser usada na tag <img>
-    
-    // Criar uma imagem temporária para obter as dimensões originais
-    const img = new Image(); // Cria um elemento de imagem HTML não renderizado
-    img.src = logoDataUrl; // Define a fonte da imagem como a URL de dados
-    await new Promise((resolve) => {
-      img.onload = resolve; // Aguarda até que a imagem seja carregada
-    }); // Garante que as dimensões da imagem estarão disponíveis
-    
-    // Dimensões originais do logo
-    const originalWidth = img.width; // Largura original da imagem em pixels
-    const originalHeight = img.height; // Altura original da imagem em pixels
-    const aspectRatio = originalHeight / originalWidth; // Calcula a proporção entre altura e largura
-    
-    // Largura desejada para o logo no PDF (em mm)
-    const desiredWidth = 80; // Define a largura desejada para o logo no PDF (em milímetros)
-    
-    // Calcular altura proporcional
-    const proportionalHeight = desiredWidth * aspectRatio; // Calcula a altura mantendo a proporção original
-    
-    // Adiciona o logo centralizado acima do título
-    const pageWidth = doc.internal.pageSize.getWidth(); // Obtém a largura da página do PDF (A4 = 210mm)
-    const logoX = (pageWidth - desiredWidth) / 2; // Calcula a posição X para centralizar o logo
-    
-    doc.addImage(logoDataUrl, 'PNG', logoX, 10, desiredWidth, proportionalHeight); // Insere a imagem no PDF
-    
-    // Texto do cabeçalho abaixo do logo
-    doc.setFont("helvetica", "bold"); // Define a fonte para o título
-    doc.setFontSize(styles.titleFontSize); // Define o tamanho da fonte
-    doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 10 + proportionalHeight + 5, { align: "center" }); // Adiciona o texto principal
-    
-    doc.setFontSize(styles.subtitleFontSize); // Define tamanho menor para o subtítulo
-    doc.text("Lista Completa de Membros", 105, 10 + proportionalHeight + 13, { align: "center" }); // Adiciona subtítulo
-    
-    // Linha divisória (ajustada para ficar abaixo do título)
-    doc.setDrawColor(200, 200, 200); // Define cor cinza para a linha (RGB)
-    doc.setLineWidth(0.3); // Define espessura fina para a linha
-    const lineY = 10 + proportionalHeight + 20; // Calcula posição Y da linha baseado no logo e títulos
-    doc.line(styles.margin, lineY, 210 - styles.margin, lineY); // Desenha linha horizontal
-    
-    // Ajusta a posição inicial do conteúdo
-    let yPosition = lineY + 10; // Define a posição inicial para o conteúdo principal
-
-} catch (error) {
-    console.error("Erro ao carregar o logo:", error); // Log de erro se houver problemas com o logo
-    
-    // Se houver erro no logo, usa apenas o texto
-    doc.setFont("helvetica", "bold"); // Define fonte para o título alternativo
-    doc.setFontSize(styles.titleFontSize); // Tamanho do título
-    doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" }); // Título sem logo
-    
-    doc.setFontSize(styles.subtitleFontSize); // Tamanho do subtítulo
-    doc.text("Lista Completa de Membros", 105, 28, { align: "center" }); // Subtítulo sem logo
-    
-    // Linha divisória
-    doc.setDrawColor(200, 200, 200); // Cor da linha
-    doc.setLineWidth(0.3); // Espessura da linha
-    doc.line(styles.margin, 33, 210 - styles.margin, 33); // Desenha linha
-    
-    // Posição inicial do conteúdo sem logo
-    let yPosition = 40; // Posição Y inicial mais baixa sem logo
-}
-
-// Carrega os dados
-const snapshot = await new Promise(resolve =>
-    onValue(ref(db, "membros"), resolve, { onlyOnce: true })
-); // Obtém dados dos membros do Firebase (uma única vez)
-
-const membros = []; // Array para armazenar os membros
-for (const id in snapshot.val()) {
-    membros.push(snapshot.val()[id]); // Adiciona cada membro ao array
-} // Preenche o array com dados do Firebase
-
-// Ordena por nome
-membros.sort((a, b) => a.nome.localeCompare(b.nome)); // Ordena alfabeticamente pelo nome
-
-// Configurações da tabela
-let yPosition = 50; // Posição Y inicial do conteúdo (ajustado para cabeçalho com logo)
-const col1 = styles.margin; // Posição X da primeira coluna (margem esquerda)
-const colWidth = (210 - (2 * styles.margin)) / 2; // Largura de cada coluna (divide espaço restante)
-
-// Adiciona membros
-doc.setFont("helvetica", "normal"); // Fonte normal para o conteúdo
-doc.setFontSize(styles.textFontSize); // Tamanho da fonte para os dados
-
-membros.forEach((membro, index) => {
-    if (yPosition > 270) { // Verifica se atingiu o final da página
-        doc.addPage(); // Adiciona nova página
-        yPosition = 20; // Reinicia posição Y
-    } // Controla quebra de página
-    
-    // Dados formatados
-    const dados = [ // Array com informações formatadas de cada membro
-        `Nome: ${membro.nome || 'Não informado'}`, // Nome com fallback
-        `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`, // Data formatada
-        `Sexo: ${membro.sexo || 'Não informado'}`, // Sexo
-        `Telefone: ${membro.telefone || 'Não informado'}`, // Telefone
-        `Função: ${membro.funcao || 'Não informado'}`, // Função
-        `Batismo: ${membro.batismo ? new Date(membro.batismo).toLocaleDateString('pt-BR') : 'Não informado'}`, // Data de batismo
-        `Endereço: ${ // Endereço completo formatado
-            [
-                membro.endereco,
-                membro.bairro,
-                membro.cidade,
-                membro.estado
-            ]
-            .filter(Boolean) // Remove campos vazios
-            .join(', ') // Junta com vírgula
-            || 'Não informado' // Fallback se não houver endereço
-        }`
-    ];
-
-    // Adiciona os dados em duas colunas
-    let x = col1; // Posição X inicial (primeira coluna)
-    let maxHeight = 0; // Controla altura máxima da linha
-    
-    dados.forEach((texto, i) => {
-        const textHeight = doc.splitTextToSize(texto, colWidth - 5).length * styles.lineHeight; // Calcula altura do texto
-        doc.text(texto, x, yPosition, { maxWidth: colWidth - 5 }); // Adiciona texto com largura máxima
+    // Função para adicionar rodapé em todas as páginas
+    function addFooter(doc, totalPages) {
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
         
-        if (i % 2 === 1) { // Se for item ímpar (segunda coluna)
-            yPosition += Math.max(styles.lineHeight * 2, textHeight); // Move para próxima linha
-            x = col1; // Volta para primeira coluna
-        } else { // Se for item par (primeira coluna)
-            x += colWidth; // Move para segunda coluna
-            maxHeight = Math.max(maxHeight, textHeight); // Atualiza altura máxima
-        }
-    });
+        // Texto centralizado: "Página X de Y"
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Página ${i} de ${totalPages}`, 105, 285, { align: "center" });
+        
+        // Texto à direita: "Gerado em..."
+        const dataHora = new Date().toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }).replace(',', ' às');
+        
+        doc.setFontSize(8);
+        doc.text(`Gerado em ${dataHora}`, 200, 285, { align: "right" });
+      }
+    }
 
-    // Linha divisória entre membros
-    doc.setDrawColor(220, 220, 220); // Cor cinza claro
-    doc.setLineWidth(0.8); // Espessura média
-    yPosition += 7; // Espaço antes da linha
-    doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition); // Desenha linha
-    
-    yPosition += 5; // Espaço após a linha
-});
+    // Exportar para PDF
+    btnExportar.addEventListener("click", async () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        compress: true
+      });
 
-// Rodapé
-const dataHora = new Date().toLocaleString('pt-BR', { // Formata data e hora
-    day: '2-digit', // Dia com 2 dígitos
-    month: '2-digit', // Mês com 2 dígitos
-    year: 'numeric', // Ano completo
-    hour: '2-digit', // Hora com 2 dígitos
-    minute: '2-digit', // Minutos com 2 dígitos
-    hour12: false // Formato 24h
-}).replace(',', ' às'); // Substitui vírgula por "às"
+      // Estilos
+      const styles = {
+        titleFontSize: 12,
+        subtitleFontSize: 12,
+        textFontSize: 10,
+        margin: 15,
+        lineHeight: 5,
+      };
 
-doc.setFontSize(8); // Fonte pequena para rodapé
-doc.setTextColor(150, 150, 150); // Cor cinza
-doc.text(`Gerado em ${dataHora} • Famílias Vivendo na Graça e Unção do Espírito`, 105, 287, { align: "center" }); // Texto centralizado no rodapé
+      // Cabeçalho com logo acima do título
+      try {
+          const logoUrl = './logo.png';
+          const logoResponse = await fetch(logoUrl);
+          const logoBlob = await logoResponse.blob();
+          const logoDataUrl = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(logoBlob);
+          });
+          
+          const img = new Image();
+          img.src = logoDataUrl;
+          await new Promise((resolve) => {
+            img.onload = resolve;
+          });
+          
+          const originalWidth = img.width;
+          const originalHeight = img.height;
+          const aspectRatio = originalHeight / originalWidth;
+          
+          const desiredWidth = 80;
+          const proportionalHeight = desiredWidth * aspectRatio;
+          
+          const pageWidth = doc.internal.pageSize.getWidth();
+          const logoX = (pageWidth - desiredWidth) / 2;
+          
+          doc.addImage(logoDataUrl, 'PNG', logoX, 10, desiredWidth, proportionalHeight);
+          
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(styles.titleFontSize);
+          doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 10 + proportionalHeight + 5, { align: "center" });
+          
+          doc.setFontSize(styles.subtitleFontSize);
+          doc.text("Lista Completa de Membros", 105, 10 + proportionalHeight + 13, { align: "center" });
+          
+          doc.setDrawColor(200, 200, 200);
+          doc.setLineWidth(0.3);
+          const lineY = 10 + proportionalHeight + 20;
+          doc.line(styles.margin, lineY, 210 - styles.margin, lineY);
+          
+          let yPosition = lineY + 10;
+
+      } catch (error) {
+          console.error("Erro ao carregar o logo:", error);
+          
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(styles.titleFontSize);
+          doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" });
+          
+          doc.setFontSize(styles.subtitleFontSize);
+          doc.text("Lista Completa de Membros", 105, 28, { align: "center" });
+          
+          doc.setDrawColor(200, 200, 200);
+          doc.setLineWidth(0.3);
+          doc.line(styles.margin, 33, 210 - styles.margin, 33);
+          
+          let yPosition = 40;
+      }
+
+      // Carrega os dados
+      const snapshot = await new Promise(resolve =>
+          onValue(ref(db, "membros"), resolve, { onlyOnce: true })
+      );
+
+      const membros = [];
+      for (const id in snapshot.val()) {
+          membros.push(snapshot.val()[id]);
+      }
+
+      // Ordena por nome
+      membros.sort((a, b) => a.nome.localeCompare(b.nome));
+
+      // Configurações da tabela
+      let yPosition = 50;
+      const col1 = styles.margin;
+      const colWidth = (210 - (2 * styles.margin)) / 2;
+
+      // Calcular total de páginas necessárias
+      let totalPages = 1;
+      let currentY = yPosition;
+
+      membros.forEach((membro, index) => {
+          const memberHeight = 40;
+          
+          if (currentY + memberHeight > 270) {
+              totalPages++;
+              currentY = 20;
+          }
+          currentY += memberHeight;
+      });
+
+      // Adiciona membros
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(styles.textFontSize);
+
+      membros.forEach((membro, index) => {
+          if (yPosition > 270) {
+              doc.addPage();
+              yPosition = 20;
+          }
+          
+          const dados = [
+              `Nome: ${membro.nome || 'Não informado'}`,
+              `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
+              `Sexo: ${membro.sexo || 'Não informado'}`,
+              `Telefone: ${membro.telefone || 'Não informado'}`,
+              `Função: ${membro.funcao || 'Não informado'}`,
+              `Batismo: ${membro.batismo ? new Date(membro.batismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
+              `Endereço: ${
+                  [
+                      membro.endereco,
+                      membro.bairro,
+                      membro.cidade,
+                      membro.estado
+                  ]
+                  .filter(Boolean)
+                  .join(', ')
+                  || 'Não informado'
+              }`
+          ];
+
+          let x = col1;
+          let maxHeight = 0;
+          
+          dados.forEach((texto, i) => {
+              const textHeight = doc.splitTextToSize(texto, colWidth - 5).length * styles.lineHeight;
+              doc.text(texto, x, yPosition, { maxWidth: colWidth - 5 });
+              
+              if (i % 2 === 1) {
+                  yPosition += Math.max(styles.lineHeight * 2, textHeight);
+                  x = col1;
+              } else {
+                  x += colWidth;
+                  maxHeight = Math.max(maxHeight, textHeight);
+              }
+          });
+
+          doc.setDrawColor(220, 220, 220);
+          doc.setLineWidth(0.8);
+          yPosition += 7;
+          doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
+          
+          yPosition += 5;
+      });
+
+      // Adicionar rodapé em todas as páginas
+      addFooter(doc, totalPages);
 
       // Salva o PDF
       doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);
