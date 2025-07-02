@@ -220,14 +220,8 @@
         subtitleFontSize: 14,
         textFontSize: 11,
         margin: 15,
-        lineHeight: 3,
-        cellPadding: 5
-      };
-
-      // Espaçamento inicial diferenciado por página
-      const initialYPadding = {
-        firstPage: 50,   // Espaço inicial da primeira página
-        otherPages: 20   // Espaço reduzido para páginas seguintes
+        lineHeight: 5,  // Espaçamento aumentado
+        cellPadding: 5  // Espaço entre campos aumentado
       };
 
       // Cabeçalho com logo
@@ -323,8 +317,8 @@
           label: "Endereço", 
           field: ["endereco", "bairro", "cidade", "estado"], 
           format: (vals) => vals.filter(Boolean).join(', ') || 'Não informado',
-          fontSize: 10,
-          marginBottom: 8
+          fontSize: 11,
+          marginBottom: 8 // Adicione esta propriedade para espaçamento extra
         }
       ];
 
@@ -346,10 +340,10 @@
         });
         memberHeight += 12; // Espaço para linha divisória
 
-        // Quebra de página com espaçamento diferenciado
+        // Quebra de página se necessário
         if (yPosition + memberHeight > pageHeight - 15) {
           doc.addPage();
-          yPosition = totalPages === 1 ? initialYPadding.firstPage : initialYPadding.otherPages;
+          yPosition = 20;
           totalPages++;
         }
 
@@ -383,29 +377,21 @@
           }
         });
 
-        // Linha divisória com espaço reduzido
+        // Linha divisória com mais espaço
         doc.setDrawColor(230, 230, 230);
         doc.setLineWidth(0.3);
-        yPosition += 5; // Espaço antes da linha reduzido
+        yPosition += 8; // Espaço antes da linha aumentado
         doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-        yPosition += 5; // Espaço depois da linha reduzido
+        yPosition += 8; // Espaço depois da linha aumentado
       });
 
-      // Rodapé com espaçamento diferenciado
-      function addFooter(doc, totalPages, lastContentY) {
+      // Rodapé
+      function addFooter(doc, totalPages) {
         const pageCount = doc.internal.getNumberOfPages();
-        
         for (let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
           
-          // Espaçamento diferente para primeira página vs demais
-          const minSpace = i === 1 ? 10 : 5; // 10mm na 1ª página, 5mm nas outras
-          let footerY = doc.internal.pageSize.getHeight() - minSpace;
-          
-          // Verificação de sobreposição com conteúdo
-          if (lastContentY && footerY < lastContentY + minSpace) {
-            footerY = lastContentY + minSpace;
-          }
+          const footerY = doc.internal.pageSize.getHeight() - 10;
           
           // Texto centralizado
           setTextStyle(doc, false);
@@ -428,7 +414,7 @@
         }
       }
 
-      addFooter(doc, totalPages, yPosition);
+      addFooter(doc, totalPages);
       doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);
     });
 
