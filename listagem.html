@@ -334,6 +334,11 @@ btnExportar.addEventListener("click", async () => {
         
         const dados = [
           `Nome: ${membro.nome || 'Não informado'}`,
+          `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
+          `Telefone: ${membro.telefone || 'Não informado'}`,
+          `Função: ${membro.funcao || 'Não informado'}`,
+          `Sexo: ${membro.sexo === 'M' ? 'Masculino' : membro.sexo === 'F' ? 'Feminino' : 'Não informado'}`
+          `Batismo: ${membro.batismo ? new Date(membro.batismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
           `Endereço: ${
             [
               membro.endereco,
@@ -345,11 +350,6 @@ btnExportar.addEventListener("click", async () => {
             .join(', ')
             || 'Não informado'
           }`,
-          `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
-          `Batismo: ${membro.dataBatismo ? new Date(membro.dataBatismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
-          `Função: ${membro.funcao || 'Não informado'}`,
-          `Telefone: ${membro.telefone || 'Não informado'}`,
-          `Sexo: ${membro.sexo === 'M' ? 'Masculino' : membro.sexo === 'F' ? 'Feminino' : 'Não informado'}`
         ];
 
         let x = col1;
