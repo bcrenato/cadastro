@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lista de Membros</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
     body {
       padding-top: 70px;
@@ -38,96 +37,84 @@
 </head>
 <body>
 
-  <!-- Script de verificação de autenticação -->
-  <script type="module">
-    import { checkAuth } from './auth.js';
-    import { isUserAdmin } from './users.js';
+ <!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO (ATUALIZADO) -->
+<script type="module">
+  import { checkAuth } from './auth.js';
+  import { isUserAdmin } from './users.js';
+  
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = await checkAuth();
     
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await checkAuth();
-      
-      if (user && await isUserAdmin()) {
-        document.getElementById('adminMenuItem').style.display = 'block';
-      }
+    // Mostrar menu admin se o usuário for administrador
+    if (user && await isUserAdmin()) {
+      document.getElementById('adminMenuItem').style.display = 'block';
+    }
+  });
+</script>
 
-      if (user) {
-        document.getElementById('currentUserDisplay').querySelector('span').textContent = user.email || 'Usuário';
-      }
-
-      document.getElementById('logoutBtn').addEventListener('click', () => {
-        firebase.auth().signOut().then(() => {
-          window.location.href = 'login.html';
-        });
-      });
-    });
-  </script>
-
-  <!-- Navbar fixa no topo -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-    <div class="container">
-      <a class="navbar-brand" href="index.html">Listagem</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="index.html">
-              <i class="fas fa-user-plus me-1"></i> Cadastro
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="listagem.html">
-              <i class="fas fa-list me-1"></i> Listagem
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="aniversariantes.html">
-              <i class="fas fa-birthday-cake me-1"></i> Aniversariantes
-            </a>
-          </li>
-          
-          <li class="nav-item" id="adminMenuItem" style="display: none;">
-            <a class="nav-link" href="register.html">
-              <i class="fas fa-user-shield me-1"></i> Cadastrar Usuários
-            </a>
-          </li>
-        </ul>
+  <!-- 🔹 Navbar fixa no topo -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">Listagem</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="index.html">
+            <i class="fas fa-user-plus me-1"></i> Cadastro
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="listagem.html">
+            <i class="fas fa-list me-1"></i> Listagem
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="aniversariantes.html">
+            <i class="fas fa-birthday-cake me-1"></i> Aniversariantes
+          </a>
+        </li>
         
-        <div class="d-flex align-items-center">
-          <span class="navbar-text text-white me-3" id="currentUserDisplay">
-            <i class="fas fa-user-circle me-1"></i>
-            <span>Carregando...</span>
-          </span>
-          
-          <button id="logoutBtn" class="btn btn-sm btn-outline-light">
-            <i class="fas fa-sign-out-alt me-1"></i> Sair
-          </button>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <div class="container mt-4">
-    <div class="mb-3 d-flex justify-content-between">
-      <button id="btnSelecionar" class="btn btn-secondary">Selecionar Cadastros</button>
-      <div>
-        <button id="btnExcluir" class="btn btn-danger d-none me-2">Excluir Selecionados</button>
-        <button id="btnExportar" class="btn btn-success">
-          <i class="fas fa-file-pdf me-1"></i> Exportar PDF
+        <!-- Menu de Admin (só aparece para administradores) -->
+        <li class="nav-item" id="adminMenuItem" style="display: none;">
+          <a class="nav-link" href="register.html">
+            <i class="fas fa-user-shield me-1"></i> Cadastrar Usuários
+          </a>
+        </li>
+      </ul>
+      
+      <div class="d-flex align-items-center">
+        <!-- Nome do usuário logado -->
+        <span class="navbar-text text-white me-3" id="currentUserDisplay">
+          <i class="fas fa-user-circle me-1"></i>
+          <span>Carregando...</span>
+        </span>
+        
+        <!-- Botão de Logout -->
+        <button id="logoutBtn" class="btn btn-sm btn-outline-light">
+          <i class="fas fa-sign-out-alt me-1"></i> Sair
         </button>
       </div>
     </div>
+  </div>
+</nav>
 
+  <!-- 🔹 Conteúdo -->
+  <div class="container mt-4">
+
+    <!-- Botões de ação -->
+    <div class="mb-3 d-flex justify-content-between">
+      <button id="btnSelecionar" class="btn btn-secondary">Selecionar Cadastros</button>
+      <button id="btnExcluir" class="btn btn-danger d-none">Excluir Selecionados</button>
+    </div>
+
+    <!-- Lista de membros -->
     <div id="lista-membros" class="list-group"></div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
+  <!-- 🔹 Firebase + lógica -->
   <script type="module">
     import { db } from './firebase-config.js';
     import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
@@ -135,11 +122,11 @@
     const lista = document.getElementById("lista-membros");
     const btnSelecionar = document.getElementById("btnSelecionar");
     const btnExcluir = document.getElementById("btnExcluir");
-    const btnExportar = document.getElementById("btnExportar");
     let modoSelecao = false;
 
     const membrosRef = ref(db, "membros");
 
+    // Função para carregar os membros
     function carregarMembros(data) {
       lista.innerHTML = "";
 
@@ -156,7 +143,7 @@
         item.innerHTML = `
           <input type="checkbox" class="form-check-input me-2 checkbox-selecao" data-id="${id}">
           <a href="ficha.html?id=${id}" class="info-membro">
-            <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto" onerror="this.src='./sem-foto.jpg'">
+            <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
             <div>
               <div><strong>${membro.nome}</strong></div>
               <small>${membro.funcao}</small>
@@ -170,6 +157,7 @@
       atualizarVisibilidadeCheckboxes();
     }
 
+    // Alterna visibilidade dos checkboxes
     function atualizarVisibilidadeCheckboxes() {
       const checkboxes = document.querySelectorAll(".checkbox-selecao");
       checkboxes.forEach(cb => {
@@ -180,11 +168,13 @@
       btnSelecionar.textContent = modoSelecao ? "Cancelar Seleção" : "Selecionar Cadastros";
     }
 
+    // Alternar seleção
     btnSelecionar.addEventListener("click", () => {
       modoSelecao = !modoSelecao;
       atualizarVisibilidadeCheckboxes();
     });
 
+    // Excluir selecionados
     btnExcluir.addEventListener("click", () => {
       const selecionados = document.querySelectorAll(".checkbox-selecao:checked");
       if (selecionados.length === 0) {
@@ -200,236 +190,13 @@
       });
     });
 
-    // Função auxiliar para alternar estilos
-    function setTextStyle(doc, isBold = false) {
-      doc.setFont("helvetica", isBold ? "bold" : "normal");
-    }
-
-    btnExportar.addEventListener("click", async () => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-        compress: true
-      });
-
-      // Estilos otimizados
-      const styles = {
-        titleFontSize: 12,
-        subtitleFontSize: 14,
-        textFontSize: 11,
-        margin: 15,
-        lineHeight: 5,  // Espaçamento aumentado
-        cellPadding: 5  // Espaço entre campos aumentado
-      };
-
-      // Cabeçalho com logo
-      try {
-          const logoUrl = './logo.png';
-          const logoResponse = await fetch(logoUrl);
-          const logoBlob = await logoResponse.blob();
-          const logoDataUrl = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(logoBlob);
-          });
-          
-          const img = new Image();
-          img.src = logoDataUrl;
-          await new Promise((resolve) => {
-            img.onload = resolve;
-          });
-          
-          const originalWidth = img.width;
-          const originalHeight = img.height;
-          const aspectRatio = originalHeight / originalWidth;
-          
-          const desiredWidth = 80;
-          const proportionalHeight = desiredWidth * aspectRatio;
-          
-          const pageWidth = doc.internal.pageSize.getWidth();
-          const logoX = (pageWidth - desiredWidth) / 2;
-          
-          doc.addImage(logoDataUrl, 'PNG', logoX, 10, desiredWidth, proportionalHeight);
-          
-          // Título em negrito
-          setTextStyle(doc, true);
-          doc.setFontSize(styles.titleFontSize);
-          doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 10 + proportionalHeight + 5, { align: "center" });
-          
-          // Subtítulo em negrito
-          doc.setFontSize(styles.subtitleFontSize);
-          doc.text("Lista Completa de Membros", 105, 10 + proportionalHeight + 13, { align: "center" });
-          
-          doc.setDrawColor(200, 200, 200);
-          doc.setLineWidth(0.3);
-          const lineY = 10 + proportionalHeight + 20;
-          doc.line(styles.margin, lineY, 210 - styles.margin, lineY);
-          
-          let yPosition = lineY + 10;
-
-      } catch (error) {
-          console.error("Erro ao carregar o logo:", error);
-          
-          setTextStyle(doc, true);
-          doc.setFontSize(styles.titleFontSize);
-          doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" });
-          
-          doc.setFontSize(styles.subtitleFontSize);
-          doc.text("Lista Completa de Membros", 105, 28, { align: "center" });
-          
-          doc.setDrawColor(200, 200, 200);
-          doc.setLineWidth(0.3);
-          doc.line(styles.margin, 33, 210 - styles.margin, 33);
-          
-          let yPosition = 40;
-      }
-
-      // Carrega os dados
-      const snapshot = await new Promise(resolve =>
-          onValue(ref(db, "membros"), resolve, { onlyOnce: true })
-      );
-
-      const membros = [];
-      for (const id in snapshot.val()) {
-          membros.push(snapshot.val()[id]);
-      }
-
-      membros.sort((a, b) => a.nome.localeCompare(b.nome));
-
-      // Configurações de layout
-      let yPosition = 50;
-      const col1 = styles.margin;
-      const colWidth = (210 - (2 * styles.margin)) / 2;
-      const pageHeight = doc.internal.pageSize.getHeight();
-      let totalPages = 1;
-
-      // Formato fixo dos campos
-      const campos = [
-        { label: "Nome", field: "nome" },
-        { label: "Nascimento", field: "nascimento", format: (val) => val ? new Date(val).toLocaleDateString('pt-BR') : 'Não informado' },
-        { label: "Sexo", field: "sexo" },
-        { label: "Telefone", field: "telefone" },
-        { label: "Função", field: "funcao" },
-        { label: "Batismo", field: "batismo", format: (val) => val ? new Date(val).toLocaleDateString('pt-BR') : 'Não informado' },
-        { 
-          label: "Endereço", 
-          field: ["endereco", "bairro", "cidade", "estado"], 
-          format: (vals) => vals.filter(Boolean).join(', ') || 'Não informado',
-          fontSize: 11,
-          marginBottom: 8 // Adicione esta propriedade para espaçamento extra
-        }
-      ];
-
-      // Adiciona membros com formatação diferenciada
-      membros.forEach((membro) => {
-        // Calcula altura necessária
-        let memberHeight = 0;
-        campos.forEach((campo, i) => {
-          const value = Array.isArray(campo.field) 
-            ? campo.format(campo.field.map(f => membro[f]))
-            : campo.format 
-              ? campo.format(membro[campo.field])
-              : membro[campo.field] || 'Não informado';
-          
-          const text = `${campo.label}: ${value}`;
-          const lines = doc.splitTextToSize(text, colWidth - 5);
-          memberHeight += lines.length * styles.lineHeight;
-          if (i % 2 === 1) memberHeight += styles.cellPadding;
-        });
-        memberHeight += 12; // Espaço para linha divisória
-
-        // Quebra de página se necessário
-        if (yPosition + memberHeight > pageHeight - 15) {
-          doc.addPage();
-          yPosition = 30;
-          totalPages++;
-        }
-
-        if (yPosition < pageHeight - 20) {
-          doc.setDrawColor(255, 255, 255); // linha branca para "apagar"
-          doc.setLineWidth(1);
-          doc.line(styles.margin, yPosition - 4, 210 - styles.margin, yPosition - 4);
-        }
-
-        // Adiciona campos formatados
-        let x = col1;
-        campos.forEach((campo, i) => {
-          const value = Array.isArray(campo.field) 
-            ? campo.format(campo.field.map(f => membro[f]))
-            : campo.format 
-              ? campo.format(membro[campo.field])
-              : membro[campo.field] || 'Não informado';
-          
-          const currentFontSize = campo.fontSize || styles.textFontSize;
-          doc.setFontSize(currentFontSize);
-          
-          // Label em negrito
-          setTextStyle(doc, true);
-          doc.text(`${campo.label}:`, x, yPosition);
-          const labelWidth = doc.getTextWidth(`${campo.label}:`);
-          
-          // Valor em normal
-          setTextStyle(doc, false);
-          const lines = doc.splitTextToSize(value, colWidth - labelWidth - 5);
-          doc.text(lines, x + labelWidth + 2, yPosition);
-          
-          if (i % 2 === 1) {
-              yPosition += Math.max(styles.lineHeight, lines.length * styles.lineHeight) + 
-                          (campo.marginBottom || styles.cellPadding); // Use marginBottom se existir
-              x = col1;
-            } else {
-              x += colWidth;
-            }
-          });
-
-        // Linha divisória com mais espaço
-        doc.setDrawColor(230, 230, 230);
-        doc.setLineWidth(0.3);
-        yPosition += 4; // Reduzido
-        doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-        yPosition += 4; // Reduzido
-          });
-
-      // Rodapé
-      function addFooter(doc, totalPages) {
-        const pageCount = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          doc.setPage(i);
-          
-          const footerY = doc.internal.pageSize.getHeight() - 10;
-          
-          // Texto centralizado
-          setTextStyle(doc, false);
-          doc.setFontSize(8);
-          doc.setTextColor(100, 100, 100);
-          doc.text(`Página ${i} de ${totalPages}`, 105, footerY, { align: "center" });
-          
-          // Texto à direita
-          const dataHora = new Date().toLocaleString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          }).replace(',', ' às');
-          
-          doc.setFontSize(7);
-          doc.text(`Gerado em ${dataHora}`, 200, footerY, { align: "right" });
-        }
-      }
-
-      addFooter(doc, totalPages);
-      doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);
-    });
-
     // Carrega os dados do Firebase
     onValue(membrosRef, (snapshot) => {
       const data = snapshot.val();
       carregarMembros(data);
     });
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
