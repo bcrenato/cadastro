@@ -218,7 +218,7 @@
       const styles = {
         titleFontSize: 12,
         subtitleFontSize: 14,
-        textFontSize: 12,
+        textFontSize: 11,
         margin: 15,
         lineHeight: 6,  // Espaçamento aumentado
         cellPadding: 6  // Espaço entre campos aumentado
@@ -301,7 +301,9 @@
       // Configurações de layout
       let yPosition = 50;
       const col1 = styles.margin;
-      const colWidth = (210 - (2 * styles.margin)) / 2;
+      const totalWidth = 210 - (2 * styles.margin);
+      const col1Width = totalWidth * 0.6;  // 60% para primeira coluna
+      const col2Width = totalWidth * 0.4;  // 40% para segunda coluna
       const pageHeight = doc.internal.pageSize.getHeight();
       let totalPages = 1;
 
@@ -317,7 +319,7 @@
           label: "Endereço", 
           field: ["endereco", "bairro", "cidade", "estado"], 
           format: (vals) => vals.filter(Boolean).join(', ') || 'Não informado',
-          fontSize: 12
+          fontSize: 11
         }
       ];
 
@@ -347,7 +349,7 @@
         }
 
         // Adiciona campos formatados
-        let x = col1;
+       let x = col1;
         campos.forEach((campo, i) => {
           const value = Array.isArray(campo.field) 
             ? campo.format(campo.field.map(f => membro[f]))
@@ -355,8 +357,8 @@
               ? campo.format(membro[campo.field])
               : membro[campo.field] || 'Não informado';
           
-          const currentFontSize = campo.fontSize || styles.textFontSize;
-          doc.setFontSize(currentFontSize);
+          const currentColWidth = i % 2 === 0 ? col1Width : col2Width;
+          const text = `${campo.label}: ${value}`;
           
           // Label em negrito
           setTextStyle(doc, true);
@@ -365,16 +367,16 @@
           
           // Valor em normal
           setTextStyle(doc, false);
-          const lines = doc.splitTextToSize(value, colWidth - labelWidth - 5);
-          doc.text(lines, x + labelWidth + 2, yPosition);
-          
+          const lines = doc.splitTextToSize(value, currentColWidth - labelWidth - 5);
+          doc.text(lines, x + labelWidth + 2, yPosition, { maxWidth: currentColWidth - labelWidth - 5 });
+                
           if (i % 2 === 1) {
-            yPosition += Math.max(styles.lineHeight, lines.length * styles.lineHeight) + styles.cellPadding;
-            x = col1;
-          } else {
-            x += colWidth;
-          }
-        });
+              yPosition += Math.max(styles.lineHeight, lines.length * styles.lineHeight) + styles.cellPadding;
+              x = col1;
+            } else {
+              x += col1Width;
+            }
+          });
 
         // Linha divisória com mais espaço
         doc.setDrawColor(230, 230, 230);
