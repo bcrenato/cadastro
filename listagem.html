@@ -317,7 +317,8 @@
           label: "Endereço", 
           field: ["endereco", "bairro", "cidade", "estado"], 
           format: (vals) => vals.filter(Boolean).join(', ') || 'Não informado',
-          fontSize: 11
+          fontSize: 11,
+          marginBottom: 8 // Adicione esta propriedade para espaçamento extra
         }
       ];
 
@@ -379,9 +380,9 @@
         // Linha divisória com mais espaço
         doc.setDrawColor(230, 230, 230);
         doc.setLineWidth(0.3);
-        yPosition += 5; // Espaço antes da linha aumentado
+        yPosition += 8; // Espaço antes da linha aumentado
         doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-        yPosition += 5; // Espaço depois da linha aumentado
+        yPosition += 8; // Espaço depois da linha aumentado
       });
 
       // Rodapé
