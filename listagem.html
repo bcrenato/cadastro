@@ -229,10 +229,10 @@
       const styles = {
         titleFontSize: 12,
         subtitleFontSize: 14,
-        textFontSize: 10,
+        textFontSize: 10,  // Tamanho da fonte
         margin: 15,
-        lineHeight: 3.5,
-        cellPadding: 1.5
+        lineHeight: 5, // AUMENTE ESTE VALOR para mais espaço entre linhas (era 3.5)
+        cellPadding: 3 // AUMENTE ESTE VALOR para mais espaço entre campos (era 1.5)
       };
 
       // Cabeçalho com logo acima do título
@@ -385,9 +385,9 @@
         // Linha divisória sutil
         doc.setDrawColor(230, 230, 230);
         doc.setLineWidth(0.5);
-        yPosition += 6;
+        yPosition += 6; // Espaço antes da linha (era 3)
         doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-        yPosition += 6;
+        yPosition += 6;  // Espaço depois da linha (era 3)
       });
 
       // Rodapé compacto
