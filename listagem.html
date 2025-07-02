@@ -224,7 +224,28 @@ btnExportar.addEventListener("click", async () => {
     format: "a4",
     compress: true
   });
+ let totalPages = 1; // Contador de páginas
 
+const addFooter = (doc, pageNumber) => {
+  const pageCount = doc.internal.getNumberOfPages();
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  
+  // Número da página (centralizado)
+  doc.text(`Página ${pageNumber} de ${pageCount}`, 105, 285, { align: "center" });
+  
+  // Data de geração (alinhado à direita - mantendo seu formato original)
+  const dataHora = new Date().toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).replace(',', ' às');
+  
+  doc.text(`Gerado em ${dataHora}`, 200, 285, { align: "right" });
+};
   // Estilos
   const styles = {
     titleFontSize: 12,
@@ -382,19 +403,15 @@ membros.forEach((membro, index) => {
 });
 
 // Rodapé
-const dataHora = new Date().toLocaleString('pt-BR', { // Formata data e hora
-    day: '2-digit', // Dia com 2 dígitos
-    month: '2-digit', // Mês com 2 dígitos
-    year: 'numeric', // Ano completo
-    hour: '2-digit', // Hora com 2 dígitos
-    minute: '2-digit', // Minutos com 2 dígitos
-    hour12: false // Formato 24h
-}).replace(',', ' às'); // Substitui vírgula por "às"
+addFooter(doc, totalPages); // Adiciona rodapé na última página
+doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);
+});
 
-doc.setFontSize(8); // Fonte pequena para rodapé
-doc.setTextColor(150, 150, 150); // Cor cinza
-doc.text(`Gerado em ${dataHora} • Famílias Vivendo na Graça e Unção do Espírito`, 105, 287, { align: "center" }); // Texto centralizado no rodapé
-
+// Mantenha o resto igual
+onValue(membrosRef, (snapshot) => {
+  const data = snapshot.val();
+  carregarMembros(data);
+});
       // Salva o PDF
       doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);
     });
