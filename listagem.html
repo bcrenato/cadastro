@@ -218,10 +218,10 @@
       const styles = {
         titleFontSize: 12,
         subtitleFontSize: 14,
-        textFontSize: 11,
+        textFontSize: 12,
         margin: 15,
         lineHeight: 6,  // Espaçamento aumentado
-        cellPadding: 5  // Espaço entre campos aumentado
+        cellPadding: 6  // Espaço entre campos aumentado
       };
 
       // Cabeçalho com logo
@@ -317,7 +317,7 @@
           label: "Endereço", 
           field: ["endereco", "bairro", "cidade", "estado"], 
           format: (vals) => vals.filter(Boolean).join(', ') || 'Não informado',
-          fontSize: 11
+          fontSize: 12
         }
       ];
 
