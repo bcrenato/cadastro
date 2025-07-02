@@ -215,9 +215,9 @@
                       m.sexo === "F" || m.sexo?.toLowerCase() === "feminino" ? "Feminino" : 
                       "Não informado",
         // Garantir nome em maiúsculas
-        nomeFormatado: m.nome ? m.nome.toUpperCase() : "SEM INFORMAÇÃO",
+        nomeFormatado: m.nome ? m.nome.toUpperCase() : "Não informado",
         // Garantir função em maiúsculas
-        funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "SEM INFORMAÇÃO"
+        funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "Não informado"
       }))
       // Ordenar primeiro por função, depois por nome
       .sort((a, b) => {
@@ -236,11 +236,11 @@
         
         return [
           m.nomeFormatado,
-          m.nascimento ? formatDate(m.nascimento) : "SEM INFORMAÇÃO",
+          m.nascimento ? formatDate(m.nascimento) : "Não informado",
           m.sexoFormatado,
           m.telefone || "SEM INFORMAÇÃO",
           m.funcaoFormatada,
-          m.batismo ? formatDate(m.batismo) : "SEM INFORMAÇÃO",
+          m.batismo ? formatDate(m.batismo) : "Não informado",
           `${endereco}\n${m.cidade || ''}, ${m.estado || ''}`
         ];
       });
@@ -264,7 +264,7 @@
         fontStyle: 'bold'
       },
       columnStyles: {
-        0: { cellWidth: 66, fontStyle: 'bold' }, // NOME em negrito
+        0: { cellWidth: 66}, // NOME em negrito  0: { cellWidth: 66, fontStyle: 'bold' },
         1: { cellWidth: 25 },
         2: { cellWidth: 20 }, // Ajustado para "Masculino"/"Feminino"
         3: { cellWidth: 25 },
@@ -277,6 +277,9 @@
         doc.setFontSize(8);
         doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
         
+        const now = new Date();
+        doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" });
+
         // Ajuste para páginas seguintes
         if (data.pageNumber > 1) {
           data.table.startY = 15;
