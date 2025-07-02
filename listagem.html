@@ -157,56 +157,42 @@
 <script>
   document.getElementById("btnExportarPDF").addEventListener("click", async () => {
   try {
-    // 1. Configuração do PDF com compressão
+    // 1. Configuração do PDF
     const doc = new window.jsPDFGlobal({
       orientation: "landscape",
       unit: "mm",
       format: "a4",
-      compress: true,
-      hotfixes: ["px_scaling"]
+      compress: true
     });
 
-    // 2. Carregamento otimizado da logo
+    // 2. Carregar a logo
     const logoUrl = "./logo.png";
     const img = await new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => {
-        // Reduz a qualidade da imagem para 80%
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = img.width * 0.8;
-        canvas.height = img.height * 0.8;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas);
-      };
+      img.onload = () => resolve(img);
       img.onerror = () => resolve(null);
       img.src = logoUrl;
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
-    let startY = 20; // Posição inicial padrão
+    let startY = 15; // Posição inicial padrão
 
-    // 3. Cabeçalho completo com logo
+    // 3. Adicionar cabeçalho na primeira página
     if (img) {
-      const logoWidth = 70; // Largura moderada para equilíbrio
+      const logoWidth = 70;
       const logoHeight = (img.height / img.width) * logoWidth;
       const logoX = (pageWidth - logoWidth) / 2;
       
-      // Adiciona a logo
-      doc.addImage(img, 'JPEG', logoX, 15, logoWidth, logoHeight, undefined, 'MEDIUM');
-      
-      // Textos do cabeçalho
+      doc.addImage(img, 'JPEG', logoX, 15, logoWidth, logoHeight);
       doc.setFontSize(14);
-      doc.setTextColor(40);
-      doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 15 + logoHeight + 10, { align: "center" });
-      
+      doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 15 + logoHeight + 8, { align: "center" });
       doc.setFontSize(12);
-      doc.text("Lista Completa de Membros", pageWidth / 2, 15 + logoHeight + 16, { align: "center" });
+      doc.text("Lista Completa de Membros", pageWidth / 2, 15 + logoHeight + 15, { align: "center" });
       
-      startY = 15 + logoHeight + 25; // Ajusta a posição inicial da tabela
+      startY = 15 + logoHeight + 25; // Posição após o cabeçalho
     }
 
-    // 4. Obtenção dos dados do Firebase
+    // 4. Obter dados do Firebase
     const { db } = await import("./firebase-config.js");
     const { get, ref, child } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js");
     const snapshot = await get(child(ref(db), "membros"));
@@ -216,7 +202,7 @@
       return;
     }
 
-    // 5. Preparação compacta dos dados
+    // 5. Preparar os dados
     const membrosArray = Object.values(snapshot.val()).map(m => {
       const endereco = [
         m.endereco, 
@@ -235,61 +221,49 @@
       ];
     });
 
-    // 6. Configuração da tabela otimizada
+    // 6. Configuração da tabela
     doc.autoTable({
       head: [["Nome", "Nascimento", "Sexo", "Telefone", "Função", "Batismo", "Endereço"]],
       body: membrosArray,
-      startY: startY,
+      startY: startY, // Começa logo após o cabeçalho
       margin: { top: 10, bottom: 15 },
       styles: {
         fontSize: 9,
         cellPadding: 1.5,
-        overflow: "linebreak",
-        halign: "left",
-        valign: "middle",
-        lineWidth: 0.2
+        overflow: "linebreak"
       },
       headStyles: {
         fillColor: [41, 128, 185],
         textColor: [255, 255, 255],
-        fontSize: 9,
-        cellPadding: 2,
-        lineWidth: 0.2
+        fontSize: 9
       },
       columnStyles: {
-        0: { cellWidth: 66 },  // Nome
-        1: { cellWidth: 25 },  // Nascimento
-        2: { cellWidth: 20 },  // Sexo
-        3: { cellWidth: 30 },  // Telefone
-        4: { cellWidth: 25 },  // Função
-        5: { cellWidth: 25 },  // Batismo
-        6: { cellWidth: 80 }   // Endereço
+        0: { cellWidth: 55 },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 12 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 70 }
       },
       didDrawPage: function(data) {
         // Rodapé em todas as páginas
         doc.setFontSize(8);
-        doc.setTextColor(100);
         doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
         
-        // Data de geração
-        const now = new Date();
-        doc.text(`Gerado em: ${now.toLocaleString('pt-BR')}`, pageWidth - 15, doc.internal.pageSize.getHeight() - 10, { align: "right" });
-
         // Ajuste para páginas seguintes
         if (data.pageNumber > 1) {
-          data.table.startY = 20;
+          data.table.startY = 15;
         }
-      },
-      pageBreak: 'avoid',
-      tableWidth: 'wrap'
+      }
     });
 
-    // 7. Salvar o PDF otimizado
+    // 7. Salvar o PDF
     doc.save("lista_membros.pdf");
 
   } catch (error) {
     console.error("Erro ao gerar PDF:", error);
-    alert("Erro ao gerar PDF. Verifique o console para detalhes.");
+    alert("Erro ao gerar PDF: " + error.message);
   }
 });
 
@@ -304,7 +278,7 @@ function formatDate(dateString) {
       year: 'numeric'
     });
   } catch {
-    return dateString; // Retorna original se não puder formatar
+    return dateString;
   }
 }
 </script>
