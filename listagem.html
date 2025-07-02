@@ -211,12 +211,12 @@
       ].filter(Boolean).join(", ");
       
       return [
-        m.nome || "-",
-        m.nascimento ? formatDate(m.nascimento) : "-",
-        m.sexo ? m.sexo.charAt(0).toUpperCase() : "-",
-        m.telefone || "-",
-        m.funcao || "-",
-        m.batismo ? formatDate(m.batismo) : "-",
+        m.nome || "Sem Informação",
+        m.nascimento ? formatDate(m.nascimento) : "Sem Informação",
+        m.sexo || "Sem Informação",
+        m.telefone || "Sem Informação",
+        m.funcao || "Sem Informação",
+        m.batismo ? formatDate(m.batismo) : "Sem Informação",
         `${endereco}\n${m.cidade || ''}, ${m.estado || ''}`
       ];
     });
@@ -238,13 +238,13 @@
         fontSize: 9
       },
       columnStyles: {
-        0: { cellWidth: 55 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 12 },
-        3: { cellWidth: 25 },
+        0: { cellWidth: 66 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 30 },
         4: { cellWidth: 25 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 70 }
+        5: { cellWidth: 25 },
+        6: { cellWidth: 80 }
       },
       didDrawPage: function(data) {
         // Rodapé em todas as páginas
