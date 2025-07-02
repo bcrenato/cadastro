@@ -46,17 +46,14 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await checkAuth();
       
-      // Mostrar menu admin se o usuário for administrador
       if (user && await isUserAdmin()) {
         document.getElementById('adminMenuItem').style.display = 'block';
       }
 
-      // Mostrar nome do usuário logado
       if (user) {
         document.getElementById('currentUserDisplay').querySelector('span').textContent = user.email || 'Usuário';
       }
 
-      // Configurar logout
       document.getElementById('logoutBtn').addEventListener('click', () => {
         firebase.auth().signOut().then(() => {
           window.location.href = 'login.html';
@@ -90,7 +87,6 @@
             </a>
           </li>
           
-          <!-- Menu de Admin (só aparece para administradores) -->
           <li class="nav-item" id="adminMenuItem" style="display: none;">
             <a class="nav-link" href="register.html">
               <i class="fas fa-user-shield me-1"></i> Cadastrar Usuários
@@ -99,13 +95,11 @@
         </ul>
         
         <div class="d-flex align-items-center">
-          <!-- Nome do usuário logado -->
           <span class="navbar-text text-white me-3" id="currentUserDisplay">
             <i class="fas fa-user-circle me-1"></i>
             <span>Carregando...</span>
           </span>
           
-          <!-- Botão de Logout -->
           <button id="logoutBtn" class="btn btn-sm btn-outline-light">
             <i class="fas fa-sign-out-alt me-1"></i> Sair
           </button>
@@ -114,9 +108,7 @@
     </div>
   </nav>
 
-  <!-- Conteúdo -->
   <div class="container mt-4">
-    <!-- Botões de ação -->
     <div class="mb-3 d-flex justify-content-between">
       <button id="btnSelecionar" class="btn btn-secondary">Selecionar Cadastros</button>
       <div>
@@ -127,18 +119,15 @@
       </div>
     </div>
 
-    <!-- Lista de membros -->
     <div id="lista-membros" class="list-group"></div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Firebase + lógica -->
   <script type="module">
     import { db } from './firebase-config.js';
     import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
@@ -151,7 +140,6 @@
 
     const membrosRef = ref(db, "membros");
 
-    // Função para carregar os membros
     function carregarMembros(data) {
       lista.innerHTML = "";
 
@@ -182,7 +170,6 @@
       atualizarVisibilidadeCheckboxes();
     }
 
-    // Alterna visibilidade dos checkboxes
     function atualizarVisibilidadeCheckboxes() {
       const checkboxes = document.querySelectorAll(".checkbox-selecao");
       checkboxes.forEach(cb => {
@@ -193,13 +180,11 @@
       btnSelecionar.textContent = modoSelecao ? "Cancelar Seleção" : "Selecionar Cadastros";
     }
 
-    // Alternar seleção
     btnSelecionar.addEventListener("click", () => {
       modoSelecao = !modoSelecao;
       atualizarVisibilidadeCheckboxes();
     });
 
-    // Excluir selecionados
     btnExcluir.addEventListener("click", () => {
       const selecionados = document.querySelectorAll(".checkbox-selecao:checked");
       if (selecionados.length === 0) {
@@ -215,7 +200,11 @@
       });
     });
 
-    // Exportar para PDF
+    // Função auxiliar para alternar estilos
+    function setTextStyle(doc, isBold = false) {
+      doc.setFont("helvetica", isBold ? "bold" : "normal");
+    }
+
     btnExportar.addEventListener("click", async () => {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({
@@ -229,13 +218,13 @@
       const styles = {
         titleFontSize: 12,
         subtitleFontSize: 14,
-        textFontSize: 11,  // Tamanho da fonte
+        textFontSize: 11,
         margin: 15,
-        lineHeight: 5, // AUMENTE ESTE VALOR para mais espaço entre linhas (era 3.5)
-        cellPadding: 5 // AUMENTE ESTE VALOR para mais espaço entre campos (era 1.5)
+        lineHeight: 6,  // Espaçamento aumentado
+        cellPadding: 5  // Espaço entre campos aumentado
       };
 
-      // Cabeçalho com logo acima do título
+      // Cabeçalho com logo
       try {
           const logoUrl = './logo.png';
           const logoResponse = await fetch(logoUrl);
@@ -264,10 +253,12 @@
           
           doc.addImage(logoDataUrl, 'PNG', logoX, 10, desiredWidth, proportionalHeight);
           
-          doc.setFont("helvetica", "bold");
+          // Título em negrito
+          setTextStyle(doc, true);
           doc.setFontSize(styles.titleFontSize);
           doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 10 + proportionalHeight + 5, { align: "center" });
           
+          // Subtítulo em negrito
           doc.setFontSize(styles.subtitleFontSize);
           doc.text("Lista Completa de Membros", 105, 10 + proportionalHeight + 13, { align: "center" });
           
@@ -281,7 +272,7 @@
       } catch (error) {
           console.error("Erro ao carregar o logo:", error);
           
-          doc.setFont("helvetica", "bold");
+          setTextStyle(doc, true);
           doc.setFontSize(styles.titleFontSize);
           doc.text("Famílias Vivendo na Graça e Unção do Espírito", 105, 20, { align: "center" });
           
@@ -305,7 +296,6 @@
           membros.push(snapshot.val()[id]);
       }
 
-      // Ordena por nome
       membros.sort((a, b) => a.nome.localeCompare(b.nome));
 
       // Configurações de layout
@@ -315,7 +305,7 @@
       const pageHeight = doc.internal.pageSize.getHeight();
       let totalPages = 1;
 
-      // Formato fixo e ordenado dos campos
+      // Formato fixo dos campos
       const campos = [
         { label: "Nome", field: "nome" },
         { label: "Nascimento", field: "nascimento", format: (val) => val ? new Date(val).toLocaleDateString('pt-BR') : 'Não informado' },
@@ -331,9 +321,9 @@
         }
       ];
 
-      // Adiciona membros com formatação consistente
+      // Adiciona membros com formatação diferenciada
       membros.forEach((membro) => {
-        // Calcula altura necessária ANTES de adicionar
+        // Calcula altura necessária
         let memberHeight = 0;
         campos.forEach((campo, i) => {
           const value = Array.isArray(campo.field) 
@@ -347,10 +337,10 @@
           memberHeight += lines.length * styles.lineHeight;
           if (i % 2 === 1) memberHeight += styles.cellPadding;
         });
-        memberHeight += 6; // Espaço para linha divisória
+        memberHeight += 12; // Espaço para linha divisória
 
         // Quebra de página se necessário
-        if (yPosition + memberHeight > pageHeight - 12) {
+        if (yPosition + memberHeight > pageHeight - 15) {
           doc.addPage();
           yPosition = 20;
           totalPages++;
@@ -365,12 +355,18 @@
               ? campo.format(membro[campo.field])
               : membro[campo.field] || 'Não informado';
           
-          const text = `${campo.label}: ${value}`;
           const currentFontSize = campo.fontSize || styles.textFontSize;
           doc.setFontSize(currentFontSize);
           
-          const lines = doc.splitTextToSize(text, colWidth - 5);
-          doc.text(lines, x, yPosition, { maxWidth: colWidth - 5 });
+          // Label em negrito
+          setTextStyle(doc, true);
+          doc.text(`${campo.label}:`, x, yPosition);
+          const labelWidth = doc.getTextWidth(`${campo.label}:`);
+          
+          // Valor em normal
+          setTextStyle(doc, false);
+          const lines = doc.splitTextToSize(value, colWidth - labelWidth - 5);
+          doc.text(lines, x + labelWidth + 2, yPosition);
           
           if (i % 2 === 1) {
             yPosition += Math.max(styles.lineHeight, lines.length * styles.lineHeight) + styles.cellPadding;
@@ -378,19 +374,17 @@
           } else {
             x += colWidth;
           }
-          
-          doc.setFontSize(styles.textFontSize);
         });
 
-        // Linha divisória sutil
+        // Linha divisória com mais espaço
         doc.setDrawColor(230, 230, 230);
-        doc.setLineWidth(0.5);
-        yPosition += 8; // Espaço antes da linha (era 3)
+        doc.setLineWidth(0.3);
+        yPosition += 8; // Espaço antes da linha aumentado
         doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-        yPosition += 8;  // Espaço depois da linha (era 3)
+        yPosition += 8; // Espaço depois da linha aumentado
       });
 
-      // Rodapé compacto
+      // Rodapé
       function addFooter(doc, totalPages) {
         const pageCount = doc.internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
@@ -398,10 +392,13 @@
           
           const footerY = doc.internal.pageSize.getHeight() - 5;
           
+          // Texto centralizado
+          setTextStyle(doc, false);
           doc.setFontSize(8);
           doc.setTextColor(100, 100, 100);
           doc.text(`Página ${i} de ${totalPages}`, 105, footerY, { align: "center" });
           
+          // Texto à direita
           const dataHora = new Date().toLocaleString('pt-BR', {
             day: '2-digit',
             month: '2-digit',
