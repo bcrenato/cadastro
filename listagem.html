@@ -379,9 +379,9 @@
         // Linha divisória com mais espaço
         doc.setDrawColor(230, 230, 230);
         doc.setLineWidth(0.3);
-        yPosition += 10; // Espaço antes da linha aumentado
+        yPosition += 5; // Espaço antes da linha aumentado
         doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-        yPosition += 10; // Espaço depois da linha aumentado
+        yPosition += 5; // Espaço depois da linha aumentado
       });
 
       // Rodapé
@@ -390,7 +390,7 @@
         for (let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
           
-          const footerY = doc.internal.pageSize.getHeight() - 5;
+          const footerY = doc.internal.pageSize.getHeight() - 10;
           
           // Texto centralizado
           setTextStyle(doc, false);
