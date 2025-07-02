@@ -202,46 +202,61 @@
       return;
     }
 
-    // 5. Preparar os dados
-    const membrosArray = Object.values(snapshot.val()).map(m => {
-      const endereco = [
-        m.endereco, 
-        m.numero && `Nº${m.numero}`, 
-        m.bairro
-      ].filter(Boolean).join(", ");
-      
-      return [
-        m.nome || "Sem Informação",
-        m.nascimento ? formatDate(m.nascimento) : "Sem Informação",
-        m.sexo || "Sem Informação",
-        m.telefone || "Sem Informação",
-        m.funcao || "Sem Informação",
-        m.batismo ? formatDate(m.batismo) : "Sem Informação",
-        `${endereco}\n${m.cidade || ''}, ${m.estado || ''}`
-      ];
-    });
+    // 5. Ordenar e preparar os dados
+    const membrosArray = Object.values(snapshot.val())
+      .map(m => ({
+        ...m,
+        // Definir ordem de prioridade para funções
+        ordemFuncao: m.funcao === "Pastor" ? 1 : 
+                    m.funcao === "Diácono" ? 2 : 
+                    m.funcao === "Membro" ? 3 : 4,
+        // Formatar sexo corretamente
+        sexoFormatado: m.sexo === "M" ? "Masculino" : 
+                      m.sexo === "F" ? "Feminino" : 
+                      m.sexo || "Não informado"
+      }))
+      .sort((a, b) => a.ordemFuncao - b.ordemFuncao || a.nome.localeCompare(b.nome))
+      .map(m => {
+        const endereco = [
+          m.endereco, 
+          m.numero && `Nº${m.numero}`, 
+          m.bairro
+        ].filter(Boolean).join(", ");
+        
+        return [
+          m.nome ? m.nome.toUpperCase() : "SEM INFORMAÇÃO",
+          m.nascimento ? formatDate(m.nascimento) : "SEM INFORMAÇÃO",
+          m.sexoFormatado, // Usando o sexo formatado
+          m.telefone || "SEM INFORMAÇÃO",
+          m.funcao ? m.funcao.toUpperCase() : "SEM INFORMAÇÃO",
+          m.batismo ? formatDate(m.batismo) : "SEM INFORMAÇÃO",
+          `${endereco}\n${m.cidade || ''}, ${m.estado || ''}`
+        ];
+      });
 
     // 6. Configuração da tabela
     doc.autoTable({
-      head: [["Nome", "Nascimento", "Sexo", "Telefone", "Função", "Batismo", "Endereço"]],
+      head: [["NOME", "NASCIMENTO", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
       body: membrosArray,
-      startY: startY, // Começa logo após o cabeçalho
+      startY: startY,
       margin: { top: 10, bottom: 15 },
       styles: {
         fontSize: 9,
         cellPadding: 1.5,
-        overflow: "linebreak"
+        overflow: "linebreak",
+        fontStyle: 'normal'
       },
       headStyles: {
         fillColor: [41, 128, 185],
         textColor: [255, 255, 255],
-        fontSize: 9
+        fontSize: 9,
+        fontStyle: 'bold'
       },
       columnStyles: {
-        0: { cellWidth: 66 },
+        0: { cellWidth: 66, fontStyle: 'bold' }, // NOME em negrito
         1: { cellWidth: 25 },
-        2: { cellWidth: 20 },
-        3: { cellWidth: 30 },
+        2: { cellWidth: 20 }, // Ajustado para "Masculino"/"Feminino"
+        3: { cellWidth: 25 },
         4: { cellWidth: 25 },
         5: { cellWidth: 25 },
         6: { cellWidth: 80 }
@@ -259,7 +274,7 @@
     });
 
     // 7. Salvar o PDF
-    doc.save("lista_membros.pdf");
+    doc.save("lista_membros_ordenada.pdf");
 
   } catch (error) {
     console.error("Erro ao gerar PDF:", error);
