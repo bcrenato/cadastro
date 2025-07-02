@@ -165,13 +165,13 @@
 
     img.onload = function () {
       const pageWidth = doc.internal.pageSize.getWidth();
-      const logoWidth = 40;
+      const logoWidth = 80;
       const logoHeight = (img.height / img.width) * logoWidth;
       const logoX = (pageWidth - logoWidth) / 2;
 
       doc.addImage(img, 'PNG', logoX, 10, logoWidth, logoHeight);
       doc.setFontSize(14);
-      doc.text("Igreja XXX", pageWidth / 2, 10 + logoHeight + 7, { align: "center" });
+      doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 10 + logoHeight + 7, { align: "center" });
       doc.text("Lista completa de membros", pageWidth / 2, 10 + logoHeight + 15, { align: "center" });
 
       const cabecalhoY = 10 + logoHeight + 25;
@@ -224,7 +224,7 @@
                 halign: 'center'
               },
               columnStyles: {
-                0: { cellWidth: 40 }, // Nome
+                0: { cellWidth: 66 }, // Nome
                 1: { cellWidth: 25 }, // Nascimento
                 2: { cellWidth: 20 }, // Sexo
                 3: { cellWidth: 30 }, // Telefone
