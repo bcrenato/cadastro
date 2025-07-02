@@ -317,7 +317,8 @@
           label: "Endereço", 
           field: ["endereco", "bairro", "cidade", "estado"], 
           format: (vals) => vals.filter(Boolean).join(', ') || 'Não informado',
-          fontSize: 11
+          fontSize: 11,
+          marginBottom: 8 // Adicione esta propriedade para espaçamento extra
         }
       ];
 
@@ -369,19 +370,20 @@
           doc.text(lines, x + labelWidth + 2, yPosition);
           
           if (i % 2 === 1) {
-            yPosition += Math.max(styles.lineHeight, lines.length * styles.lineHeight) + styles.cellPadding;
-            x = col1;
-          } else {
-            x += colWidth;
-          }
-        });
+              yPosition += Math.max(styles.lineHeight, lines.length * styles.lineHeight) + 
+                          (campo.marginBottom || styles.cellPadding); // Use marginBottom se existir
+              x = col1;
+            } else {
+              x += colWidth;
+            }
+          });
 
         // Linha divisória com mais espaço
         doc.setDrawColor(230, 230, 230);
         doc.setLineWidth(0.3);
-        yPosition += 10; // Espaço antes da linha aumentado
+        yPosition += 8; // Espaço antes da linha aumentado
         doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-        yPosition += 10; // Espaço depois da linha aumentado
+        yPosition += 8; // Espaço depois da linha aumentado
       });
 
       // Rodapé
@@ -390,7 +392,7 @@
         for (let i = 1; i <= pageCount; i++) {
           doc.setPage(i);
           
-          const footerY = doc.internal.pageSize.getHeight() - 5;
+          const footerY = doc.internal.pageSize.getHeight() - 10;
           
           // Texto centralizado
           setTextStyle(doc, false);
