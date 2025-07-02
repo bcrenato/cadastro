@@ -228,14 +228,16 @@
         return a.nome?.localeCompare(b.nome);
       })
       .map(m => {
-        // Formatar endereço completo em uma única linha
-        const enderecoCompleto = [
+        // Formatar endereço completo em UMA ÚNICA LINHA
+        const partesEndereco = [
           m.endereco, 
-          m.numero && `Nº${m.numero}`, 
+          m.numero && `Nº${m.numero}`,
           m.bairro,
           m.cidade,
           m.estado
-        ].filter(Boolean).join(", ");
+        ].filter(Boolean); // Remove valores vazios/nulos
+        
+        const enderecoCompleto = partesEndereco.join(", ");
         
         return [
           m.nomeFormatado,
@@ -244,7 +246,7 @@
           m.telefone || "Não informado",
           m.funcaoFormatada,
           m.batismo ? formatDate(m.batismo) : "Não informado",
-          enderecoCompleto  // Agora em uma única linha
+          enderecoCompleto // Agora em uma única linha
         ];
       });
 
