@@ -170,7 +170,7 @@
       const logoX = (pageWidth - logoWidth) / 2;
 
       doc.addImage(img, 'PNG', logoX, 10, logoWidth, logoHeight);
-      doc.setFontSize(14);
+      doc.setFontSize(13);
       doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 10 + logoHeight + 7, { align: "center" });
       doc.text("Lista completa de membros", pageWidth / 2, 10 + logoHeight + 15, { align: "center" });
 
@@ -199,7 +199,7 @@
                 "Batismo", "Endereço completo"
               ]],
               body: membrosArray,
-              styles: { fontSize: 8, cellPadding: 2 },
+              styles: { fontSize: 11, cellPadding: 2 },
               margin: { top: cabecalhoY, bottom: 15 },
               didDrawPage: function (data) {
                 const pageCount = doc.internal.getNumberOfPages();
