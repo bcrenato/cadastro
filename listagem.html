@@ -215,32 +215,6 @@
       });
     });
 
-    // Função para adicionar rodapé em todas as páginas
-    function addFooter(doc, totalPages) {
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        
-        // Texto centralizado: "Página X de Y"
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Página ${i} de ${totalPages}`, 105, 285, { align: "center" });
-        
-        // Texto à direita: "Gerado em..."
-        const dataHora = new Date().toLocaleString('pt-BR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        }).replace(',', ' às');
-        
-        doc.setFontSize(8);
-        doc.text(`Gerado em ${dataHora}`, 200, 285, { align: "right" });
-      }
-    }
-
     // Exportar para PDF
     btnExportar.addEventListener("click", async () => {
       const { jsPDF } = window.jspdf;
@@ -251,13 +225,14 @@
         compress: true
       });
 
-      // Estilos
+      // Estilos otimizados
       const styles = {
-        titleFontSize: 12,
-        subtitleFontSize: 12,
-        textFontSize: 10,
+        titleFontSize: 10,
+        subtitleFontSize: 9,
+        textFontSize: 7.5,
         margin: 15,
-        lineHeight: 5,
+        lineHeight: 3.5,
+        cellPadding: 1.5
       };
 
       // Cabeçalho com logo acima do título
@@ -333,110 +308,115 @@
       // Ordena por nome
       membros.sort((a, b) => a.nome.localeCompare(b.nome));
 
-      // Configurações da tabela
+      // Configurações de layout
       let yPosition = 50;
       const col1 = styles.margin;
       const colWidth = (210 - (2 * styles.margin)) / 2;
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let totalPages = 1;
 
-   // Adiciona membros com controle real de quebra de página
-// Substitua a parte de adição de membros e rodapé pelo seguinte código:
-
-// Configurações de layout ajustadas
-const pageHeight = doc.internal.pageSize.getHeight();
-const footerMargin = 10; // Reduzindo a margem do rodapé
-const startY = yPosition; // Mantém a posição Y atual do cabeçalho
-let totalPages = 1;
-
-// Adiciona membros com cálculo preciso de espaço
-membros.forEach((membro, index) => {
-    const dados = [
-        `Nome: ${membro.nome || 'Não informado'}`,
-        `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
-        `Sexo: ${membro.sexo || 'Não informado'}`,
-        `Telefone: ${membro.telefone || 'Não informado'}`,
-        `Função: ${membro.funcao || 'Não informado'}`,
-        `Batismo: ${membro.batismo ? new Date(membro.batismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
-        `Endereço: ${[
-            membro.endereco,
-            membro.bairro,
-            membro.cidade,
-            membro.estado
-        ].filter(Boolean).join(', ') || 'Não informado'}`
-    ];
-
-    // Calcula a altura exata para este membro
-    let memberHeight = 0;
-    dados.forEach((texto, i) => {
-        const lines = doc.splitTextToSize(texto, colWidth - 5);
-        const lineHeight = styles.lineHeight * 0.8; // Reduz o espaçamento entre linhas
-        memberHeight += lines.length * lineHeight;
-        if (i % 2 === 1) memberHeight += lineHeight * 0.5; // Espaço reduzido entre pares
-    });
-    memberHeight += 8; // Espaço para a linha divisória
-
-    // Verificação de espaço otimizada
-    if (yPosition + memberHeight > pageHeight - footerMargin) {
-        doc.addPage();
-        yPosition = 20;
-        totalPages++;
-    }
-
-    // Adiciona o conteúdo com espaçamento ajustado
-    let x = col1;
-    dados.forEach((texto, i) => {
-        const lines = doc.splitTextToSize(texto, colWidth - 5);
-        const lineHeight = styles.lineHeight * 0.8;
-        
-        doc.text(lines, x, yPosition, { maxWidth: colWidth - 5 });
-        
-        if (i % 2 === 1) {
-            yPosition += Math.max(lineHeight * 1.5, lines.length * lineHeight);
-            x = col1;
-        } else {
-            x += colWidth;
+      // Formato fixo e ordenado dos campos
+      const campos = [
+        { label: "Nome", field: "nome" },
+        { label: "Nascimento", field: "nascimento", format: (val) => val ? new Date(val).toLocaleDateString('pt-BR') : 'Não informado' },
+        { label: "Sexo", field: "sexo" },
+        { label: "Telefone", field: "telefone" },
+        { label: "Função", field: "funcao" },
+        { label: "Batismo", field: "batismo", format: (val) => val ? new Date(val).toLocaleDateString('pt-BR') : 'Não informado' },
+        { 
+          label: "Endereço", 
+          field: ["endereco", "bairro", "cidade", "estado"], 
+          format: (vals) => vals.filter(Boolean).join(', ') || 'Não informado',
+          fontSize: 7
         }
-    });
+      ];
 
-    // Linha divisória mais compacta
-    doc.setDrawColor(220, 220, 220);
-    doc.setLineWidth(0.5);
-    yPosition += 4;
-    doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-    yPosition += 4;
-});
+      // Adiciona membros com formatação consistente
+      membros.forEach((membro) => {
+        // Calcula altura necessária ANTES de adicionar
+        let memberHeight = 0;
+        campos.forEach((campo, i) => {
+          const value = Array.isArray(campo.field) 
+            ? campo.format(campo.field.map(f => membro[f]))
+            : campo.format 
+              ? campo.format(membro[campo.field])
+              : membro[campo.field] || 'Não informado';
+          
+          const text = `${campo.label}: ${value}`;
+          const lines = doc.splitTextToSize(text, colWidth - 5);
+          memberHeight += lines.length * styles.lineHeight;
+          if (i % 2 === 1) memberHeight += styles.cellPadding;
+        });
+        memberHeight += 6; // Espaço para linha divisória
 
-// Rodapé ajustado para ficar mais próximo do conteúdo
-function addFooter(doc, totalPages) {
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        
-        // Posiciona o rodapé mais próximo do conteúdo
-        const footerY = doc.internal.pageSize.getHeight() - 5;
-        
-        // Texto centralizado
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Página ${i} de ${totalPages}`, 105, footerY, { align: "center" });
-        
-        // Texto à direita
-        const dataHora = new Date().toLocaleString('pt-BR', {
+        // Quebra de página se necessário
+        if (yPosition + memberHeight > pageHeight - 12) {
+          doc.addPage();
+          yPosition = 20;
+          totalPages++;
+        }
+
+        // Adiciona campos formatados
+        let x = col1;
+        campos.forEach((campo, i) => {
+          const value = Array.isArray(campo.field) 
+            ? campo.format(campo.field.map(f => membro[f]))
+            : campo.format 
+              ? campo.format(membro[campo.field])
+              : membro[campo.field] || 'Não informado';
+          
+          const text = `${campo.label}: ${value}`;
+          const currentFontSize = campo.fontSize || styles.textFontSize;
+          doc.setFontSize(currentFontSize);
+          
+          const lines = doc.splitTextToSize(text, colWidth - 5);
+          doc.text(lines, x, yPosition, { maxWidth: colWidth - 5 });
+          
+          if (i % 2 === 1) {
+            yPosition += Math.max(styles.lineHeight, lines.length * styles.lineHeight) + styles.cellPadding;
+            x = col1;
+          } else {
+            x += colWidth;
+          }
+          
+          doc.setFontSize(styles.textFontSize);
+        });
+
+        // Linha divisória sutil
+        doc.setDrawColor(230, 230, 230);
+        doc.setLineWidth(0.3);
+        yPosition += 3;
+        doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
+        yPosition += 3;
+      });
+
+      // Rodapé compacto
+      function addFooter(doc, totalPages) {
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          
+          const footerY = doc.internal.pageSize.getHeight() - 5;
+          
+          doc.setFontSize(8);
+          doc.setTextColor(100, 100, 100);
+          doc.text(`Página ${i} de ${totalPages}`, 105, footerY, { align: "center" });
+          
+          const dataHora = new Date().toLocaleString('pt-BR', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
             hour12: false
-        }).replace(',', ' às');
-        
-        doc.text(`Gerado em ${dataHora}`, 200, footerY, { align: "right" });
-    }
-}
+          }).replace(',', ' às');
+          
+          doc.setFontSize(7);
+          doc.text(`Gerado em ${dataHora}`, 200, footerY, { align: "right" });
+        }
+      }
 
-// Chama a função do rodapé após adicionar todos os membros
-addFooter(doc, totalPages);
-
-      // Salva o PDF
+      addFooter(doc, totalPages);
       doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);
     });
 
