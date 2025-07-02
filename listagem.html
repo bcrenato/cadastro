@@ -335,7 +335,13 @@ btnExportar.addEventListener("click", async () => {
          // Dados formatados
         const dados = [  // Array com dados formatados do membro
           `Nome: ${membro.nome || 'Não informado'}`,  // Nome ou fallback
-         `Endereço: ${
+         
+          `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
+          `Sexo: ${membro.sexo === 'M' ? 'Masculino' : membro.sexo === 'F' ? 'Feminino' : 'Não informado'}`,
+          `Telefone: ${membro.telefone || 'Não informado'}`,
+          `Função: ${membro.funcao || 'Não informado'}`,
+          `Batismo: ${membro.batismo ? new Date(membro.batismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
+          `Endereço: ${
             [
               membro.endereco,
               membro.bairro,
@@ -345,13 +351,7 @@ btnExportar.addEventListener("click", async () => {
             .filter(Boolean) // Remove itens vazios/nulos
             .join(', ')      // Junta com vírgula e espaço
             || 'Não informado'
-          }`,
-          `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
-         
-          `Função: ${membro.funcao || 'Não informado'}`,
-          `Telefone: ${membro.telefone || 'Não informado'}`,
-           `Batismo: ${membro.batismo ? new Date(membro.batismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
-          `Sexo: ${membro.sexo === 'M' ? 'Masculino' : membro.sexo === 'F' ? 'Feminino' : 'Não informado'}`
+          }`
         ];
     
         // Adiciona os dados em duas colunas
