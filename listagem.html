@@ -339,15 +339,16 @@
       const colWidth = (210 - (2 * styles.margin)) / 2;
 
    // Adiciona membros com controle real de quebra de página
-doc.setFont("helvetica", "normal");
-doc.setFontSize(styles.textFontSize);
+// Substitua a parte de adição de membros e rodapé pelo seguinte código:
 
-let totalPages = 1; // Começa com 1 página
+// Configurações de layout ajustadas
 const pageHeight = doc.internal.pageSize.getHeight();
-const footerHeight = 15; // Espaço reservado para o rodapé
+const footerMargin = 10; // Reduzindo a margem do rodapé
+const startY = yPosition; // Mantém a posição Y atual do cabeçalho
+let totalPages = 1;
 
+// Adiciona membros com cálculo preciso de espaço
 membros.forEach((membro, index) => {
-    // Calcula a altura aproximada que este membro ocupará
     const dados = [
         `Nome: ${membro.nome || 'Não informado'}`,
         `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`,
@@ -355,62 +356,84 @@ membros.forEach((membro, index) => {
         `Telefone: ${membro.telefone || 'Não informado'}`,
         `Função: ${membro.funcao || 'Não informado'}`,
         `Batismo: ${membro.batismo ? new Date(membro.batismo).toLocaleDateString('pt-BR') : 'Não informado'}`,
-        `Endereço: ${
-            [
-                membro.endereco,
-                membro.bairro,
-                membro.cidade,
-                membro.estado
-            ]
-            .filter(Boolean)
-            .join(', ')
-            || 'Não informado'
-        }`
+        `Endereço: ${[
+            membro.endereco,
+            membro.bairro,
+            membro.cidade,
+            membro.estado
+        ].filter(Boolean).join(', ') || 'Não informado'}`
     ];
 
-    // Calcula a altura total que este membro ocupará
+    // Calcula a altura exata para este membro
     let memberHeight = 0;
     dados.forEach((texto, i) => {
-        const textLines = doc.splitTextToSize(texto, colWidth - 5);
-        memberHeight += textLines.length * styles.lineHeight;
-        if (i % 2 === 1) memberHeight += styles.lineHeight; // Espaço entre linhas
+        const lines = doc.splitTextToSize(texto, colWidth - 5);
+        const lineHeight = styles.lineHeight * 0.8; // Reduz o espaçamento entre linhas
+        memberHeight += lines.length * lineHeight;
+        if (i % 2 === 1) memberHeight += lineHeight * 0.5; // Espaço reduzido entre pares
     });
-    memberHeight += 12; // Adiciona margem para a linha divisória
+    memberHeight += 8; // Espaço para a linha divisória
 
-    // Verifica se precisa de nova página ANTES de adicionar o conteúdo
-    if (yPosition + memberHeight > pageHeight - footerHeight) {
+    // Verificação de espaço otimizada
+    if (yPosition + memberHeight > pageHeight - footerMargin) {
         doc.addPage();
-        yPosition = 20; // Posição inicial na nova página
+        yPosition = 20;
         totalPages++;
     }
 
-    // Agora adiciona o conteúdo do membro
+    // Adiciona o conteúdo com espaçamento ajustado
     let x = col1;
-    let maxHeight = 0;
-    
     dados.forEach((texto, i) => {
-        const textHeight = doc.splitTextToSize(texto, colWidth - 5).length * styles.lineHeight;
-        doc.text(texto, x, yPosition, { maxWidth: colWidth - 5 });
+        const lines = doc.splitTextToSize(texto, colWidth - 5);
+        const lineHeight = styles.lineHeight * 0.8;
+        
+        doc.text(lines, x, yPosition, { maxWidth: colWidth - 5 });
         
         if (i % 2 === 1) {
-            yPosition += Math.max(styles.lineHeight * 2, textHeight);
+            yPosition += Math.max(lineHeight * 1.5, lines.length * lineHeight);
             x = col1;
         } else {
             x += colWidth;
-            maxHeight = Math.max(maxHeight, textHeight);
         }
     });
 
-    // Linha divisória
+    // Linha divisória mais compacta
     doc.setDrawColor(220, 220, 220);
-    doc.setLineWidth(0.8);
-    yPosition += 7;
+    doc.setLineWidth(0.5);
+    yPosition += 4;
     doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-    
-    yPosition += 5;
+    yPosition += 4;
 });
 
-// Adiciona o rodapé após todo o conteúdo
+// Rodapé ajustado para ficar mais próximo do conteúdo
+function addFooter(doc, totalPages) {
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        
+        // Posiciona o rodapé mais próximo do conteúdo
+        const footerY = doc.internal.pageSize.getHeight() - 5;
+        
+        // Texto centralizado
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Página ${i} de ${totalPages}`, 105, footerY, { align: "center" });
+        
+        // Texto à direita
+        const dataHora = new Date().toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }).replace(',', ' às');
+        
+        doc.text(`Gerado em ${dataHora}`, 200, footerY, { align: "right" });
+    }
+}
+
+// Chama a função do rodapé após adicionar todos os membros
 addFooter(doc, totalPages);
 
       // Salva o PDF
