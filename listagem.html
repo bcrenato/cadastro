@@ -157,43 +157,42 @@
 <script>
   document.getElementById("btnExportarPDF").addEventListener("click", async () => {
   try {
-    // 1. Configuração do PDF com compressão ativada
+    // Configuração do PDF com compressão ativada
     const doc = new window.jsPDFGlobal({
       orientation: "landscape",
       unit: "mm",
       format: "a4",
-      compress: true,  // Ativa compressão interna
-      hotfixes: ["px_scaling"]  // Corrige problemas de escala
+      compress: true,
+      hotfixes: ["px_scaling"]
     });
 
-    // 2. Otimização da imagem (reduz qualidade para 70%)
+    // Otimização da imagem
     let logoHeight = 0;
     const logoUrl = "./logo.png";
     const img = await new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
-        // Cria canvas para reduzir qualidade da imagem
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = img.width * 0.7;  // Reduz dimensões
+        canvas.width = img.width * 0.7;
         canvas.height = img.height * 0.7;
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         resolve(canvas);
       };
-      img.onerror = () => resolve(null); // Ignora se não carregar
+      img.onerror = () => resolve(null);
       img.src = logoUrl;
     });
 
-    // 3. Adiciona logo (se existir)
+    // Adiciona logo (se existir)
+    const pageWidth = doc.internal.pageSize.getWidth();
     if (img) {
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const logoWidth = 60;  // Reduz tamanho da logo
+      const logoWidth = 60;
       logoHeight = (img.height / img.width) * logoWidth;
       const logoX = (pageWidth - logoWidth) / 2;
-      doc.addImage(img, 'JPEG', logoX, 10, logoWidth, logoHeight, undefined, 'FAST'); // Usa JPEG e modo FAST
+      doc.addImage(img, 'JPEG', logoX, 10, logoWidth, logoHeight, undefined, 'FAST');
     }
 
-    // 4. Obtém dados do Firebase
+    // Obtém dados do Firebase
     const { db } = await import("./firebase-config.js");
     const { get, ref, child } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js");
     const snapshot = await get(child(ref(db), "membros"));
@@ -203,9 +202,8 @@
       return;
     }
 
-    // 5. Prepara dados de forma mais compacta
+    // Prepara dados de forma compacta
     const membrosArray = Object.values(snapshot.val()).map(m => {
-      // Formata endereço de forma mais eficiente
       const endereco = [
         m.endereco, 
         m.numero && `Nº${m.numero}`, 
@@ -215,7 +213,7 @@
       return [
         m.nome || "-",
         m.nascimento ? formatDate(m.nascimento) : "-",
-        m.sexo ? m.sexo.charAt(0) : "-",  // Apenas primeira letra
+        m.sexo ? m.sexo.charAt(0) : "-",
         m.telefone || "-",
         m.funcao || "-",
         m.batismo || "-",
@@ -223,19 +221,19 @@
       ];
     });
 
-    // 6. Configurações otimizadas da tabela
+    // Configurações otimizadas da tabela
     const tableConfig = {
-      head: [["Nome", "Nasc.", "Sx", "Tel.", "Função", "Batismo", "Endereço"]], // Cabeçalhos mais curtos
+      head: [["Nome", "Nasc.", "Sx", "Tel.", "Função", "Batismo", "Endereço"]],
       body: membrosArray,
-      startY: img ? 10 + logoHeight + 15 : 15, // Posição ajustável
-      margin: { top: 10, bottom: 15 }, // Margens reduzidas
+      startY: img ? 10 + logoHeight + 15 : 15,
+      margin: { top: 10, bottom: 15 },
       styles: { 
-        fontSize: 9,  // Fonte menor
-        cellPadding: 1.5,  // Espaçamento reduzido
+        fontSize: 9,
+        cellPadding: 1.5,
         overflow: "linebreak",
         halign: "left",
         valign: "middle",
-        lineWidth: 0.1  // Linhas mais finas
+        lineWidth: 0.1
       },
       headStyles: {
         fillColor: [41, 128, 185],
@@ -244,7 +242,7 @@
         cellPadding: 1.5
       },
       columnStyles: {
-        0: { cellWidth: 50 },  // Colunas mais estreitas
+        0: { cellWidth: 50 },
         1: { cellWidth: 20 },
         2: { cellWidth: 10 },
         3: { cellWidth: 25 },
@@ -253,23 +251,21 @@
         6: { cellWidth: 65 }
       },
       didDrawPage: function(data) {
-        // Rodapé simplificado
         doc.setFontSize(7);
-        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 8, { align: "center");
+        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
         
-        // Ajuste para páginas seguintes
         if (data.pageNumber > 1) {
           data.table.startY = 15;
         }
       },
-      pageBreak: 'avoid',  // Evita quebras de página desnecessárias
-      tableWidth: 'wrap'   // Ajusta largura da tabela
+      pageBreak: 'avoid',
+      tableWidth: 'wrap'
     };
 
-    // 7. Gera a tabela
+    // Gera a tabela
     doc.autoTable(tableConfig);
     
-    // 8. Salva com nome indicando versão compacta
+    // Salva o PDF
     doc.save("lista_membros_compacto.pdf");
 
   } catch (error) {
