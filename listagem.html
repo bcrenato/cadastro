@@ -37,22 +37,20 @@
 </head>
 <body>
 
- <!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO (ATUALIZADO) -->
+<!-- 🔹 SCRIPT DE VERIFICAÇÃO DE AUTENTICAÇÃO -->
 <script type="module">
   import { checkAuth } from './auth.js';
   import { isUserAdmin } from './users.js';
   
   document.addEventListener('DOMContentLoaded', async () => {
     const user = await checkAuth();
-    
-    // Mostrar menu admin se o usuário for administrador
     if (user && await isUserAdmin()) {
       document.getElementById('adminMenuItem').style.display = 'block';
     }
   });
 </script>
 
-  <!-- 🔹 Navbar fixa no topo -->
+<!-- 🔹 Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
   <div class="container">
     <a class="navbar-brand" href="index.html">Listagem</a>
@@ -61,142 +59,155 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="index.html">
-            <i class="fas fa-user-plus me-1"></i> Cadastro
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link active" href="listagem.html">
-            <i class="fas fa-list me-1"></i> Listagem
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="aniversariantes.html">
-            <i class="fas fa-birthday-cake me-1"></i> Aniversariantes
-          </a>
-        </li>
-        
-        <!-- Menu de Admin (só aparece para administradores) -->
-        <li class="nav-item" id="adminMenuItem" style="display: none;">
-          <a class="nav-link" href="register.html">
-            <i class="fas fa-user-shield me-1"></i> Cadastrar Usuários
-          </a>
-        </li>
+        <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-user-plus me-1"></i> Cadastro</a></li>
+        <li class="nav-item"><a class="nav-link active" href="listagem.html"><i class="fas fa-list me-1"></i> Listagem</a></li>
+        <li class="nav-item"><a class="nav-link" href="aniversariantes.html"><i class="fas fa-birthday-cake me-1"></i> Aniversariantes</a></li>
+        <li class="nav-item" id="adminMenuItem" style="display: none;"><a class="nav-link" href="register.html"><i class="fas fa-user-shield me-1"></i> Cadastrar Usuários</a></li>
       </ul>
-      
       <div class="d-flex align-items-center">
-        <!-- Nome do usuário logado -->
         <span class="navbar-text text-white me-3" id="currentUserDisplay">
-          <i class="fas fa-user-circle me-1"></i>
-          <span>Carregando...</span>
+          <i class="fas fa-user-circle me-1"></i> <span>Carregando...</span>
         </span>
-        
-        <!-- Botão de Logout -->
-        <button id="logoutBtn" class="btn btn-sm btn-outline-light">
-          <i class="fas fa-sign-out-alt me-1"></i> Sair
-        </button>
+        <button id="logoutBtn" class="btn btn-sm btn-outline-light"><i class="fas fa-sign-out-alt me-1"></i> Sair</button>
       </div>
     </div>
   </div>
 </nav>
 
-  <!-- 🔹 Conteúdo -->
-  <div class="container mt-4">
+<!-- 🔹 Conteúdo -->
+<div class="container mt-4">
 
-    <!-- Botões de ação -->
-    <div class="mb-3 d-flex justify-content-between">
+  <!-- Botões -->
+  <div class="mb-3 d-flex justify-content-between">
+    <div>
       <button id="btnSelecionar" class="btn btn-secondary">Selecionar Cadastros</button>
-      <button id="btnExcluir" class="btn btn-danger d-none">Excluir Selecionados</button>
+      <button id="btnExportarPDF" class="btn btn-success">Exportar PDF</button>
     </div>
-
-    <!-- Lista de membros -->
-    <div id="lista-membros" class="list-group"></div>
+    <button id="btnExcluir" class="btn btn-danger d-none">Excluir Selecionados</button>
   </div>
 
-  <!-- 🔹 Firebase + lógica -->
-  <script type="module">
-    import { db } from './firebase-config.js';
-    import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  <!-- Lista -->
+  <div id="lista-membros" class="list-group"></div>
+</div>
 
-    const lista = document.getElementById("lista-membros");
-    const btnSelecionar = document.getElementById("btnSelecionar");
-    const btnExcluir = document.getElementById("btnExcluir");
-    let modoSelecao = false;
+<!-- 🔹 Firebase e lógica -->
+<script type="module">
+  import { db } from './firebase-config.js';
+  import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    const membrosRef = ref(db, "membros");
+  const lista = document.getElementById("lista-membros");
+  const btnSelecionar = document.getElementById("btnSelecionar");
+  const btnExcluir = document.getElementById("btnExcluir");
+  let modoSelecao = false;
 
-    // Função para carregar os membros
-    function carregarMembros(data) {
-      lista.innerHTML = "";
+  const membrosRef = ref(db, "membros");
 
-      if (!data) {
-        lista.innerHTML = "<p class='text-center'>Nenhum membro cadastrado.</p>";
-        return;
-      }
-
-      for (const id in data) {
-        const membro = data[id];
-        const item = document.createElement("div");
-        item.className = "list-group-item membro-item";
-
-        item.innerHTML = `
-          <input type="checkbox" class="form-check-input me-2 checkbox-selecao" data-id="${id}">
-          <a href="ficha.html?id=${id}" class="info-membro">
-            <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
-            <div>
-              <div><strong>${membro.nome}</strong></div>
-              <small>${membro.funcao}</small>
-            </div>
-          </a>
-        `;
-
-        lista.appendChild(item);
-      }
-
-      atualizarVisibilidadeCheckboxes();
+  function carregarMembros(data) {
+    lista.innerHTML = "";
+    if (!data) {
+      lista.innerHTML = "<p class='text-center'>Nenhum membro cadastrado.</p>";
+      return;
     }
 
-    // Alterna visibilidade dos checkboxes
-    function atualizarVisibilidadeCheckboxes() {
-      const checkboxes = document.querySelectorAll(".checkbox-selecao");
-      checkboxes.forEach(cb => {
-        cb.style.display = modoSelecao ? "inline-block" : "none";
-      });
+    for (const id in data) {
+      const membro = data[id];
+      const item = document.createElement("div");
+      item.className = "list-group-item membro-item";
 
-      btnExcluir.classList.toggle("d-none", !modoSelecao);
-      btnSelecionar.textContent = modoSelecao ? "Cancelar Seleção" : "Selecionar Cadastros";
+      item.innerHTML = `
+        <input type="checkbox" class="form-check-input me-2 checkbox-selecao" data-id="${id}">
+        <a href="ficha.html?id=${id}" class="info-membro">
+          <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
+          <div>
+            <div><strong>${membro.nome}</strong></div>
+            <small>${membro.funcao}</small>
+          </div>
+        </a>
+      `;
+
+      lista.appendChild(item);
     }
 
-    // Alternar seleção
-    btnSelecionar.addEventListener("click", () => {
-      modoSelecao = !modoSelecao;
-      atualizarVisibilidadeCheckboxes();
+    atualizarVisibilidadeCheckboxes();
+  }
+
+  function atualizarVisibilidadeCheckboxes() {
+    const checkboxes = document.querySelectorAll(".checkbox-selecao");
+    checkboxes.forEach(cb => cb.style.display = modoSelecao ? "inline-block" : "none");
+    btnExcluir.classList.toggle("d-none", !modoSelecao);
+    btnSelecionar.textContent = modoSelecao ? "Cancelar Seleção" : "Selecionar Cadastros";
+  }
+
+  btnSelecionar.addEventListener("click", () => {
+    modoSelecao = !modoSelecao;
+    atualizarVisibilidadeCheckboxes();
+  });
+
+  btnExcluir.addEventListener("click", () => {
+    const selecionados = document.querySelectorAll(".checkbox-selecao:checked");
+    if (selecionados.length === 0) return alert("Nenhum cadastro selecionado.");
+    if (!confirm("Tem certeza que deseja excluir os cadastros selecionados?")) return;
+
+    selecionados.forEach(cb => {
+      const id = cb.getAttribute("data-id");
+      remove(ref(db, `membros/${id}`));
     });
+  });
 
-    // Excluir selecionados
-    btnExcluir.addEventListener("click", () => {
-      const selecionados = document.querySelectorAll(".checkbox-selecao:checked");
-      if (selecionados.length === 0) {
-        alert("Nenhum cadastro selecionado.");
-        return;
-      }
+  onValue(membrosRef, (snapshot) => {
+    const data = snapshot.val();
+    carregarMembros(data);
+  });
 
-      if (!confirm("Tem certeza que deseja excluir os cadastros selecionados?")) return;
+  // Exportar PDF
+  document.getElementById("btnExportarPDF").addEventListener("click", async () => {
+    const { jsPDF } = await import("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+    const { autoTable } = window.jspdf;
 
-      selecionados.forEach(cb => {
-        const id = cb.getAttribute("data-id");
-        remove(ref(db, `membros/${id}`));
-      });
-    });
+    const doc = new jsPDF();
+    const logoUrl = "https://via.placeholder.com/100x50.png?text=Logo"; // Substitua pela URL da sua logo
 
-    // Carrega os dados do Firebase
-    onValue(membrosRef, (snapshot) => {
-      const data = snapshot.val();
-      carregarMembros(data);
-    });
-  </script>
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = logoUrl;
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    img.onload = () => {
+      doc.addImage(img, 'PNG', 10, 10, 40, 20);
+      doc.setFontSize(14);
+      doc.text("Igreja XXX", 10, 35);
+      doc.text("Lista completa de membros", 10, 45);
+
+      const cabecalhoY = 55;
+
+      onValue(membrosRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return alert("Nenhum membro encontrado.");
+
+        const membrosArray = Object.values(data).map(m => ([
+          m.nome || "", m.nascimento || "", m.sexo || "", m.telefone || "",
+          m.funcao || "", m.batismo || "", m.endereco || "", m.bairro || "",
+          m.cidade || "", m.estado || ""
+        ]));
+
+        autoTable(doc, {
+          startY: cabecalhoY,
+          head: [[
+            "Nome", "Nascimento", "Sexo", "Telefone", "Função", 
+            "Batismo", "Endereço", "Bairro", "Cidade", "Estado"
+          ]],
+          body: membrosArray,
+          styles: { fontSize: 8, cellPadding: 2 }
+        });
+
+        doc.save("lista_membros.pdf");
+      }, { onlyOnce: true });
+    };
+  });
+</script>
+
+<!-- Bibliotecas externas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
