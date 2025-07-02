@@ -157,27 +157,43 @@
 <script>
   document.getElementById("btnExportarPDF").addEventListener("click", async () => {
   try {
+    // 1. Configuração do PDF com compressão ativada
     const doc = new window.jsPDFGlobal({
       orientation: "landscape",
       unit: "mm",
-      format: "a4"
+      format: "a4",
+      compress: true,  // Ativa compressão interna
+      hotfixes: ["px_scaling"]  // Corrige problemas de escala
     });
 
-    // Carregar a logo
+    // 2. Otimização da imagem (reduz qualidade para 70%)
+    let logoHeight = 0;
     const logoUrl = "./logo.png";
     const img = await new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
+      img.onload = () => {
+        // Cria canvas para reduzir qualidade da imagem
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width * 0.7;  // Reduz dimensões
+        canvas.height = img.height * 0.7;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas);
+      };
+      img.onerror = () => resolve(null); // Ignora se não carregar
       img.src = logoUrl;
     });
 
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const logoWidth = 80;
-    const logoHeight = (img.height / img.width) * logoWidth;
-    const logoX = (pageWidth - logoWidth) / 2;
+    // 3. Adiciona logo (se existir)
+    if (img) {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const logoWidth = 60;  // Reduz tamanho da logo
+      logoHeight = (img.height / img.width) * logoWidth;
+      const logoX = (pageWidth - logoWidth) / 2;
+      doc.addImage(img, 'JPEG', logoX, 10, logoWidth, logoHeight, undefined, 'FAST'); // Usa JPEG e modo FAST
+    }
 
-    // Obter dados do Firebase
+    // 4. Obtém dados do Firebase
     const { db } = await import("./firebase-config.js");
     const { get, ref, child } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js");
     const snapshot = await get(child(ref(db), "membros"));
@@ -187,77 +203,87 @@
       return;
     }
 
-    // Preparar os dados
+    // 5. Prepara dados de forma mais compacta
     const membrosArray = Object.values(snapshot.val()).map(m => {
-      const enderecoCompleto = `${m.endereco || ''}${m.numero ? ', ' + m.numero : ''}${m.bairro ? ', ' + m.bairro : ''},\n${m.cidade || ''}, ${m.estado || ''}`;
+      // Formata endereço de forma mais eficiente
+      const endereco = [
+        m.endereco, 
+        m.numero && `Nº${m.numero}`, 
+        m.bairro
+      ].filter(Boolean).join(", ");
+      
       return [
-        m.nome || "", 
-        m.nascimento || "", 
-        m.sexo || "", 
-        m.telefone || "",
-        m.funcao || "", 
-        m.batismo || "", 
-        enderecoCompleto
+        m.nome || "-",
+        m.nascimento ? formatDate(m.nascimento) : "-",
+        m.sexo ? m.sexo.charAt(0) : "-",  // Apenas primeira letra
+        m.telefone || "-",
+        m.funcao || "-",
+        m.batismo || "-",
+        `${endereco}\n${m.cidade || ''}, ${m.estado || ''}`
       ];
     });
 
-    // Adicionar cabeçalho na primeira página
-    doc.addImage(img, "PNG", logoX, 10, logoWidth, logoHeight);
-    doc.setFontSize(13);
-    doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 10 + logoHeight + 7, { align: "center" });
-    doc.text("Lista completa de membros", pageWidth / 2, 10 + logoHeight + 15, { align: "center" });
-
-    const startY = 10 + logoHeight + 25;
-
-    // Configurações da tabela
-    doc.autoTable({
-      head: [["Nome", "Nascimento", "Sexo", "Telefone", "Função", "Batismo", "Endereço completo"]],
+    // 6. Configurações otimizadas da tabela
+    const tableConfig = {
+      head: [["Nome", "Nasc.", "Sx", "Tel.", "Função", "Batismo", "Endereço"]], // Cabeçalhos mais curtos
       body: membrosArray,
-      startY: startY,
-      margin: { top: 15, bottom: 20 },
+      startY: img ? 10 + logoHeight + 15 : 15, // Posição ajustável
+      margin: { top: 10, bottom: 15 }, // Margens reduzidas
       styles: { 
-        fontSize: 10, 
-        cellPadding: 2,
-        overflow: "linebreak"
+        fontSize: 9,  // Fonte menor
+        cellPadding: 1.5,  // Espaçamento reduzido
+        overflow: "linebreak",
+        halign: "left",
+        valign: "middle",
+        lineWidth: 0.1  // Linhas mais finas
       },
       headStyles: {
         fillColor: [41, 128, 185],
-        halign: "center",
-        textColor: [255, 255, 255]
+        textColor: [255, 255, 255],
+        fontSize: 9,
+        cellPadding: 1.5
       },
       columnStyles: {
-        0: { cellWidth: 66 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 20 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 25 },
-        5: { cellWidth: 25 },
-        6: { cellWidth: 80 }
+        0: { cellWidth: 50 },  // Colunas mais estreitas
+        1: { cellWidth: 20 },
+        2: { cellWidth: 10 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 65 }
       },
       didDrawPage: function(data) {
-        // Número da página apenas (sem total)
-        doc.setFontSize(8);
-        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
+        // Rodapé simplificado
+        doc.setFontSize(7);
+        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 8, { align: "center");
         
-        // Data de geração
-        const now = new Date();
-        doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" });
-
-        // Ajustar posição para páginas seguintes
+        // Ajuste para páginas seguintes
         if (data.pageNumber > 1) {
-          data.table.startY = 20;
+          data.table.startY = 15;
         }
-      }
-    });
+      },
+      pageBreak: 'avoid',  // Evita quebras de página desnecessárias
+      tableWidth: 'wrap'   // Ajusta largura da tabela
+    };
+
+    // 7. Gera a tabela
+    doc.autoTable(tableConfig);
     
-    // Salvar o PDF
-    doc.save("lista_membros.pdf");
+    // 8. Salva com nome indicando versão compacta
+    doc.save("lista_membros_compacto.pdf");
 
   } catch (error) {
     console.error("Erro ao gerar PDF:", error);
-    alert("Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.");
+    alert("Erro ao gerar PDF: " + error.message);
   }
 });
+
+// Função auxiliar para formatar data
+function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
 </script>
 
 
