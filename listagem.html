@@ -220,8 +220,14 @@
         subtitleFontSize: 14,
         textFontSize: 11,
         margin: 15,
-        lineHeight: 3,  // Espaçamento aumentado
-        cellPadding: 5  // Espaço entre campos aumentado
+        lineHeight: 3,
+        cellPadding: 5
+      };
+
+      // Espaçamento inicial diferenciado por página
+      const initialYPadding = {
+        firstPage: 50,   // Espaço inicial da primeira página
+        otherPages: 20   // Espaço reduzido para páginas seguintes
       };
 
       // Cabeçalho com logo
@@ -318,7 +324,7 @@
           field: ["endereco", "bairro", "cidade", "estado"], 
           format: (vals) => vals.filter(Boolean).join(', ') || 'Não informado',
           fontSize: 11,
-          marginBottom: 8 // Adicione esta propriedade para espaçamento extra
+          marginBottom: 8
         }
       ];
 
@@ -340,10 +346,10 @@
         });
         memberHeight += 12; // Espaço para linha divisória
 
-        // Quebra de página se necessário
+        // Quebra de página com espaçamento diferenciado
         if (yPosition + memberHeight > pageHeight - 15) {
           doc.addPage();
-          yPosition = 20;
+          yPosition = totalPages === 1 ? initialYPadding.firstPage : initialYPadding.otherPages;
           totalPages++;
         }
 
@@ -377,49 +383,52 @@
           }
         });
 
-        // Linha divisória com mais espaço
+        // Linha divisória com espaço reduzido
         doc.setDrawColor(230, 230, 230);
         doc.setLineWidth(0.3);
-        yPosition += 7; // Espaço antes da linha aumentado
+        yPosition += 5; // Espaço antes da linha reduzido
         doc.line(styles.margin, yPosition, 210 - styles.margin, yPosition);
-        yPosition += 5; // Espaço depois da linha aumentado
+        yPosition += 5; // Espaço depois da linha reduzido
       });
 
-      // Rodapé
+      // Rodapé com espaçamento diferenciado
       function addFooter(doc, totalPages, lastContentY) {
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    
-    let footerY = doc.internal.pageSize.getHeight() - 5; // 5mm da borda inferior
-    
-    // Verificação de sobreposição com conteúdo
-    if (lastContentY && footerY < lastContentY + 5) {
-      footerY = lastContentY + 5; // Mantém 5mm de espaço mínimo após o conteúdo
-    }
-    
-    // Texto centralizado
-    setTextStyle(doc, false);
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Página ${i} de ${totalPages}`, 105, footerY, { align: "center" });
-    
-    // Texto à direita
-    const dataHora = new Date().toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).replace(',', ' às');
-    
-    doc.setFontSize(7);
-    doc.text(`Gerado em ${dataHora}`, 200, footerY, { align: "right" });
-  }
-}
+        const pageCount = doc.internal.getNumberOfPages();
+        
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          
+          // Espaçamento diferente para primeira página vs demais
+          const minSpace = i === 1 ? 10 : 5; // 10mm na 1ª página, 5mm nas outras
+          let footerY = doc.internal.pageSize.getHeight() - minSpace;
+          
+          // Verificação de sobreposição com conteúdo
+          if (lastContentY && footerY < lastContentY + minSpace) {
+            footerY = lastContentY + minSpace;
+          }
+          
+          // Texto centralizado
+          setTextStyle(doc, false);
+          doc.setFontSize(8);
+          doc.setTextColor(100, 100, 100);
+          doc.text(`Página ${i} de ${totalPages}`, 105, footerY, { align: "center" });
+          
+          // Texto à direita
+          const dataHora = new Date().toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }).replace(',', ' às');
+          
+          doc.setFontSize(7);
+          doc.text(`Gerado em ${dataHora}`, 200, footerY, { align: "right" });
+        }
+      }
 
-      addFooter(doc, totalPages);
+      addFooter(doc, totalPages, yPosition);
       doc.save(`Lista_de_Membros_${new Date().getFullYear()}.pdf`);
     });
 
