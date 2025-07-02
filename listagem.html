@@ -188,37 +188,37 @@
             ];
           });
 
-          // Adiciona cabeçalho apenas na primeira página
-          doc.addImage(img, 'PNG', logoX, 10, logoWidth, logoHeight);
-          doc.setFontSize(13);
-          doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 10 + logoHeight + 7, { align: "center" });
-          doc.text("Lista completa de membros", pageWidth / 2, 10 + logoHeight + 15, { align: "center" });
-
-          const cabecalhoY = 10 + logoHeight + 25;
-
+          // Calcula a posição Y após o cabeçalho
+          const alturaCabecalho = 10 + logoHeight + 25;
+          
           doc.autoTable({
-            startY: cabecalhoY,
+            startY: alturaCabecalho,
             head: [[
               "Nome", "Nascimento", "Sexo", "Telefone", "Função",
               "Batismo", "Endereço completo"
             ]],
             body: membrosArray,
             styles: { fontSize: 10, cellPadding: 2 },
-            margin: { top: 15, bottom: 20 }, // Margem inferior maior para o rodapé
+            margin: { top: 15, bottom: 20 },
             didDrawPage: function (data) {
               const pageHeight = doc.internal.pageSize.getHeight();
               const pageWidth = doc.internal.pageSize.getWidth();
+              
+              // Só desenha o cabeçalho completo na primeira página
+              if (data.pageNumber === 1) {
+                doc.addImage(img, 'PNG', logoX, 10, logoWidth, logoHeight);
+                doc.setFontSize(13);
+                doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 10 + logoHeight + 7, { align: "center" });
+                doc.text("Lista completa de membros", pageWidth / 2, 10 + logoHeight + 15, { align: "center" });
+              }
               
               // Atualiza o total de páginas
               totalPages = doc.internal.getNumberOfPages();
               
               // Adiciona rodapé em todas as páginas
               doc.setFontSize(8);
-              
-              // Número da página (centralizado)
               doc.text(`Página ${data.pageNumber} de ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: "center" });
               
-              // Data de geração (alinhada à direita)
               const now = new Date();
               const geradoEm = now.toLocaleString("pt-BR", {
                 day: "2-digit", month: "2-digit", year: "numeric",
@@ -228,7 +228,7 @@
 
               // Ajusta a posição inicial para páginas seguintes
               if (data.pageNumber > 1) {
-                data.table.startY = 15;
+                data.table.startY = 20; // Posição mais alta nas páginas seguintes
               }
             },
             headStyles: {
@@ -245,25 +245,10 @@
               5: { cellWidth: 25 }, // Batismo
               6: { cellWidth: 80 }  // Endereço completo
             },
-            // Garante que o rodapé não seja sobreposto pela tabela
-            pageBreak: 'avoid',
+            // Configurações para evitar problemas de paginação
+            showHead: 'firstPage',
             tableOverflow: 'linebreak'
           });
-
-          // Força a atualização final do total de páginas
-          totalPages = doc.internal.getNumberOfPages();
-          
-          // Adiciona o rodapé novamente na última página para garantir
-          doc.setPage(totalPages);
-          doc.setFontSize(8);
-          doc.text(`Página ${totalPages} de ${totalPages}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
-          
-          const now = new Date();
-          const geradoEm = now.toLocaleString("pt-BR", {
-            day: "2-digit", month: "2-digit", year: "numeric",
-            hour: "2-digit", minute: "2-digit"
-          });
-          doc.text(`Gerado em: ${geradoEm}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" });
 
           doc.save("lista_membros.pdf");
         });
