@@ -157,7 +157,7 @@
 <script>
   document.getElementById("btnExportarPDF").addEventListener("click", async () => {
   try {
-    // Configuração do PDF com compressão ativada
+    // 1. Configuração do PDF com compressão
     const doc = new window.jsPDFGlobal({
       orientation: "landscape",
       unit: "mm",
@@ -166,16 +166,16 @@
       hotfixes: ["px_scaling"]
     });
 
-    // Otimização da imagem
-    let logoHeight = 0;
+    // 2. Carregamento otimizado da logo
     const logoUrl = "./logo.png";
     const img = await new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
+        // Reduz a qualidade da imagem para 80%
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = img.width * 0.7;
-        canvas.height = img.height * 0.7;
+        canvas.width = img.width * 0.8;
+        canvas.height = img.height * 0.8;
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         resolve(canvas);
       };
@@ -183,16 +183,30 @@
       img.src = logoUrl;
     });
 
-    // Adiciona logo (se existir)
     const pageWidth = doc.internal.pageSize.getWidth();
+    let startY = 20; // Posição inicial padrão
+
+    // 3. Cabeçalho completo com logo
     if (img) {
-      const logoWidth = 60;
-      logoHeight = (img.height / img.width) * logoWidth;
+      const logoWidth = 70; // Largura moderada para equilíbrio
+      const logoHeight = (img.height / img.width) * logoWidth;
       const logoX = (pageWidth - logoWidth) / 2;
-      doc.addImage(img, 'JPEG', logoX, 10, logoWidth, logoHeight, undefined, 'FAST');
+      
+      // Adiciona a logo
+      doc.addImage(img, 'JPEG', logoX, 15, logoWidth, logoHeight, undefined, 'MEDIUM');
+      
+      // Textos do cabeçalho
+      doc.setFontSize(14);
+      doc.setTextColor(40);
+      doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 15 + logoHeight + 10, { align: "center" });
+      
+      doc.setFontSize(12);
+      doc.text("Lista Completa de Membros", pageWidth / 2, 15 + logoHeight + 16, { align: "center" });
+      
+      startY = 15 + logoHeight + 25; // Ajusta a posição inicial da tabela
     }
 
-    // Obtém dados do Firebase
+    // 4. Obtenção dos dados do Firebase
     const { db } = await import("./firebase-config.js");
     const { get, ref, child } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js");
     const snapshot = await get(child(ref(db), "membros"));
@@ -202,7 +216,7 @@
       return;
     }
 
-    // Prepara dados de forma compacta
+    // 5. Preparação compacta dos dados
     const membrosArray = Object.values(snapshot.val()).map(m => {
       const endereco = [
         m.endereco, 
@@ -213,72 +227,85 @@
       return [
         m.nome || "-",
         m.nascimento ? formatDate(m.nascimento) : "-",
-        m.sexo ? m.sexo.charAt(0) : "-",
+        m.sexo ? m.sexo.charAt(0).toUpperCase() : "-",
         m.telefone || "-",
         m.funcao || "-",
-        m.batismo || "-",
+        m.batismo ? formatDate(m.batismo) : "-",
         `${endereco}\n${m.cidade || ''}, ${m.estado || ''}`
       ];
     });
 
-    // Configurações otimizadas da tabela
-    const tableConfig = {
-      head: [["Nome", "Nasc.", "Sx", "Tel.", "Função", "Batismo", "Endereço"]],
+    // 6. Configuração da tabela otimizada
+    doc.autoTable({
+      head: [["Nome", "Nascimento", "Sexo", "Telefone", "Função", "Batismo", "Endereço"]],
       body: membrosArray,
-      startY: img ? 10 + logoHeight + 15 : 15,
+      startY: startY,
       margin: { top: 10, bottom: 15 },
-      styles: { 
+      styles: {
         fontSize: 9,
         cellPadding: 1.5,
         overflow: "linebreak",
         halign: "left",
         valign: "middle",
-        lineWidth: 0.1
+        lineWidth: 0.2
       },
       headStyles: {
         fillColor: [41, 128, 185],
         textColor: [255, 255, 255],
         fontSize: 9,
-        cellPadding: 1.5
+        cellPadding: 2,
+        lineWidth: 0.2
       },
       columnStyles: {
-        0: { cellWidth: 50 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 10 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 65 }
+        0: { cellWidth: 66 },  // Nome
+        1: { cellWidth: 25 },  // Nascimento
+        2: { cellWidth: 20 },  // Sexo
+        3: { cellWidth: 30 },  // Telefone
+        4: { cellWidth: 25 },  // Função
+        5: { cellWidth: 25 },  // Batismo
+        6: { cellWidth: 80 }   // Endereço
       },
       didDrawPage: function(data) {
-        doc.setFontSize(7);
-        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
+        // Rodapé em todas as páginas
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
         
+        // Data de geração
+        const now = new Date();
+        doc.text(`Gerado em: ${now.toLocaleString('pt-BR')}`, pageWidth - 15, doc.internal.pageSize.getHeight() - 10, { align: "right" });
+
+        // Ajuste para páginas seguintes
         if (data.pageNumber > 1) {
-          data.table.startY = 15;
+          data.table.startY = 20;
         }
       },
       pageBreak: 'avoid',
       tableWidth: 'wrap'
-    };
+    });
 
-    // Gera a tabela
-    doc.autoTable(tableConfig);
-    
-    // Salva o PDF
-    doc.save("lista_membros_compacto.pdf");
+    // 7. Salvar o PDF otimizado
+    doc.save("lista_membros.pdf");
 
   } catch (error) {
     console.error("Erro ao gerar PDF:", error);
-    alert("Erro ao gerar PDF: " + error.message);
+    alert("Erro ao gerar PDF. Verifique o console para detalhes.");
   }
 });
 
-// Função auxiliar para formatar data
+// Função para formatar datas
 function formatDate(dateString) {
   if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch {
+    return dateString; // Retorna original se não puder formatar
+  }
 }
 </script>
 
