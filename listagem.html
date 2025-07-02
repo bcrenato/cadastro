@@ -206,16 +206,27 @@
     const membrosArray = Object.values(snapshot.val())
       .map(m => ({
         ...m,
-        // Definir ordem de prioridade para funções
-        ordemFuncao: m.funcao === "Pastor" ? 1 : 
-                    m.funcao === "Diácono" ? 2 : 
-                    m.funcao === "Membro" ? 3 : 4,
+        // Definir ordem de prioridade para funções (case insensitive)
+        ordemFuncao: m.funcao?.toLowerCase() === "pastor" ? 1 : 
+                    m.funcao?.toLowerCase() === "diácono" || m.funcao?.toLowerCase() === "diacono" ? 2 : 
+                    m.funcao?.toLowerCase() === "membro" ? 3 : 4,
         // Formatar sexo corretamente
-        sexoFormatado: m.sexo === "M" ? "Masculino" : 
-                      m.sexo === "F" ? "Feminino" : 
-                      m.sexo || "Não informado"
+        sexoFormatado: m.sexo === "M" || m.sexo?.toLowerCase() === "masculino" ? "Masculino" : 
+                      m.sexo === "F" || m.sexo?.toLowerCase() === "feminino" ? "Feminino" : 
+                      "Não informado",
+        // Garantir nome em maiúsculas
+        nomeFormatado: m.nome ? m.nome.toUpperCase() : "SEM INFORMAÇÃO",
+        // Garantir função em maiúsculas
+        funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "SEM INFORMAÇÃO"
       }))
-      .sort((a, b) => a.ordemFuncao - b.ordemFuncao || a.nome.localeCompare(b.nome))
+      // Ordenar primeiro por função, depois por nome
+      .sort((a, b) => {
+        // Ordem numérica pela função
+        const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
+        if (ordemFuncao !== 0) return ordemFuncao;
+        // Se função igual, ordenar por nome
+        return a.nome?.localeCompare(b.nome);
+      })
       .map(m => {
         const endereco = [
           m.endereco, 
@@ -224,11 +235,11 @@
         ].filter(Boolean).join(", ");
         
         return [
-          m.nome ? m.nome.toUpperCase() : "SEM INFORMAÇÃO",
+          m.nomeFormatado,
           m.nascimento ? formatDate(m.nascimento) : "SEM INFORMAÇÃO",
-          m.sexoFormatado, // Usando o sexo formatado
+          m.sexoFormatado,
           m.telefone || "SEM INFORMAÇÃO",
-          m.funcao ? m.funcao.toUpperCase() : "SEM INFORMAÇÃO",
+          m.funcaoFormatada,
           m.batismo ? formatDate(m.batismo) : "SEM INFORMAÇÃO",
           `${endereco}\n${m.cidade || ''}, ${m.estado || ''}`
         ];
