@@ -228,10 +228,13 @@
         return a.nome?.localeCompare(b.nome);
       })
       .map(m => {
-        const endereco = [
+        // Formatar endereço completo em uma única linha
+        const enderecoCompleto = [
           m.endereco, 
           m.numero && `Nº${m.numero}`, 
-          m.bairro
+          m.bairro,
+          m.cidade,
+          m.estado
         ].filter(Boolean).join(", ");
         
         return [
@@ -241,7 +244,7 @@
           m.telefone || "Não informado",
           m.funcaoFormatada,
           m.batismo ? formatDate(m.batismo) : "Não informado",
-          `${endereco}\n${m.cidade || ''}, ${m.estado || ''}`
+          enderecoCompleto  // Agora em uma única linha
         ];
       });
 
@@ -264,13 +267,13 @@
         fontStyle: 'bold'
       },
       columnStyles: {
-        0: { cellWidth: 66}, // NOME em negrito  0: { cellWidth: 66, fontStyle: 'bold' },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 20 }, // Ajustado para "Masculino"/"Feminino"
-        3: { cellWidth: 25 },
-        4: { cellWidth: 25 },
-        5: { cellWidth: 25 },
-        6: { cellWidth: 80 }
+        0: { cellWidth: 66 }, // NOME
+        1: { cellWidth: 25 }, // NASCIMENTO
+        2: { cellWidth: 20 }, // SEXO
+        3: { cellWidth: 25 }, // TELEFONE
+        4: { cellWidth: 25 }, // FUNÇÃO
+        5: { cellWidth: 25 }, // BATISMO
+        6: { cellWidth: 80 }  // ENDEREÇO
       },
       didDrawPage: function(data) {
         // Rodapé em todas as páginas
