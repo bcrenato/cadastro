@@ -338,7 +338,7 @@ membros.forEach((membro, index) => {
     const dados = [ // Array com informações formatadas de cada membro
         `Nome: ${membro.nome || 'Não informado'}`, // Nome com fallback
         `Nascimento: ${membro.nascimento ? new Date(membro.nascimento).toLocaleDateString('pt-BR') : 'Não informado'}`, // Data formatada
-        `Sexo: ${membro.sexo === 'M' ? 'Masculino' : membro.sexo === 'F' ? 'Feminino' : 'Não informado'}`, // Sexo formatado
+        `Sexo: ${membro.sexo || 'Não informado'}`, // Sexo
         `Telefone: ${membro.telefone || 'Não informado'}`, // Telefone
         `Função: ${membro.funcao || 'Não informado'}`, // Função
         `Batismo: ${membro.batismo ? new Date(membro.batismo).toLocaleDateString('pt-BR') : 'Não informado'}`, // Data de batismo
