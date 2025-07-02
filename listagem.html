@@ -217,29 +217,29 @@
 
     // Função para adicionar rodapé em todas as páginas
     function addFooter(doc, totalPages) {
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        
-        // Texto centralizado: "Página X de Y"
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Página ${i} de ${totalPages}`, 105, 285, { align: "center" });
-        
-        // Texto à direita: "Gerado em..."
-        const dataHora = new Date().toLocaleString('pt-BR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        }).replace(',', ' às');
-        
-        doc.setFontSize(8);
-        doc.text(`Gerado em ${dataHora}`, 200, 285, { align: "right" });
-      }
-    }
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    
+    // Texto centralizado: "Página X de Y" (mais para baixo)
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Página ${i} de ${totalPages}`, 105, doc.internal.pageSize.getHeight() - 10, { align: "center" });
+    
+    // Texto à direita: "Gerado em..." (mais para baixo)
+    const dataHora = new Date().toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).replace(',', ' às');
+    
+    doc.setFontSize(8);
+    doc.text(`Gerado em ${dataHora}`, doc.internal.pageSize.getWidth() - 15, doc.internal.pageSize.getHeight() - 10, { align: "right" });
+  }
+}
 
     // Exportar para PDF
     btnExportar.addEventListener("click", async () => {
@@ -342,25 +342,17 @@
       let totalPages = 1;
       let currentY = yPosition;
 
-      membros.forEach((membro, index) => {
-          const memberHeight = 40;
-          
-          if (currentY + memberHeight > 270) {
-              totalPages++;
-              currentY = 20;
-          }
-          currentY += memberHeight;
-      });
-
       // Adiciona membros
       doc.setFont("helvetica", "normal");
       doc.setFontSize(styles.textFontSize);
 
-      membros.forEach((membro, index) => {
-          if (yPosition > 270) {
-              doc.addPage();
-              yPosition = 20;
-          }
+     membros.forEach((membro, index) => {
+    // Nova verificação de quebra de página com margem para o rodapé
+    if (yPosition > doc.internal.pageSize.getHeight() - 30) { // 30mm de margem inferior
+        doc.addPage();
+        yPosition = 20; // Reinicia posição Y
+        totalPages++; // Incrementa o contador de páginas
+    }
           
           const dados = [
               `Nome: ${membro.nome || 'Não informado'}`,
