@@ -263,10 +263,16 @@
         fontStyle: 'normal', // Estilo normal
         cellPadding: 2.5, // Espaçamento interno das células
         lineWidth: 0.0, // Espessura da linha
-        lineColor: [240, 255, 240] // Cor da linha (cinza claro 200, 200, 200)
+        lineColor: [200, 200, 200] // Cor da linha (cinza claro 200, 200, 200)
+        fillColor: [255, 255, 255], // Cor padrão das linhas ímpares (branco)
+        textColor: [0, 0, 0]        // Texto preto
+      },
+      alternateRowStyles: {
+        fillColor: [32, 178, 170], // Cinza claro para linhas pares
+        textColor: [0, 0, 0]        // Texto preto
       },
       headStyles: { // Estilos do cabeçalho
-        fillColor: [0, 128, 0], // Cor de fundo (azul 41, 128, 185)
+        fillColor: [0, 128, 0], // Cor de fundo atual verde (azul 41, 128, 185)
         textColor: [255, 255, 255], // Cor do texto (branco)
         fontSize: 9, // Tamanho da fonte
         fontStyle: 'bold', // Negrito
@@ -274,7 +280,7 @@
       },
       columnStyles: { // Larguras das colunas
         0: { cellWidth: 64 }, // NOME
-        1: { cellWidth: 25 }, // NASCIMENTO
+        1: { cellWidth: 25, fontSize: 8}, // NASCIMENTO
         2: { cellWidth: 21 }, // SEXO
         3: { cellWidth: 31 }, // TELEFONE
         4: { cellWidth: 24 }, // FUNÇÃO
