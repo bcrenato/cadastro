@@ -252,45 +252,48 @@
 
     // 6. Configuração da tabela
     doc.autoTable({
-      head: [["NOME", "NASCIMENTO", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
-      body: membrosArray,
-      startY: startY,
-      margin: { top: 10, bottom: 15 },
-      styles: {
-        fontSize: 10,
-        cellPadding: 1.5,
-        overflow: "linebreak",
-        fontStyle: 'normal'
-      },
-      headStyles: {
-        fillColor: [41, 128, 185],
-        textColor: [255, 255, 255],
-        fontSize: 9,
-        fontStyle: 'bold'
-      },
-      columnStyles: {
-        0: { cellWidth: 64 }, // NOME
-        1: { cellWidth: 25 }, // NASCIMENTO
-        2: { cellWidth: 21 }, // SEXO
-        3: { cellWidth: 30 }, // TELEFONE
-        4: { cellWidth: 24 }, // FUNÇÃO
-        5: { cellWidth: 23 }, // BATISMO
-        6: { cellWidth: 80 }  // ENDEREÇO
-      },
-      didDrawPage: function(data) {
-        // Rodapé em todas as páginas
-        doc.setFontSize(8);
-        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
-        
-        const now = new Date();
-        doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" });
+  head: [["NOME", "NASCIMENTO", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
+  body: membrosArray,
+  startY: startY,
+  margin: { top: 10, bottom: 15 },
+  styles: {
+    fontSize: 10,
+    overflow: "linebreak",
+    fontStyle: 'normal',
+    // Configurações compatíveis com versões antigas
+    cellPadding: 3, // Aumenta o espaçamento interno
+    lineWidth: 0.1,
+    lineColor: [200, 200, 200]
+  },
+  headStyles: {
+    fillColor: [41, 128, 185],
+    textColor: [255, 255, 255],
+    fontSize: 9,
+    fontStyle: 'bold',
+    // Configurações adicionais para cabeçalho
+    cellPadding: 4
+  },
+  columnStyles: {
+    0: { cellWidth: 64 }, // NOME
+    1: { cellWidth: 25 }, // NASCIMENTO
+    2: { cellWidth: 21 }, // SEXO
+    3: { cellWidth: 30 }, // TELEFONE
+    4: { cellWidth: 24 }, // FUNÇÃO
+    5: { cellWidth: 23 }, // BATISMO
+    6: { cellWidth: 80 }  // ENDEREÇO
+  },
+  didDrawPage: function(data) {
+    doc.setFontSize(8);
+    doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
+    
+    const now = new Date();
+    doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" });
 
-        // Ajuste para páginas seguintes
-        if (data.pageNumber > 1) {
-          data.table.startY = 15;
-        }
-      }
-    });
+    if (data.pageNumber > 1) {
+      data.table.startY = 15;
+    }
+  }
+});
 
     // 7. Salvar o PDF
     doc.save("Lista_Membros.pdf");
