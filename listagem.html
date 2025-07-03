@@ -253,7 +253,7 @@
 
     // 6. Configuração da tabela
     doc.autoTable({ // Cria tabela no PDF
-      head: [["NOME", "NASCIMENTO", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]], // Cabeçalhos
+      head: [["NOME", "NASCIM", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]], // Cabeçalhos
       body: membrosArray, // Dados dos membros
       startY: startY, // Posição inicial Y
       margin: { top: 10, bottom: 15 }, // Margens
@@ -280,14 +280,7 @@
       },
       columnStyles: { // Larguras das colunas
           0: { cellWidth: 64 }, // NOME
-          1: { 
-            cellWidth: 25,      // Mantém a largura
-            //fontSize: 8,        // Tamanho do texto do corpo
-            head: {             // Configuração ESPECÍFICA do cabeçalho
-              fontSize: 3,      // Tamanho menor para o cabeçalho
-              cellPadding: 3    // Ajuste de espaçamento
-            }
-          },
+          1: { cellWidth: 25 }, // NASCIMENTO
           2: { cellWidth: 21 }, // SEXO
           3: { cellWidth: 31 }, // TELEFONE
           4: { cellWidth: 24 }, // FUNÇÃO
