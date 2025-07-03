@@ -261,12 +261,17 @@
         cellPadding: 1.5,
         overflow: "linebreak",
         fontStyle: 'normal'
+        cellHeight: 15, // Altura fixa de 8mm para as células do corpo
+        minCellHeight: 8 // Altura mínima garantida
+    
       },
       headStyles: {
         fillColor: [41, 128, 185],
         textColor: [255, 255, 255],
         fontSize: 9,
         fontStyle: 'bold'
+        cellHeight: 10 // Altura maior para o cabeçalho (10mm)
+    
       },
       columnStyles: {
         0: { cellWidth: 64 }, // NOME
