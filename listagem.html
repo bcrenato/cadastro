@@ -268,7 +268,7 @@
         textColor: [0, 0, 0]        // Texto preto
       },
       alternateRowStyles: {
-        fillColor: [240, 240, 240], // Cinza claro para linhas pares
+        fillColor: [200, 200, 200], // Cinza claro para linhas pares
         textColor: [0, 0, 0]        // Texto preto
       },
       headStyles: { // Estilos do cabeçalho
@@ -279,14 +279,21 @@
         cellPadding: 4 // Mais espaçamento no cabeçalho
       },
       columnStyles: { // Larguras das colunas
-        0: { cellWidth: 64 }, // NOME
-        1: { cellWidth: 25, fontSize: 8}, // NASCIMENTO
-        2: { cellWidth: 21 }, // SEXO
-        3: { cellWidth: 31 }, // TELEFONE
-        4: { cellWidth: 24 }, // FUNÇÃO
-        5: { cellWidth: 25 }, // BATISMO
-        6: { cellWidth: 79 }  // ENDEREÇO
-      },
+          0: { cellWidth: 64 }, // NOME
+          1: { 
+            cellWidth: 25,      // Mantém a largura
+            //fontSize: 8,        // Tamanho do texto do corpo
+            head: {             // Configuração ESPECÍFICA do cabeçalho
+              fontSize: 7,      // Tamanho menor para o cabeçalho
+              cellPadding: 3    // Ajuste de espaçamento
+            }
+          },
+          2: { cellWidth: 21 }, // SEXO
+          3: { cellWidth: 31 }, // TELEFONE
+          4: { cellWidth: 24 }, // FUNÇÃO
+          5: { cellWidth: 25 }, // BATISMO
+          6: { cellWidth: 79 }  // ENDEREÇO
+        },
       didDrawPage: function(data) { // Callback após desenhar cada página
         doc.setFontSize(8); // Tamanho da fonte do rodapé
         doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" }); // Número da página
