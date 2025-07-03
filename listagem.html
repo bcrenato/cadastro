@@ -153,172 +153,171 @@
   });
 </script>
 
-<!-- 🔹 Exportar PDF -->
-<script>
+<!-- 🔹 Exportar PDF --> // Comentário indicando a seção de exportação de PDF
+<script> // Início do bloco de script JavaScript
+
+  // Adiciona um event listener para o clique no botão de exportar PDF
   document.getElementById("btnExportarPDF").addEventListener("click", async () => {
-  try {
+  try { // Início do bloco try para tratamento de erros
+
     // 1. Configuração do PDF
-    const doc = new window.jsPDFGlobal({
-      orientation: "landscape",
-      unit: "mm",
-      format: "a4",
-      compress: true
+    const doc = new window.jsPDFGlobal({ // Cria um novo documento PDF
+      orientation: "landscape", // Orientação horizontal
+      unit: "mm", // Unidade de medida em milímetros
+      format: "a4", // Formato A4
+      compress: true // Ativa compressão para reduzir tamanho
     });
 
     // 2. Carregar a logo
-    const logoUrl = "./logo.png";
-    const img = await new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
-      img.src = logoUrl;
+    const logoUrl = "./logo.png"; // Caminho para a imagem da logo
+    const img = await new Promise((resolve, reject) => { // Promessa para carregar a imagem
+      const img = new Image(); // Cria um novo objeto de imagem
+      img.onload = () => resolve(img); // Resolve a promessa quando a imagem carrega
+      img.onerror = () => resolve(null); // Resolve com null se houver erro
+      img.src = logoUrl; // Define o caminho da imagem
     });
 
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let startY = 15; // Posição inicial padrão
+    const pageWidth = doc.internal.pageSize.getWidth(); // Obtém largura da página
+    let startY = 15; // Posição inicial padrão no eixo Y
 
     // 3. Adicionar cabeçalho na primeira página
-    if (img) {
-      const logoWidth = 70;
-      const logoHeight = (img.height / img.width) * logoWidth;
-      const logoX = (pageWidth - logoWidth) / 2;
+    if (img) { // Se a imagem foi carregada com sucesso
+      const logoWidth = 70; // Largura desejada para a logo
+      const logoHeight = (img.height / img.width) * logoWidth; // Calcula altura proporcional
+      const logoX = (pageWidth - logoWidth) / 2; // Calcula posição X para centralizar
       
-      doc.addImage(img, 'JPEG', logoX, 15, logoWidth, logoHeight);
-      doc.setFontSize(14);
-      doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 15 + logoHeight + 8, { align: "center" });
-      doc.setFontSize(12);
-      doc.text("Lista Completa de Membros", pageWidth / 2, 15 + logoHeight + 15, { align: "center" });
+      doc.addImage(img, 'JPEG', logoX, 15, logoWidth, logoHeight); // Adiciona a logo ao PDF
+      doc.setFontSize(14); // Define tamanho da fonte para o título principal
+      doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 15 + logoHeight + 8, { align: "center" }); // Adiciona título principal
+      doc.setFontSize(12); // Define tamanho da fonte para o subtítulo
+      doc.text("Lista Completa de Membros", pageWidth / 2, 15 + logoHeight + 15, { align: "center" }); // Adiciona subtítulo
       
-      startY = 15 + logoHeight + 25; // Posição após o cabeçalho
+      startY = 15 + logoHeight + 25; // Atualiza a posição Y inicial para depois do cabeçalho
     }
 
     // 4. Obter dados do Firebase
-    const { db } = await import("./firebase-config.js");
-    const { get, ref, child } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js");
-    const snapshot = await get(child(ref(db), "membros"));
+    const { db } = await import("./firebase-config.js"); // Importa configuração do Firebase
+    const { get, ref, child } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"); // Importa funções do Firebase
+    const snapshot = await get(child(ref(db), "membros")); // Obtém dados dos membros
 
-    if (!snapshot.exists()) {
-      alert("Nenhum membro encontrado.");
-      return;
+    if (!snapshot.exists()) { // Verifica se existem dados
+      alert("Nenhum membro encontrado."); // Alerta se não houver membros
+      return; // Sai da função
     }
 
     // 5. Ordenar e preparar os dados
-    const membrosArray = Object.values(snapshot.val())
-      .map(m => ({
-        ...m,
-        // Definir ordem de prioridade para funções (case insensitive)
+    const membrosArray = Object.values(snapshot.val()) // Converte objeto em array
+      .map(m => ({ // Mapeia cada membro
+        ...m, // Copia todas as propriedades existentes
+        // Define ordem de prioridade para funções (case insensitive)
         ordemFuncao: m.funcao?.toLowerCase() === "pastor" ? 1 : 
                     m.funcao?.toLowerCase() === "diácono" || m.funcao?.toLowerCase() === "diacono" ? 2 : 
                     m.funcao?.toLowerCase() === "membro" ? 3 : 4,
-        // Formatar sexo corretamente
+        // Formata sexo corretamente
         sexoFormatado: m.sexo === "M" || m.sexo?.toLowerCase() === "masculino" ? "Masculino" : 
                       m.sexo === "F" || m.sexo?.toLowerCase() === "feminino" ? "Feminino" : 
                       "Não informado",
-        // Garantir nome em maiúsculas
+        // Garante nome em maiúsculas
         nomeFormatado: m.nome ? m.nome.toUpperCase() : "Não informado",
-        // Garantir função em maiúsculas
+        // Garante função em maiúsculas
         funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "Não informado"
       }))
-      // Ordenar primeiro por função, depois por nome
+      // Ordena primeiro por função, depois por nome
       .sort((a, b) => {
-        // Ordem numérica pela função
-        const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
-        if (ordemFuncao !== 0) return ordemFuncao;
-        // Se função igual, ordenar por nome
-        return a.nome?.localeCompare(b.nome);
+        const ordemFuncao = a.ordemFuncao - b.ordemFuncao; // Ordem numérica pela função
+        if (ordemFuncao !== 0) return ordemFuncao; // Se funções diferentes, mantém ordem
+        return a.nome?.localeCompare(b.nome); // Se funções iguais, ordena por nome
       })
-      .map(m => {
-        // Formatar endereço completo em UMA ÚNICA LINHA
-        const partesEndereco = [
+      .map(m => { // Mapeia para o formato final da tabela
+        // Formata endereço completo em UMA ÚNICA LINHA
+        const partesEndereco = [ // Array com partes do endereço
           m.endereco, 
-          m.numero && `Nº${m.numero}`,
+          m.numero && `Nº${m.numero}`, // Número apenas se existir
           m.bairro,
           m.cidade,
           m.estado
         ].filter(Boolean); // Remove valores vazios/nulos
         
-        const enderecoCompleto = partesEndereco.join(", ");
+        const enderecoCompleto = partesEndereco.join(", "); // Junta partes com vírgulas
         
-        return [
+        return [ // Retorna array com dados formatados para a tabela
           m.nomeFormatado,
           m.nascimento ? formatDate(m.nascimento) : "Não informado",
           m.sexoFormatado,
           m.telefone || "Não informado",
           m.funcaoFormatada,
           m.batismo ? formatDate(m.batismo) : "Não informado",
-          enderecoCompleto // Agora em uma única linha
+          enderecoCompleto
         ];
       });
 
     // 6. Configuração da tabela
-    doc.autoTable({
-  head: [["NOME", "NASCIMENTO", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
-  body: membrosArray,
-  startY: startY,
-  margin: { top: 10, bottom: 15 },
-  styles: {
-    fontSize: 10,
-    overflow: "linebreak",
-    fontStyle: 'normal',
-    // Configurações compatíveis com versões antigas
-    cellPadding: 2, // Aumenta o espaçamento interno
-    lineWidth: 0.1,
-    lineColor: [200, 200, 200]
-  },
-  headStyles: {
-    fillColor: [41, 128, 185],
-    textColor: [255, 255, 255],
-    fontSize: 9,
-    fontStyle: 'bold',
-    // Configurações adicionais para cabeçalho
-    cellPadding: 4
-  },
-  columnStyles: {
-    0: { cellWidth: 64 }, // NOME
-    1: { cellWidth: 25 }, // NASCIMENTO
-    2: { cellWidth: 21 }, // SEXO
-    3: { cellWidth: 31 }, // TELEFONE
-    4: { cellWidth: 24 }, // FUNÇÃO
-    5: { cellWidth: 25 }, // BATISMO
-    6: { cellWidth: 79 }  // ENDEREÇO
-  },
-  didDrawPage: function(data) {
-    doc.setFontSize(8);
-    doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
-    
-    const now = new Date();
-    doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" });
+    doc.autoTable({ // Cria tabela no PDF
+      head: [["NOME", "NASCIMENTO", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]], // Cabeçalhos
+      body: membrosArray, // Dados dos membros
+      startY: startY, // Posição inicial Y
+      margin: { top: 10, bottom: 15 }, // Margens
+      styles: { // Estilos gerais
+        fontSize: 10, // Tamanho da fonte
+        overflow: "linebreak", // Quebra de linha
+        fontStyle: 'normal', // Estilo normal
+        cellPadding: 2.5, // Espaçamento interno das células
+        lineWidth: 0.1, // Espessura da linha
+        lineColor: [200, 200, 200] // Cor da linha (cinza claro)
+      },
+      headStyles: { // Estilos do cabeçalho
+        fillColor: [41, 128, 185], // Cor de fundo (azul)
+        textColor: [255, 255, 255], // Cor do texto (branco)
+        fontSize: 9, // Tamanho da fonte
+        fontStyle: 'bold', // Negrito
+        cellPadding: 4 // Mais espaçamento no cabeçalho
+      },
+      columnStyles: { // Larguras das colunas
+        0: { cellWidth: 64 }, // NOME
+        1: { cellWidth: 25 }, // NASCIMENTO
+        2: { cellWidth: 21 }, // SEXO
+        3: { cellWidth: 31 }, // TELEFONE
+        4: { cellWidth: 24 }, // FUNÇÃO
+        5: { cellWidth: 25 }, // BATISMO
+        6: { cellWidth: 79 }  // ENDEREÇO
+      },
+      didDrawPage: function(data) { // Callback após desenhar cada página
+        doc.setFontSize(8); // Tamanho da fonte do rodapé
+        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" }); // Número da página
+        
+        const now = new Date(); // Data atual
+        doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" }); // Data de geração
 
-    if (data.pageNumber > 1) {
-      data.table.startY = 15;
-    }
-  }
-});
+        if (data.pageNumber > 1) { // Ajuste para páginas seguintes
+          data.table.startY = 15; // Posição Y inicial menor
+        }
+      }
+    });
 
     // 7. Salvar o PDF
-    doc.save("Lista_Membros.pdf");
+    doc.save("Lista_Membros.pdf"); // Salva o PDF com o nome especificado
 
-  } catch (error) {
-    console.error("Erro ao gerar PDF:", error);
-    alert("Erro ao gerar PDF: " + error.message);
+  } catch (error) { // Captura de erros
+    console.error("Erro ao gerar PDF:", error); // Log no console
+    alert("Erro ao gerar PDF: " + error.message); // Alerta para o usuário
   }
 });
 
 // Função para formatar datas
-function formatDate(dateString) {
-  if (!dateString) return "";
+function formatDate(dateString) { // Recebe string de data
+  if (!dateString) return ""; // Retorna vazio se não houver data
   try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    const date = new Date(dateString); // Cria objeto Date
+    return date.toLocaleDateString('pt-BR', { // Formata para padrão brasileiro
+      day: '2-digit', // Dia com 2 dígitos
+      month: '2-digit', // Mês com 2 dígitos
+      year: 'numeric' // Ano com 4 dígitos
     });
-  } catch {
-    return dateString;
+  } catch { // Se houver erro na conversão
+    return dateString; // Retorna a string original
   }
 }
-</script>
+</script> // Fim do bloco de script
 
 
 
