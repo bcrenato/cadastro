@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — Relógio de Oração</title>
+  <script src="../firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
+</head>
+<body>
+  <h1>Painel Admin</h1>
+  <div id="lista"></div>
+
+  <script>
+    const db = firebase.database();
+
+    function renderAdmin(snapshot) {
+      const list = document.getElementById('lista');
+      list.innerHTML = '';
+      snapshot.forEach(child => {
+        const h = child.key;
+        const data = child.val();
+        if (data.reservado) {
+          list.innerHTML += `
+            <div>
+              ${h}: ${data.nome_reserva}
+              <button onclick="liberar('${h}')">Liberar</button>
+            </div>`;
+        }
+      });
+    }
+
+    db.ref('horarios').on('value', renderAdmin);
+
+    function liberar(horario) {
+      if (!confirm('Liberar reserva de '+horario+'?')) return;
+      db.ref(`horarios/${horario}`).update({
+        reservado: false,
+        nome_reserva: ''
+      }).then(() => alert('Liberado!'));
+    }
+  </script>
+</body>
+</html>
