@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Relógio de Oração</title>
+  <script src="../firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
+</head>
+<body>
+  <h1>Relógio de Oração</h1>
+  <div id="horarios"></div>
+
+  <script>
+    const db = firebase.database();
+
+    function renderHorarios(snapshot) {
+      const container = document.getElementById('horarios');
+      container.innerHTML = '';
+      snapshot.forEach(child => {
+        const h = child.key;
+        const data = child.val();
+        const btn = data.reservado
+          ? `<button disabled>${h} — Reservado</button>`
+          : `<button onclick="reservar('${h}')">${h} — Reservar</button>`;
+        container.innerHTML += `<div>${btn}</div>`;
+      });
+    }
+
+    db.ref('horarios').on('value', renderHorarios);
+
+    function reservar(horario) {
+      const nome = prompt('Seu nome:');
+      if (!nome) return;
+      db.ref(`horarios/${horario}`).update({
+        reservado: true,
+        nome_reserva: nome
+      }).then(() => alert('Reserva confirmada!'));
+    }
+  </script>
+</body>
+</html>
