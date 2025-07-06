@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Relógio de Oração</title>
+    <link rel="icon" href="data:,"> <!-- Remove erro do favicon -->
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -80,6 +81,27 @@
             width: 80%;
             max-width: 500px;
         }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
         .error-message {
             color: #f44336;
             margin-top: 5px;
@@ -90,7 +112,7 @@
 <body>
     <div class="container">
         <h1>Painel Admin - Relógio de Oração</h1>
-        <button class="btn btn-add" onclick="openAddModal()">+ Adicionar Horário</button>
+        <button class="btn btn-add" id="btnAddHorario">+ Adicionar Horário</button>
         
         <table id="horariosTable">
             <thead>
@@ -117,8 +139,8 @@
                 <div id="addHorarioError" class="error-message"></div>
             </div>
             <div class="modal-footer">
-                <button class="btn" onclick="closeModal('addModal')">Cancelar</button>
-                <button class="btn btn-add" onclick="addNewTime()">Adicionar</button>
+                <button class="btn" id="btnCancelAdd">Cancelar</button>
+                <button class="btn btn-add" id="btnConfirmAdd">Adicionar</button>
             </div>
         </div>
     </div>
@@ -138,35 +160,48 @@
                 <input type="text" id="editNome" placeholder="Deixe vazio para disponibilizar">
             </div>
             <div class="modal-footer">
-                <button class="btn" onclick="closeModal('editModal')">Cancelar</button>
-                <button class="btn btn-edit" onclick="saveChanges()">Salvar</button>
+                <button class="btn" id="btnCancelEdit">Cancelar</button>
+                <button class="btn btn-edit" id="btnSaveEdit">Salvar</button>
             </div>
         </div>
     </div>
 
-    <!-- 1. Carrega o SDK do Firebase -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
-    <!-- 2. Carrega sua configuração como módulo dinâmico -->
     <script>
-        import('../firebase-config.js')
-            .then(module => {
-                firebase.initializeApp(module.firebaseConfig);
-                const database = firebase.database();
-                const horariosRef = database.ref('relogio/horarios');
-                
-                // ... (todo o código do admin aqui) ...
-                
-                // Função para carregar horários
-                function loadHorarios() {
-                    horariosRef.on('value', (snapshot) => {
-                        const horarios = snapshot.val();
-                        renderHorarios(horarios);
-                    });
-                }
+        // Variáveis globais
+        let database;
+        let horariosRef;
 
-        // Função para renderizar horários na tabela
+        // Inicialização do Firebase
+        async function initializeFirebase() {
+            try {
+                const module = await import('../firebase-config.js');
+                firebase.initializeApp(module.firebaseConfig);
+                database = firebase.database();
+                horariosRef = database.ref('relogio/horarios');
+                loadHorarios();
+            } catch (error) {
+                console.error("Erro ao inicializar Firebase:", error);
+                document.getElementById('horariosBody').innerHTML = `
+                    <tr>
+                        <td colspan="4" style="color: red;">
+                            Erro ao carregar dados. Recarregue a página.
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        // Funções de CRUD
+        function loadHorarios() {
+            horariosRef.on('value', (snapshot) => {
+                const horarios = snapshot.val();
+                renderHorarios(horarios);
+            });
+        }
+
         function renderHorarios(horarios) {
             const tbody = document.getElementById('horariosBody');
             tbody.innerHTML = '';
@@ -185,16 +220,25 @@
                     <td>${horario.nome_reserva || ''}</td>
                     <td>${horario.reservado ? 'Reservado' : 'Disponível'}</td>
                     <td>
-                        <button class="btn btn-edit" onclick="openEditModal('${key}')">Editar</button>
-                        <button class="btn btn-delete" onclick="confirmDelete('${key}')">Excluir</button>
+                        <button class="btn btn-edit" data-horario="${key}">Editar</button>
+                        <button class="btn btn-delete" data-horario="${key}">Excluir</button>
                     </td>
                 `;
                 
                 tbody.appendChild(row);
             });
+
+            // Adiciona event listeners aos botões
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', () => openEditModal(btn.dataset.horario));
+            });
+            
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', () => confirmDelete(btn.dataset.horario));
+            });
         }
 
-        // Funções do modal
+        // Funções dos Modais
         function openAddModal() {
             document.getElementById('newHorario').value = '';
             document.getElementById('addHorarioError').textContent = '';
@@ -216,7 +260,6 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // Função para adicionar novo horário
         function addNewTime() {
             const horario = document.getElementById('newHorario').value.trim();
             
@@ -225,14 +268,12 @@
                 return;
             }
             
-            // Verifica se o horário já existe
             horariosRef.child(horario).once('value', (snapshot) => {
                 if (snapshot.exists()) {
                     document.getElementById('addHorarioError').textContent = 'Este horário já existe';
                     return;
                 }
                 
-                // Adiciona o novo horário como disponível
                 horariosRef.child(horario).set({
                     reservado: false,
                     nome_reserva: '',
@@ -248,7 +289,6 @@
             });
         }
 
-        // Função para salvar alterações
         function saveChanges() {
             const oldKey = document.getElementById('editHorarioKey').value;
             const newKey = document.getElementById('editHorario').value.trim();
@@ -259,11 +299,9 @@
                 return;
             }
             
-            // Primeiro obtemos os dados atuais
             horariosRef.child(oldKey).once('value', (snapshot) => {
                 const horarioData = snapshot.val();
                 
-                // Se o nome foi apagado, marca como disponível
                 if (!nome) {
                     horarioData.reservado = false;
                     horarioData.nome_reserva = '';
@@ -272,9 +310,7 @@
                     horarioData.reservado = true;
                 }
                 
-                // Se a chave (horário) mudou, precisamos recriar o nó
                 if (oldKey !== newKey) {
-                    // Remove o antigo e cria o novo
                     const updates = {};
                     updates[`relogio/horarios/${oldKey}`] = null;
                     updates[`relogio/horarios/${newKey}`] = horarioData;
@@ -288,7 +324,6 @@
                             document.getElementById('editHorarioError').textContent = 'Erro: ' + error.message;
                         });
                 } else {
-                    // Se apenas os dados mudaram, atualiza normalmente
                     horariosRef.child(oldKey).update(horarioData)
                         .then(() => {
                             closeModal('editModal');
@@ -301,7 +336,6 @@
             });
         }
 
-        // Função para confirmar e excluir um horário
         function confirmDelete(horarioKey) {
             if (confirm('Tem certeza que deseja excluir este horário?\nEsta ação não pode ser desfeita.')) {
                 horariosRef.child(horarioKey).remove()
@@ -314,22 +348,24 @@
             }
         }
 
+        // Event Listeners
+        document.getElementById('btnAddHorario').addEventListener('click', openAddModal);
+        document.getElementById('btnCancelAdd').addEventListener('click', () => closeModal('addModal'));
+        document.getElementById('btnConfirmAdd').addEventListener('click', addNewTime);
+        document.getElementById('btnCancelEdit').addEventListener('click', () => closeModal('editModal'));
+        document.getElementById('btnSaveEdit').addEventListener('click', saveChanges);
+
         // Fechar modal ao clicar fora
-        window.onclick = function(event) {
-            if (event.target.className === 'modal') {
+        window.addEventListener('click', (event) => {
+            if (event.target.classList.contains('modal')) {
                 document.querySelectorAll('.modal').forEach(modal => {
                     modal.style.display = 'none';
                 });
             }
-        }
+        });
 
-       // Inicializa o app
-                loadHorarios();
-            })
-            .catch(err => {
-                console.error("Erro ao carregar configuração:", err);
-                alert("Erro ao carregar configuração. Tente recarregar a página.");
-            });
+        // Inicializa o app
+        initializeFirebase();
     </script>
 </body>
 </html>
