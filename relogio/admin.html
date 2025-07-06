@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Relógio de Oração</title>
     <style>
-        /* Estilos mantidos do seu arquivo original */
         body { 
             font-family: Arial, sans-serif; 
             margin: 0; 
@@ -91,7 +90,7 @@
 <body>
     <div class="container">
         <h1>Painel Admin - Relógio de Oração</h1>
-        <button class="btn btn-add" onclick="openAddModal()">+ Adicionar Horário</button>
+        <button class="btn btn-add" onclick="window.openAddModal()">+ Adicionar Horário</button>
         
         <table id="horariosTable">
             <thead>
@@ -118,8 +117,8 @@
                 <div id="addHorarioError" class="error-message"></div>
             </div>
             <div class="modal-footer">
-                <button class="btn" onclick="closeModal('addModal')">Cancelar</button>
-                <button class="btn btn-add" onclick="addNewTime()">Adicionar</button>
+                <button class="btn" onclick="window.closeModal('addModal')">Cancelar</button>
+                <button class="btn btn-add" onclick="window.addNewTime()">Adicionar</button>
             </div>
         </div>
     </div>
@@ -139,28 +138,22 @@
                 <input type="text" id="editNome" placeholder="Deixe vazio para disponibilizar">
             </div>
             <div class="modal-footer">
-                <button class="btn" onclick="closeModal('editModal')">Cancelar</button>
-                <button class="btn btn-edit" onclick="saveChanges()">Salvar</button>
+                <button class="btn" onclick="window.closeModal('editModal')">Cancelar</button>
+                <button class="btn btn-edit" onclick="window.saveChanges()">Salvar</button>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK (versão compatível) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
-    <!-- Configuração do Firebase (usando seu arquivo existente) -->
-    <script src="../firebase-config.js"></script>
-    
-    <script>
-        // Inicializa o Firebase com sua configuração existente
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const horariosRef = database.ref('relogio/horarios');
+    <script type="module">
+        import { app, db } from '../firebase-config.js';
+        import { getDatabase, ref, onValue, update, remove } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+
+        const database = getDatabase(app);
+        const horariosRef = ref(database, 'relogio/horarios');
 
         // Carrega os horários
         function loadHorarios() {
-            horariosRef.on('value', (snapshot) => {
+            onValue(horariosRef, (snapshot) => {
                 const horarios = snapshot.val();
                 renderHorarios(horarios);
             });
@@ -185,8 +178,8 @@
                     <td>${horario.nome_reserva || ''}</td>
                     <td>${horario.reservado ? 'Reservado' : 'Disponível'}</td>
                     <td>
-                        <button class="btn btn-edit" onclick="openEditModal('${key}')">Editar</button>
-                        <button class="btn btn-delete" onclick="confirmDelete('${key}')">Excluir</button>
+                        <button class="btn btn-edit" onclick="window.openEditModal('${key}')">Editar</button>
+                        <button class="btn btn-delete" onclick="window.confirmDelete('${key}')">Excluir</button>
                     </td>
                 `;
                 
@@ -195,13 +188,13 @@
         }
 
         // Funções do modal
-        function openAddModal() {
+        window.openAddModal = function() {
             document.getElementById('newHorario').value = '';
             document.getElementById('addHorarioError').textContent = '';
             document.getElementById('addModal').style.display = 'block';
         }
 
-        function openEditModal(horarioKey) {
+        window.openEditModal = function(horarioKey) {
             horariosRef.child(horarioKey).once('value', (snapshot) => {
                 const horario = snapshot.val();
                 document.getElementById('editHorarioKey').value = horarioKey;
@@ -212,12 +205,12 @@
             });
         }
 
-        function closeModal(modalId) {
+        window.closeModal = function(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }
 
         // Adiciona novo horário
-        function addNewTime() {
+        window.addNewTime = function() {
             const horario = document.getElementById('newHorario').value.trim();
             
             if (!horario) {
@@ -233,13 +226,13 @@
                 }
                 
                 // Adiciona o novo horário como disponível
-                horariosRef.child(horario).set({
+                update(ref(database, `relogio/horarios/${horario}`), {
                     reservado: false,
                     nome_reserva: '',
                     data_reserva: ''
                 })
                 .then(() => {
-                    closeModal('addModal');
+                    window.closeModal('addModal');
                     alert('Horário adicionado com sucesso!');
                 })
                 .catch((error) => {
@@ -249,7 +242,7 @@
         }
 
         // Salva alterações
-        function saveChanges() {
+        window.saveChanges = function() {
             const oldKey = document.getElementById('editHorarioKey').value;
             const newKey = document.getElementById('editHorario').value.trim();
             const nome = document.getElementById('editNome').value.trim();
@@ -276,12 +269,12 @@
                 if (oldKey !== newKey) {
                     // Remove o antigo e cria o novo
                     const updates = {};
-                    updates[oldKey] = null;
-                    updates[newKey] = horarioData;
+                    updates[`relogio/horarios/${oldKey}`] = null;
+                    updates[`relogio/horarios/${newKey}`] = horarioData;
                     
-                    horariosRef.update(updates)
+                    update(ref(database), updates)
                         .then(() => {
-                            closeModal('editModal');
+                            window.closeModal('editModal');
                             alert('Horário atualizado com sucesso!');
                         })
                         .catch((error) => {
@@ -289,9 +282,9 @@
                         });
                 } else {
                     // Se apenas os dados mudaram, atualiza normalmente
-                    horariosRef.child(oldKey).update(horarioData)
+                    update(ref(database, `relogio/horarios/${oldKey}`), horarioData)
                         .then(() => {
-                            closeModal('editModal');
+                            window.closeModal('editModal');
                             alert('Horário atualizado com sucesso!');
                         })
                         .catch((error) => {
@@ -302,9 +295,9 @@
         }
 
         // Confirma e exclui um horário
-        function confirmDelete(horarioKey) {
+        window.confirmDelete = function(horarioKey) {
             if (confirm('Tem certeza que deseja excluir este horário?\nEsta ação não pode ser desfeita.')) {
-                horariosRef.child(horarioKey).remove()
+                remove(ref(database, `relogio/horarios/${horarioKey}`))
                     .then(() => {
                         alert('Horário excluído com sucesso!');
                     })
@@ -325,14 +318,6 @@
 
         // Inicializa o app
         loadHorarios();
-
-        // Torna as funções disponíveis globalmente
-        window.openAddModal = openAddModal;
-        window.openEditModal = openEditModal;
-        window.closeModal = closeModal;
-        window.addNewTime = addNewTime;
-        window.saveChanges = saveChanges;
-        window.confirmDelete = confirmDelete;
     </script>
 </body>
 </html>
