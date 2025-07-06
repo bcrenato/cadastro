@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Relógio de Oração</title>
+    
+    <!-- Adicione o Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="icon" href="data:,"> <!-- Remove erro do favicon -->
     <style>
         body { 
@@ -111,34 +115,36 @@
 </head>
 <body>
     <div class="container">
-    <!-- Cabeçalho com os botões -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Painel Admin - Relógio de Oração</h1>
-        <div>
-            <a href="../index.html" class="btn btn-add me-2">
-                <i class="fas fa-arrow-left me-1"></i> Voltar para o Relógio
-            </a>
-            <button class="btn btn-add" id="btnAddHorario">
-                <i class="fas fa-plus me-1"></i> Adicionar Horário
-            </button>
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">Painel Admin - Relógio de Oração</h1>
+            
+            <!-- Grupo de botões -->
+            <div class="d-flex gap-3">
+                <a href="relogio/index.html" class="btn btn-add">
+                    <i class="fas fa-arrow-left me-2"></i> Voltar para o Relógio
+                </a>
+                <button class="btn btn-add" id="btnAddHorario">
+                    <i class="fas fa-plus me-2"></i> Adicionar Horário
+                </button>
+            </div>
         </div>
+        
+        <!-- Tabela -->
+        <table id="horariosTable" class="w-100">
+            <thead>
+                <tr>
+                    <th class="p-3">Horário</th>
+                    <th class="p-3">Nome</th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="horariosBody">
+                <!-- Os horários serão carregados aqui -->
+            </tbody>
+        </table>
     </div>
-    
-    <!-- Tabela -->
-    <table id="horariosTable">
-        <thead>
-            <tr>
-                <th>Horário</th>
-                <th>Nome</th>
-                <th>Status</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="horariosBody">
-            <!-- Os horários serão carregados aqui -->
-        </tbody>
-    </table>
-</div>
 
     <!-- Modal de Adição -->
     <div id="addModal" class="modal">
