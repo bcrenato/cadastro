@@ -105,63 +105,74 @@
     
     <a href="admin.html" class="admin-link">Acesso Administrativo</a>
 
-    <!-- Firebase SDK (compatível com sua configuração existente) -->
+   <!-- 1. Carrega o SDK do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
-    <!-- Seu firebase-config.js existente -->
-    <script src="../firebase-config.js"></script>
-    
+    <!-- 2. Carrega sua configuração como módulo dinâmico -->
     <script>
-        // Acesso ao Firebase através do objeto global
-        const database = firebase.database();
-        const horariosRef = database.ref('relogio/horarios');
+        // Carrega o firebase-config.js como módulo dinâmico
+        import('../firebase-config.js')
+            .then(module => {
+                // Inicializa o Firebase com a configuração
+                firebase.initializeApp(module.firebaseConfig);
+                
+                // Agora pode usar o Firebase normalmente
+                const database = firebase.database();
+                const horariosRef = database.ref('relogio/horarios');
+                
 
         // Função para renderizar horários
-        function renderHorarios(snapshot) {
-            const container = document.getElementById('horariosContainer');
-            container.innerHTML = '';
-            
-            if (!snapshot.exists()) {
-                container.innerHTML = '<div>Nenhum horário cadastrado.</div>';
-                return;
-            }
-
-            snapshot.forEach((child) => {
-                const h = child.key;
-                const data = child.val();
-                const card = document.createElement('div');
-                card.className = 'horario-card';
-                
-                card.innerHTML = `
-                    <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${h}</div>
-                    ${data.reservado ? 
-                        `<div style="font-size: 14px; color: #666; margin-top: 5px;">
-                            Reservado para: ${data.nome_reserva || 'Não informado'}
-                        </div>
-                        <button class="reservar-btn" disabled>Indisponível</button>` : 
-                        `<button class="reservar-btn" onclick="reservar('${h}')">Reservar horário</button>`
+                function renderHorarios(snapshot) {
+                    const container = document.getElementById('horariosContainer');
+                    container.innerHTML = '';
+                    
+                    if (!snapshot.exists()) {
+                        container.innerHTML = '<div>Nenhum horário cadastrado.</div>';
+                        return;
                     }
-                `;
-                
-                container.appendChild(card);
+
+                    snapshot.forEach((child) => {
+                        const h = child.key;
+                        const data = child.val();
+                        const card = document.createElement('div');
+                        card.className = 'horario-card';
+                        
+                        card.innerHTML = `
+                            <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${h}</div>
+                            ${data.reservado ? 
+                                `<div style="font-size: 14px; color: #666; margin-top: 5px;">
+                                    Reservado para: ${data.nome_reserva || 'Não informado'}
+                                </div>
+                                <button class="reservar-btn" disabled>Indisponível</button>` : 
+                                `<button class="reservar-btn" onclick="reservar('${h}')">Reservar horário</button>`
+                            }
+                        `;
+                        
+                        container.appendChild(card);
+                    });
+                }
+
+                // Função para reservar horário
+                window.reservar = function(horario) {
+                    const nome = prompt('Seu nome:');
+                    if (!nome) return;
+                    
+                    horariosRef.child(horario).update({
+                        reservado: true,
+                        nome_reserva: nome,
+                        data_reserva: new Date().toISOString()
+                    }).then(() => alert('Reserva confirmada!'));
+                }
+
+                // Observa mudanças nos horários
+                horariosRef.on('value', renderHorarios);
+            })
+            .catch(err => {
+                console.error("Erro ao carregar configuração:", err);
+                document.getElementById('horariosContainer').innerHTML = 
+                    '<div class="error">Erro ao carregar configuração. Recarregue a página.</div>';
             });
-        }
-
-        // Função para reservar horário
-        function reservar(horario) {
-            const nome = prompt('Seu nome:');
-            if (!nome) return;
-            
-            horariosRef.child(horario).update({
-                reservado: true,
-                nome_reserva: nome,
-                data_reserva: new Date().toISOString()
-            }).then(() => alert('Reserva confirmada!'));
-        }
-
-        // Observa mudanças nos horários
-        horariosRef.on('value', renderHorarios);
     </script>
 </body>
 </html>
