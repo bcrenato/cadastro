@@ -115,20 +115,20 @@
 </head>
 <body>
     <div class="container">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="mb-0">Painel Admin - Relógio de Oração</h1>
-            
-            <!-- Grupo de botões -->
-            <div class="d-flex gap-3">
-                <a href="relogio/index.html" class="btn btn-add">
-                    <i class="fas fa-arrow-left me-2"></i> Voltar para o Relógio
-                </a>
-                <button class="btn btn-add" id="btnAddHorario">
-                    <i class="fas fa-plus me-2"></i> Adicionar Horário
-                </button>
-            </div>
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Painel Admin - Relógio de Oração</h1>
+        
+        <!-- Grupo de botões com espaçamento lateral aumentado -->
+        <div class="d-flex" style="gap: 2rem;"> <!-- 2rem = 32px de espaçamento -->
+            <a href="../relogio/" class="btn btn-add px-4"> <!-- px-4 = padding horizontal aumentado -->
+                <i class="fas fa-arrow-left me-3"></i> Voltar para o Relógio <!-- me-3 = margem direita aumentada -->
+            </a>
+            <button class="btn btn-add px-4" id="btnAddHorario">
+                <i class="fas fa-plus me-3"></i> Adicionar Horário
+            </button>
         </div>
+    </div>
         
         <!-- Tabela -->
         <table id="horariosTable" class="w-100">
