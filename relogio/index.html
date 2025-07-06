@@ -94,17 +94,26 @@
 <body>
 
 
-    <!-- Script de autenticação (adicione no início do <body>) -->
+    <!-- Script para proteger a página -->
 <script type="module">
-  import { checkAuth } from './auth.js';
-  import { isUserAdmin } from './users.js'; // Adicione esta importação
+  import { checkAuth } from '../auth.js';  // Usa ../ para voltar um nível
   
   document.addEventListener('DOMContentLoaded', async () => {
-    const user = await checkAuth();
-    
-    // Mostrar menu admin se o usuário for administrador
-    if (user && await isUserAdmin()) {
-      document.getElementById('adminMenuItem').style.display = 'block';
+    try {
+      const user = await checkAuth();
+      
+      // Se não tiver usuário, redireciona para login
+      if (!user) {
+        window.location.href = '../login.html';  // Redireciona para login na pasta pai
+        return;
+      }
+      
+      // Se chegou aqui, o usuário está autenticado
+      console.log('Acesso permitido para:', user.email);
+      
+    } catch (error) {
+      console.error('Erro na autenticação:', error);
+      window.location.href = '../login.html?error=auth';
     }
   });
 </script>
