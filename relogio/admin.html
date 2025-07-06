@@ -3,17 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin — Relógio de Oração</title>
-  <script src="../firebase-config.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
-</head>
-<body>
-  <h1>Painel Admin</h1>
-  <div id="lista"></div>
+  <!-- Carrega como módulo ES -->
+  <script type="module">
+    import { db } from '../firebase-config.js';
+    import { ref, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  <script>
-    const db = firebase.database();
-
+    // Função para renderizar a lista admin
     function renderAdmin(snapshot) {
       const list = document.getElementById('lista');
       list.innerHTML = '';
@@ -24,21 +19,34 @@
           list.innerHTML += `
             <div>
               ${h}: ${data.nome_reserva}
-              <button onclick="liberar('${h}')">Liberar</button>
+              <button data-horario="${h}" class="btn-liberar">Liberar</button>
             </div>`;
         }
       });
+      
+      // Adiciona listeners aos botões
+      document.querySelectorAll('.btn-liberar').forEach(btn => {
+        btn.addEventListener('click', function() {
+          liberar(this.dataset.horario);
+        });
+      });
     }
 
-    db.ref('horarios').on('value', renderAdmin);
-
+    // Função para liberar horário
     function liberar(horario) {
       if (!confirm('Liberar reserva de '+horario+'?')) return;
-      db.ref(`horarios/${horario}`).update({
+      update(ref(db, `horarios/${horario}`), {
         reservado: false,
         nome_reserva: ''
       }).then(() => alert('Liberado!'));
     }
+
+    // Inicia a escuta dos horários
+    onValue(ref(db, 'horarios'), renderAdmin);
   </script>
+</head>
+<body>
+  <h1>Painel Admin</h1>
+  <div id="lista"></div>
 </body>
 </html>
