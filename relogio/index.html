@@ -2,24 +2,14 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Relógio de Oraçãoxxxxx</title>
-  <!-- Carrega Firebase App + Database -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
-  <!-- Carrega sua configuração -->
-  <script src="../firebase-config.js"></script>
-</head>
-<body>
-  <h1>Relógio de Oraçãoxx</h1>
-  <div id="horarios"></div>
+  <title>Relógio de Oraçãoaaa</title>
+  <!-- Carrega como módulo ES -->
+  <script type="module">
+    // Importa do seu firebase-config principal
+    import { db } from '../firebase-config.js';
+    import { ref, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  <script>
-    // Agora usamos a referência que expusemos no window.firebase
-    const db = window.firebase.db;
-    
-    // Importa as funções necessárias do Firebase
-    const { ref, onValue, update } = firebase.database;
-
+    // Função para renderizar horários
     function renderHorarios(snapshot) {
       const container = document.getElementById('horarios');
       container.innerHTML = '';
@@ -28,14 +18,19 @@
         const data = child.val();
         const btn = data.reservado
           ? `<button disabled>${h} — Reservado</button>`
-          : `<button onclick="reservar('${h}')">${h} — Reservar</button>`;
+          : `<button data-horario="${h}" class="btn-reservar">${h} — Reservar</button>`;
         container.innerHTML += `<div>${btn}</div>`;
+      });
+      
+      // Adiciona listeners aos botões
+      document.querySelectorAll('.btn-reservar').forEach(btn => {
+        btn.addEventListener('click', function() {
+          reservar(this.dataset.horario);
+        });
       });
     }
 
-    // Observa mudanças nos horários
-    onValue(ref(db, 'horarios'), renderHorarios);
-
+    // Função para reservar horário
     function reservar(horario) {
       const nome = prompt('Seu nome:');
       if (!nome) return;
@@ -44,6 +39,13 @@
         nome_reserva: nome
       }).then(() => alert('Reserva confirmada!'));
     }
+
+    // Inicia a escuta dos horários
+    onValue(ref(db, 'horarios'), renderHorarios);
   </script>
+</head>
+<body>
+  <h1>Relógio de Oração</h1>
+  <div id="horarios"></div>
 </body>
 </html>
