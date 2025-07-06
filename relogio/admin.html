@@ -144,25 +144,27 @@
         </div>
     </div>
 
-    <!-- Firebase SDK (compatível com sua configuração existente) -->
+    <!-- 1. Carrega o SDK do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
-    <!-- Seu firebase-config.js existente -->
-    <script src="../firebase-config.js"></script>
-    
+    <!-- 2. Carrega sua configuração como módulo dinâmico -->
     <script>
-        // Acesso ao Firebase através do objeto global
-        const database = firebase.database();
-        const horariosRef = database.ref('relogio/horarios');
-
-        // Função para carregar horários
-        function loadHorarios() {
-            horariosRef.on('value', (snapshot) => {
-                const horarios = snapshot.val();
-                renderHorarios(horarios);
-            });
-        }
+        import('../firebase-config.js')
+            .then(module => {
+                firebase.initializeApp(module.firebaseConfig);
+                const database = firebase.database();
+                const horariosRef = database.ref('relogio/horarios');
+                
+                // ... (todo o código do admin aqui) ...
+                
+                // Função para carregar horários
+                function loadHorarios() {
+                    horariosRef.on('value', (snapshot) => {
+                        const horarios = snapshot.val();
+                        renderHorarios(horarios);
+                    });
+                }
 
         // Função para renderizar horários na tabela
         function renderHorarios(horarios) {
@@ -321,8 +323,13 @@
             }
         }
 
-        // Inicializa o app
-        loadHorarios();
+       // Inicializa o app
+                loadHorarios();
+            })
+            .catch(err => {
+                console.error("Erro ao carregar configuração:", err);
+                alert("Erro ao carregar configuração. Tente recarregar a página.");
+            });
     </script>
 </body>
 </html>
