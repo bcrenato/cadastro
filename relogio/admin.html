@@ -117,7 +117,7 @@
 
      <!-- Verificação de Admin -->
   <script type="module">
-    import { checkAdminAuth } from './auth.js';
+    import { checkAdminAuth } from '../auth.js';
     if (!await checkAdminAuth()) {
       window.location.href = 'index.html';
     }
