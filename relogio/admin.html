@@ -111,18 +111,20 @@
 </head>
 <body>
     <div class="container">
-    <!-- Cabeçalho com título e botão de voltar -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <!-- Cabeçalho com os botões -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Painel Admin - Relógio de Oração</h1>
-        <a href="../index.html" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Voltar para o Relógio
-        </a>
+        <div>
+            <a href="../index.html" class="btn btn-add me-2">
+                <i class="fas fa-arrow-left me-1"></i> Voltar para o Relógio
+            </a>
+            <button class="btn btn-add" id="btnAddHorario">
+                <i class="fas fa-plus me-1"></i> Adicionar Horário
+            </button>
+        </div>
     </div>
-
-    <!-- Botão de Adicionar Horário (mantido exatamente como estava) -->
-    <button class="btn btn-add" id="btnAddHorario">+ Adicionar Horário</button>
     
-    <!-- Tabela (mantida exatamente como estava) -->
+    <!-- Tabela -->
     <table id="horariosTable">
         <thead>
             <tr>
