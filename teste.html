@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Inicializar horários</title>
-  <script src="firebase-config.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+  <!-- Carrega Firebase primeiro -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
   <h1>Inicializar horários no Firebase</h1>
@@ -13,6 +13,18 @@
   <pre id="resultado"></pre>
 
   <script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCv6pzl34tyPTARtGxV6g2AJfkrtQeA-xU",
+  authDomain: "cadastro-igreja-23042.firebaseapp.com",
+  databaseURL: "https://cadastro-igreja-23042-default-rtdb.firebaseio.com",
+  projectId: "cadastro-igreja-23042",
+  messagingSenderId: "977906864836",
+  appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
+    };
+
+    // Inicializa o Firebase
+    const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     function inicializarHorarios() {
