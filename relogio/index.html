@@ -3,16 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <title>Relógio de Oração</title>
-  <script src="../firebase-config.js"></script>
+  <!-- Carrega Firebase App + Database -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+  <!-- Carrega sua configuração -->
+  <script src="../firebase-config.js"></script>
 </head>
 <body>
   <h1>Relógio de Oração</h1>
   <div id="horarios"></div>
 
   <script>
-    const db = firebase.database();
+    // Agora usamos a referência que expusemos no window.firebase
+    const db = window.firebase.db;
+    
+    // Importa as funções necessárias do Firebase
+    const { ref, onValue, update } = firebase.database;
 
     function renderHorarios(snapshot) {
       const container = document.getElementById('horarios');
@@ -27,12 +33,13 @@
       });
     }
 
-    db.ref('horarios').on('value', renderHorarios);
+    // Observa mudanças nos horários
+    onValue(ref(db, 'horarios'), renderHorarios);
 
     function reservar(horario) {
       const nome = prompt('Seu nome:');
       if (!nome) return;
-      db.ref(`horarios/${horario}`).update({
+      update(ref(db, `horarios/${horario}`), {
         reservado: true,
         nome_reserva: nome
       }).then(() => alert('Reserva confirmada!'));
