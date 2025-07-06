@@ -105,12 +105,17 @@
     
     <a href="admin.html" class="admin-link">Acesso Administrativo</a>
 
-    <script type="module">
-        import { app, db } from '../firebase-config.js';
-        import { getDatabase, ref, onValue, update } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
-
-        const database = getDatabase(app);
-        const horariosRef = ref(database, 'relogio/horarios');
+    <!-- Firebase SDK (compatível com sua configuração existente) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <!-- Seu firebase-config.js existente -->
+    <script src="../firebase-config.js"></script>
+    
+    <script>
+        // Acesso ao Firebase através do objeto global
+        const database = firebase.database();
+        const horariosRef = database.ref('relogio/horarios');
 
         // Função para renderizar horários
         function renderHorarios(snapshot) {
@@ -135,7 +140,7 @@
                             Reservado para: ${data.nome_reserva || 'Não informado'}
                         </div>
                         <button class="reservar-btn" disabled>Indisponível</button>` : 
-                        `<button class="reservar-btn" data-horario="${h}" onclick="window.reservar('${h}')">Reservar horário</button>`
+                        `<button class="reservar-btn" onclick="reservar('${h}')">Reservar horário</button>`
                     }
                 `;
                 
@@ -144,11 +149,11 @@
         }
 
         // Função para reservar horário
-        window.reservar = function(horario) {
+        function reservar(horario) {
             const nome = prompt('Seu nome:');
             if (!nome) return;
             
-            update(ref(database, `relogio/horarios/${horario}`), {
+            horariosRef.child(horario).update({
                 reservado: true,
                 nome_reserva: nome,
                 data_reserva: new Date().toISOString()
@@ -156,7 +161,7 @@
         }
 
         // Observa mudanças nos horários
-        onValue(horariosRef, renderHorarios);
+        horariosRef.on('value', renderHorarios);
     </script>
 </body>
 </html>
