@@ -1,52 +1,338 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin — Relógio de Oração</title>
-  <!-- Carrega como módulo ES -->
-  <script type="module">
-    import { db } from '../firebase-config.js';
-    import { ref, onValue, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
-    // Função para renderizar a lista admin
-    function renderAdmin(snapshot) {
-      const list = document.getElementById('lista');
-      list.innerHTML = '';
-      snapshot.forEach(child => {
-        const h = child.key;
-        const data = child.val();
-        if (data.reservado) {
-          list.innerHTML += `
-            <div>
-              ${h}: ${data.nome_reserva}
-              <button data-horario="${h}" class="btn-liberar">Liberar</button>
-            </div>`;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Relógio de Oração</title>
+    <style>
+        /* Estilos mantidos do seu arquivo original */
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f5f5f5;
         }
-      });
-      
-      // Adiciona listeners aos botões
-      document.querySelectorAll('.btn-liberar').forEach(btn => {
-        btn.addEventListener('click', function() {
-          liberar(this.dataset.horario);
-        });
-      });
-    }
-
-    // Função para liberar horário
-    function liberar(horario) {
-      if (!confirm('Liberar reserva de '+horario+'?')) return;
-      update(ref(db, `horarios/${horario}`), {
-        reservado: false,
-        nome_reserva: ''
-      }).then(() => alert('Liberado!'));
-    }
-
-    // Inicia a escuta dos horários
-    onValue(ref(db, 'horarios'), renderAdmin);
-  </script>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-edit {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-delete {
+            background-color: #f44336;
+            color: white;
+        }
+        .btn-add {
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+        .error-message {
+            color: #f44336;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Painel Admin</h1>
-  <div id="lista"></div>
+    <div class="container">
+        <h1>Painel Admin - Relógio de Oração</h1>
+        <button class="btn btn-add" onclick="openAddModal()">+ Adicionar Horário</button>
+        
+        <table id="horariosTable">
+            <thead>
+                <tr>
+                    <th>Horário</th>
+                    <th>Nome</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="horariosBody">
+                <!-- Os horários serão carregados aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal de Adição -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <h2>Adicionar Horário</h2>
+            <div class="form-group">
+                <label for="newHorario">Horário:</label>
+                <input type="text" id="newHorario" required placeholder="Ex: 08:00 às 09:00">
+                <div id="addHorarioError" class="error-message"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('addModal')">Cancelar</button>
+                <button class="btn btn-add" onclick="addNewTime()">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2>Editar Horário</h2>
+            <input type="hidden" id="editHorarioKey">
+            <div class="form-group">
+                <label for="editHorario">Horário:</label>
+                <input type="text" id="editHorario" required>
+                <div id="editHorarioError" class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="editNome">Nome:</label>
+                <input type="text" id="editNome" placeholder="Deixe vazio para disponibilizar">
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('editModal')">Cancelar</button>
+                <button class="btn btn-edit" onclick="saveChanges()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (versão compatível) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <!-- Configuração do Firebase (usando seu arquivo existente) -->
+    <script src="../firebase-config.js"></script>
+    
+    <script>
+        // Inicializa o Firebase com sua configuração existente
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const horariosRef = database.ref('relogio/horarios');
+
+        // Carrega os horários
+        function loadHorarios() {
+            horariosRef.on('value', (snapshot) => {
+                const horarios = snapshot.val();
+                renderHorarios(horarios);
+            });
+        }
+
+        // Renderiza os horários na tabela
+        function renderHorarios(horarios) {
+            const tbody = document.getElementById('horariosBody');
+            tbody.innerHTML = '';
+            
+            if (!horarios) {
+                tbody.innerHTML = '<tr><td colspan="4">Nenhum horário cadastrado</td></tr>';
+                return;
+            }
+            
+            Object.keys(horarios).forEach((key) => {
+                const horario = horarios[key];
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${key}</td>
+                    <td>${horario.nome_reserva || ''}</td>
+                    <td>${horario.reservado ? 'Reservado' : 'Disponível'}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="openEditModal('${key}')">Editar</button>
+                        <button class="btn btn-delete" onclick="confirmDelete('${key}')">Excluir</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Funções do modal
+        function openAddModal() {
+            document.getElementById('newHorario').value = '';
+            document.getElementById('addHorarioError').textContent = '';
+            document.getElementById('addModal').style.display = 'block';
+        }
+
+        function openEditModal(horarioKey) {
+            horariosRef.child(horarioKey).once('value', (snapshot) => {
+                const horario = snapshot.val();
+                document.getElementById('editHorarioKey').value = horarioKey;
+                document.getElementById('editHorario').value = horarioKey;
+                document.getElementById('editNome').value = horario.nome_reserva || '';
+                document.getElementById('editHorarioError').textContent = '';
+                document.getElementById('editModal').style.display = 'block';
+            });
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Adiciona novo horário
+        function addNewTime() {
+            const horario = document.getElementById('newHorario').value.trim();
+            
+            if (!horario) {
+                document.getElementById('addHorarioError').textContent = 'Por favor, informe o horário';
+                return;
+            }
+            
+            // Verifica se o horário já existe
+            horariosRef.child(horario).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    document.getElementById('addHorarioError').textContent = 'Este horário já existe';
+                    return;
+                }
+                
+                // Adiciona o novo horário como disponível
+                horariosRef.child(horario).set({
+                    reservado: false,
+                    nome_reserva: '',
+                    data_reserva: ''
+                })
+                .then(() => {
+                    closeModal('addModal');
+                    alert('Horário adicionado com sucesso!');
+                })
+                .catch((error) => {
+                    document.getElementById('addHorarioError').textContent = 'Erro: ' + error.message;
+                });
+            });
+        }
+
+        // Salva alterações
+        function saveChanges() {
+            const oldKey = document.getElementById('editHorarioKey').value;
+            const newKey = document.getElementById('editHorario').value.trim();
+            const nome = document.getElementById('editNome').value.trim();
+            
+            if (!newKey) {
+                document.getElementById('editHorarioError').textContent = 'Por favor, informe o horário';
+                return;
+            }
+            
+            // Primeiro obtemos os dados atuais
+            horariosRef.child(oldKey).once('value', (snapshot) => {
+                const horarioData = snapshot.val();
+                
+                // Se o nome foi apagado, marca como disponível
+                if (!nome) {
+                    horarioData.reservado = false;
+                    horarioData.nome_reserva = '';
+                } else {
+                    horarioData.nome_reserva = nome;
+                    horarioData.reservado = true;
+                }
+                
+                // Se a chave (horário) mudou, precisamos recriar o nó
+                if (oldKey !== newKey) {
+                    // Remove o antigo e cria o novo
+                    const updates = {};
+                    updates[oldKey] = null;
+                    updates[newKey] = horarioData;
+                    
+                    horariosRef.update(updates)
+                        .then(() => {
+                            closeModal('editModal');
+                            alert('Horário atualizado com sucesso!');
+                        })
+                        .catch((error) => {
+                            document.getElementById('editHorarioError').textContent = 'Erro: ' + error.message;
+                        });
+                } else {
+                    // Se apenas os dados mudaram, atualiza normalmente
+                    horariosRef.child(oldKey).update(horarioData)
+                        .then(() => {
+                            closeModal('editModal');
+                            alert('Horário atualizado com sucesso!');
+                        })
+                        .catch((error) => {
+                            document.getElementById('editHorarioError').textContent = 'Erro: ' + error.message;
+                        });
+                }
+            });
+        }
+
+        // Confirma e exclui um horário
+        function confirmDelete(horarioKey) {
+            if (confirm('Tem certeza que deseja excluir este horário?\nEsta ação não pode ser desfeita.')) {
+                horariosRef.child(horarioKey).remove()
+                    .then(() => {
+                        alert('Horário excluído com sucesso!');
+                    })
+                    .catch((error) => {
+                        alert('Erro ao excluir: ' + error.message);
+                    });
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            }
+        }
+
+        // Inicializa o app
+        loadHorarios();
+
+        // Torna as funções disponíveis globalmente
+        window.openAddModal = openAddModal;
+        window.openEditModal = openEditModal;
+        window.closeModal = closeModal;
+        window.addNewTime = addNewTime;
+        window.saveChanges = saveChanges;
+        window.confirmDelete = confirmDelete;
+    </script>
 </body>
 </html>
