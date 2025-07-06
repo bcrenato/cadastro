@@ -115,27 +115,14 @@
 </head>
 <body>
 
-    <!-- Script de autenticação (adicione no início do <body>) -->
-<script type="module">
-  import { checkAuth } from '../auth.js';
-  import { isUserAdmin } from '../users.js'; // Adicione esta importação
-  
-  document.addEventListener('DOMContentLoaded', async () => {
-    const user = await checkAuth();
-    
-    // Mostrar menu admin se o usuário for administrador
-    if (user && await isUserAdmin()) {
-      document.getElementById('adminMenuItem').style.display = 'block';
-    }
-  });
-</script>
+     <!-- Script para proteger a pagina -->
+    <script type="module">
+        import { checkAuth } from './auth.js';
+        checkAuth();
+      </script>
 
 
-
-
-
-
-    
+   
     <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <!-- Botão Voltar com ícone -->
