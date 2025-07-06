@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <!-- Meta tags PWA -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#3367D6"/>  
     <meta charset="UTF-8">
     <title>Relógio de Oração</title>
     <style>
-        /* Estilos mantidos do seu arquivo original */
         .app-bar {
             position: fixed;
             top: 0;
@@ -94,7 +92,6 @@
     </style>
 </head>
 <body>
-    <!-- App Bar -->
     <div class="app-bar">
         <button onclick="window.location.href='https://bcrenato.github.io/cadastro/'" aria-label="Voltar">&#8592;</button>
         Relógio de Oração
@@ -106,136 +103,60 @@
         <div>Carregando horários...</div>
     </div>
     
-    <!-- Modal de Reserva -->
-    <div id="reservaModal" class="modal">
-        <div class="modal-content">
-            <h3>Reservar Período</h3>
-            <div>
-                <label>Horário:</label>
-                <input type="text" id="modalHorario" readonly>
-            </div>
-            <div>
-                <label for="nomeReserva">Seu Nome:</label>
-                <input type="text" id="nomeReserva" placeholder="Digite seu nome">
-            </div>
-            <div id="reservaError" style="color: red; display: none;"></div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                <button onclick="fecharModalReserva()">Cancelar</button>
-                <button onclick="confirmarReserva()" style="background-color: #4CAF50; color: white;">Reservar</button>
-            </div>
-        </div>
-    </div>
-
     <a href="admin.html" class="admin-link">Acesso Administrativo</a>
 
-    <!-- Firebase SDK (versão compatível) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
-    <!-- Configuração do Firebase (usando seu arquivo existente) -->
-    <script src="../firebase-config.js"></script>
-    
-    <script>
-        // Inicializa o Firebase com sua configuração existente
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+    <script type="module">
+        import { app, db } from '../firebase-config.js';
+        import { getDatabase, ref, onValue, update } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 
-        // Referência para os horários no Firebase
-        const horariosRef = database.ref('relogio/horarios');
+        const database = getDatabase(app);
+        const horariosRef = ref(database, 'relogio/horarios');
 
-        // Elementos do DOM
-        const horariosContainer = document.getElementById('horariosContainer');
-        const reservaModal = document.getElementById('reservaModal');
-        const modalHorario = document.getElementById('modalHorario');
-        const nomeReserva = document.getElementById('nomeReserva');
-        const reservaError = document.getElementById('reservaError');
-        
-        let horarioSelecionado = null;
-
-        // Carrega os horários do Firebase
-        function carregarHorarios() {
-            horariosRef.on('value', (snapshot) => {
-                const horarios = snapshot.val();
-                renderizarHorarios(horarios);
-            });
-        }
-
-        // Renderiza os horários na tela
-        function renderizarHorarios(horarios) {
-            if (!horarios) {
-                horariosContainer.innerHTML = '<div>Nenhum horário cadastrado.</div>';
+        // Função para renderizar horários
+        function renderHorarios(snapshot) {
+            const container = document.getElementById('horariosContainer');
+            container.innerHTML = '';
+            
+            if (!snapshot.exists()) {
+                container.innerHTML = '<div>Nenhum horário cadastrado.</div>';
                 return;
             }
 
-            horariosContainer.innerHTML = '';
-            
-            Object.keys(horarios).forEach((key) => {
-                const horario = horarios[key];
+            snapshot.forEach((child) => {
+                const h = child.key;
+                const data = child.val();
                 const card = document.createElement('div');
                 card.className = 'horario-card';
                 
                 card.innerHTML = `
-                    <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${key}</div>
-                    ${horario.reservado ? 
+                    <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${h}</div>
+                    ${data.reservado ? 
                         `<div style="font-size: 14px; color: #666; margin-top: 5px;">
-                            Reservado para: ${horario.nome_reserva || 'Não informado'}
+                            Reservado para: ${data.nome_reserva || 'Não informado'}
                         </div>
                         <button class="reservar-btn" disabled>Indisponível</button>` : 
-                        `<button class="reservar-btn" onclick="abrirModalReserva('${key}')">Reservar horário</button>`
+                        `<button class="reservar-btn" data-horario="${h}" onclick="window.reservar('${h}')">Reservar horário</button>`
                     }
                 `;
                 
-                horariosContainer.appendChild(card);
+                container.appendChild(card);
             });
         }
 
-        // Abre o modal de reserva
-        function abrirModalReserva(horario) {
-            horarioSelecionado = horario;
-            modalHorario.value = horario;
-            nomeReserva.value = '';
-            reservaError.style.display = 'none';
-            reservaModal.style.display = 'block';
-        }
-
-        // Fecha o modal de reserva
-        function fecharModalReserva() {
-            reservaModal.style.display = 'none';
-        }
-
-        // Confirma a reserva
-        function confirmarReserva() {
-            const nome = nomeReserva.value.trim();
+        // Função para reservar horário
+        window.reservar = function(horario) {
+            const nome = prompt('Seu nome:');
+            if (!nome) return;
             
-            if (!nome) {
-                reservaError.textContent = 'Por favor, digite seu nome.';
-                reservaError.style.display = 'block';
-                return;
-            }
-            
-            // Atualiza o horário no Firebase
-            horariosRef.child(horarioSelecionado).update({
+            update(ref(database, `relogio/horarios/${horario}`), {
                 reservado: true,
                 nome_reserva: nome,
                 data_reserva: new Date().toISOString()
-            })
-            .then(() => {
-                fecharModalReserva();
-                alert('Horário reservado com sucesso!');
-            })
-            .catch((error) => {
-                reservaError.textContent = 'Erro ao reservar: ' + error.message;
-                reservaError.style.display = 'block';
-            });
+            }).then(() => alert('Reserva confirmada!'));
         }
 
-        // Inicializa o app
-        carregarHorarios();
-
-        // Torna as funções disponíveis globalmente para os eventos onclick
-        window.abrirModalReserva = abrirModalReserva;
-        window.fecharModalReserva = fecharModalReserva;
-        window.confirmarReserva = confirmarReserva;
+        // Observa mudanças nos horários
+        onValue(horariosRef, renderHorarios);
     </script>
 </body>
 </html>
