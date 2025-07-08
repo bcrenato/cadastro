@@ -141,69 +141,81 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
     <!-- 2. Carrega sua configuração como módulo dinâmico -->
-    <script>
-        // Carrega o firebase-config.js como módulo dinâmico
-        import('../firebase-config.js')
-            .then(module => {
-                // Inicializa o Firebase com a configuração
-                firebase.initializeApp(module.firebaseConfig);
-                
-                // Agora pode usar o Firebase normalmente
-                const database = firebase.database();
-                const horariosRef = database.ref('relogio/horarios');
-                
+    <script type="module">
+import { checkAuth } from '../auth.js';
+import { firebaseConfig } from '../firebase-config.js';
 
-        // Função para renderizar horários
-                function renderHorarios(snapshot) {
-                    const container = document.getElementById('horariosContainer');
-                    container.innerHTML = '';
-                    
-                    if (!snapshot.exists()) {
-                        container.innerHTML = '<div>Nenhum horário cadastrado.</div>';
-                        return;
-                    }
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-                    snapshot.forEach((child) => {
-                        const h = child.key;
-                        const data = child.val();
-                        const card = document.createElement('div');
-                        card.className = 'horario-card';
-                        
-                        card.innerHTML = `
-                            <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${h}</div>
-                            ${data.reservado ? 
-                                `<div style="font-size: 14px; color: #666; margin-top: 5px;">
-                                    Reservado para: ${data.nome_reserva || 'Não informado'}
-                                </div>
-                                <button class="reservar-btn" disabled>Indisponível</button>` : 
-                                `<button class="reservar-btn" onclick="reservar('${h}')">Reservar horário</button>`
-                            }
-                        `;
-                        
-                        container.appendChild(card);
-                    });
-                }
+// Espera até que o DOM esteja pronto
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const user = await checkAuth();
+    if (!user) {
+      window.location.href = '../login.html';
+      return;
+    }
 
-                // Função para reservar horário
-                window.reservar = function(horario) {
-                    const nome = prompt('Seu nome:');
-                    if (!nome) return;
-                    
-                    horariosRef.child(horario).update({
-                        reservado: true,
-                        nome_reserva: nome,
-                        data_reserva: new Date().toISOString()
-                    }).then(() => alert('Reserva confirmada!'));
-                }
+    console.log('Usuário autenticado:', user.email);
 
-                // Observa mudanças nos horários
-                horariosRef.on('value', renderHorarios);
-            })
-            .catch(err => {
-                console.error("Erro ao carregar configuração:", err);
-                document.getElementById('horariosContainer').innerHTML = 
-                    '<div class="error">Erro ao carregar configuração. Recarregue a página.</div>';
-            });
-    </script>
+    // Inicializa Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const horariosRef = ref(db, 'relogio/horarios');
+
+    const container = document.getElementById('horariosContainer');
+
+    // Função para renderizar horários
+    function renderHorarios(snapshot) {
+      container.innerHTML = '';
+      
+      if (!snapshot.exists()) {
+        container.innerHTML = '<div>Nenhum horário cadastrado.</div>';
+        return;
+      }
+
+      snapshot.forEach((child) => {
+        const h = child.key;
+        const data = child.val();
+        const card = document.createElement('div');
+        card.className = 'horario-card';
+
+        card.innerHTML = `
+          <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${h}</div>
+          ${data.reservado ? 
+            `<div style="font-size: 14px; color: #666; margin-top: 5px;">
+              Reservado para: ${data.nome_reserva || 'Não informado'}
+            </div>
+            <button class="reservar-btn" disabled>Indisponível</button>` : 
+            `<button class="reservar-btn" onclick="reservar('${h}')">Reservar horário</button>`
+          }
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // Função para reservar horário
+    window.reservar = function(horario) {
+      const nome = prompt('Seu nome:');
+      if (!nome) return;
+
+      update(ref(db, `relogio/horarios/${horario}`), {
+        reservado: true,
+        nome_reserva: nome,
+        data_reserva: new Date().toISOString()
+      }).then(() => alert('Reserva confirmada!'));
+    }
+
+    // Observa mudanças
+    onValue(horariosRef, renderHorarios);
+
+  } catch (err) {
+    console.error('Erro na autenticação ou carregamento:', err);
+    window.location.href = '../login.html?error=auth';
+  }
+});
+</script>
 </body>
 </html>
