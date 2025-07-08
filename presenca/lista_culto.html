@@ -362,15 +362,38 @@
       const lineHeight = 7;
       let yPos = 15;
       
-      // Títulos centralizados
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text('Lista de Presença - Culto', pageWidth/2, yPos, { align: 'center' });
-      yPos += lineHeight;
-      
-      doc.setFontSize(14);
-      doc.text(formatarDataSimples(cultoDate), pageWidth/2, yPos, { align: 'center' });
-      yPos += lineHeight * 2;
+      // Adiciona o logo (em Base64 ou URL pública)
+const logo = new Image();
+logo.src = 'caminho/para/logo.png'; // ajuste para o caminho correto ou base64
+
+logo.onload = () => {
+  // desenha o logo no topo, centralizado
+  const logoWidth = 40; // largura em mm
+  const logoHeight = 40; // altura em mm
+  const logoX = (pageWidth - logoWidth) / 2;
+  const logoY = yPos;
+
+  doc.addImage(logo, 'PNG', logoX, logoY, logoWidth, logoHeight);
+
+  yPos += logoHeight + 5;
+
+  // Frase
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
+  doc.text('Famílias vivendo na graça e unção do Espírito', pageWidth/2, yPos, { align: 'center' });
+  yPos += lineHeight;
+
+  // Título
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('Lista de Presença - Culto', pageWidth/2, yPos, { align: 'center' });
+  yPos += lineHeight;
+
+  // Data
+  doc.setFontSize(14);
+  doc.text(formatarDataSimples(cultoDate), pageWidth/2, yPos, { align: 'center' });
+  yPos += lineHeight * 2;
+
       
       // Prepara dados da tabela
       const headers = [['Nome', 'Tipo', 'Função']];
