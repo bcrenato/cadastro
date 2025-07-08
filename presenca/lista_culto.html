@@ -370,6 +370,7 @@
 function adicionarLogoEFrase(doc, yPos, cultoDate, callback) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const lineHeight = 7;
+  const margin = 15; // 🔷 adicionado para corrigir o erro
 
   const logo = new Image();
   logo.src = './logo.png'; // ajuste para a URL correta do logo
