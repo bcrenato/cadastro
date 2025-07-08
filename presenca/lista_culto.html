@@ -372,37 +372,39 @@ function adicionarLogoEFrase(doc, yPos, cultoDate, callback) {
   const lineHeight = 7;
 
   const logo = new Image();
-  logo.src = './logo.png'; // ajuste para a URL correta do logo
+logo.src = './logo.png'; // ajuste para a URL correta do logo
 
-  logo.onload = () => {
-    const logoWidth = 40;
-    const logoHeight = 40;
-    const logoX = (pageWidth - logoWidth) / 2;
+logo.onload = () => {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const lineHeight = 7;
 
-    // adiciona logo
-    doc.addImage(logo, 'PNG', logoX, yPos, logoWidth, logoHeight);
-    yPos += logoHeight + 5;
+  const desiredWidth = 40; // 🔷 ajuste este número para alterar a largura do logo
+  const aspectRatio = logo.height / logo.width; // calcula a proporção original
 
-    // frase
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(12);
-    doc.text('Famílias vivendo na graça e unção do Espírito', pageWidth / 2, yPos, { align: 'center' });
-    yPos += lineHeight;
+  const logoWidth = desiredWidth;
+  const logoHeight = desiredWidth * aspectRatio;
 
-    // título
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.text('Lista de Presença - Culto', pageWidth / 2, yPos, { align: 'center' });
-    yPos += lineHeight;
+  const logoX = (pageWidth - logoWidth) / 2;
 
-    // data
-    doc.setFontSize(14);
-    doc.text(formatarDataSimples(cultoDate), pageWidth / 2, yPos, { align: 'center' });
-    yPos += lineHeight * 2;
+  doc.addImage(logo, 'PNG', logoX, yPos, logoWidth, logoHeight);
+  yPos += logoHeight + 5;
 
-    // chama o próximo passo
-    callback(yPos);
-  };
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
+  doc.text('Famílias vivendo na graça e unção do Espírito', pageWidth / 2, yPos, { align: 'center' });
+  yPos += lineHeight;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('Lista de Presença - Culto', pageWidth / 2, yPos, { align: 'center' });
+  yPos += lineHeight;
+
+  doc.setFontSize(14);
+  doc.text(formatarDataSimples(cultoDate), pageWidth / 2, yPos, { align: 'center' });
+  yPos += lineHeight * 2;
+
+  callback(yPos);
+};
 }
 
 function continuarGeracaoPDF(doc, yPos, cultoDate, presentesData) {
