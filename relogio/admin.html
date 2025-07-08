@@ -52,6 +52,7 @@ tr:nth-child(even) { background-color: #f9f9f9; }
 <script type="module">
 import { checkAuth } from '../auth.js';
 import { db } from '../firebase-config.js';
+import { onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
   const user = await checkAuth();
@@ -63,7 +64,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('Admin autenticado:', user.email);
 
   const horariosRef = db.ref('relogio/horarios');
-
   const tbody = document.getElementById('horariosBody');
 
   function renderHorarios(horarios) {
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   };
 
-  horariosRef.on('value', snapshot => {
+  onValue(horariosRef, snapshot => {
     renderHorarios(snapshot.val());
   });
 });
