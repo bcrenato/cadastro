@@ -59,79 +59,90 @@ if (!user) {
 </div>
 
 <script type="module">
+import { checkAuth } from '../auth.js';
 import { db } from '../firebase-config.js';
 
-const horariosRef = db.ref('relogio/horarios');
+const user = await checkAuth();
 
-function loadHorarios() {
-  horariosRef.on('value', (snapshot) => {
-    renderHorarios(snapshot.val());
-  });
+if (!user) {
+  window.location.href = '../login.html';
+} else {
+  console.log('Usuário autenticado:', user.email);
+  startAdmin();
 }
 
-function renderHorarios(horarios) {
-  const tbody = document.getElementById('horariosBody');
-  tbody.innerHTML = '';
+function startAdmin() {
+  const horariosRef = db.ref('relogio/horarios');
 
-  if (!horarios) {
-    tbody.innerHTML = '<tr><td colspan="4">Nenhum horário cadastrado</td></tr>';
-    return;
+  function loadHorarios() {
+    horariosRef.on('value', (snapshot) => {
+      renderHorarios(snapshot.val());
+    });
   }
 
-  Object.keys(horarios).forEach((key) => {
-    const horario = horarios[key];
-    const row = document.createElement('tr');
+  function renderHorarios(horarios) {
+    const tbody = document.getElementById('horariosBody');
+    tbody.innerHTML = '';
 
-    row.innerHTML = `
-      <td>${key}</td>
-      <td>${horario.nome_reserva || ''}</td>
-      <td>${horario.reservado ? 'Reservado' : 'Disponível'}</td>
-      <td>
-        <button class="btn btn-edit" data-horario="${key}">Editar</button>
-        <button class="btn btn-delete" data-horario="${key}">Excluir</button>
-      </td>
-    `;
+    if (!horarios) {
+      tbody.innerHTML = '<tr><td colspan="4">Nenhum horário cadastrado</td></tr>';
+      return;
+    }
 
-    tbody.appendChild(row);
-  });
+    Object.keys(horarios).forEach((key) => {
+      const horario = horarios[key];
+      const row = document.createElement('tr');
 
-  document.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.addEventListener('click', () => openEditModal(btn.dataset.horario));
-  });
-  document.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', () => confirmDelete(btn.dataset.horario));
-  });
-}
+      row.innerHTML = `
+        <td>${key}</td>
+        <td>${horario.nome_reserva || ''}</td>
+        <td>${horario.reservado ? 'Reservado' : 'Disponível'}</td>
+        <td>
+          <button class="btn btn-edit" data-horario="${key}">Editar</button>
+          <button class="btn btn-delete" data-horario="${key}">Excluir</button>
+        </td>
+      `;
 
-// Modal e funções adicionais
-function openEditModal(horarioKey) {
-  const nome = prompt(`Editar nome do horário ${horarioKey}:`);
-  if (nome === null) return;
-  const reservado = nome.trim() !== '';
-  horariosRef.child(horarioKey).update({
-    nome_reserva: nome,
-    reservado: reservado,
-    data_reserva: reservado ? new Date().toISOString() : ''
-  });
-}
+      tbody.appendChild(row);
+    });
 
-function confirmDelete(horarioKey) {
-  if (confirm(`Tem certeza que deseja excluir o horário ${horarioKey}?`)) {
-    horariosRef.child(horarioKey).remove();
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+      btn.addEventListener('click', () => openEditModal(btn.dataset.horario));
+    });
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', () => confirmDelete(btn.dataset.horario));
+    });
   }
-}
 
-document.getElementById('btnAddHorario').addEventListener('click', () => {
-  const horario = prompt('Informe o novo horário (ex: 08:00):');
-  if (!horario) return;
-  horariosRef.child(horario).set({
-    reservado: false,
-    nome_reserva: '',
-    data_reserva: ''
+  function openEditModal(horarioKey) {
+    const nome = prompt(`Editar nome do horário ${horarioKey}:`);
+    if (nome === null) return;
+    const reservado = nome.trim() !== '';
+    horariosRef.child(horarioKey).update({
+      nome_reserva: nome,
+      reservado: reservado,
+      data_reserva: reservado ? new Date().toISOString() : ''
+    });
+  }
+
+  function confirmDelete(horarioKey) {
+    if (confirm(`Tem certeza que deseja excluir o horário ${horarioKey}?`)) {
+      horariosRef.child(horarioKey).remove();
+    }
+  }
+
+  document.getElementById('btnAddHorario').addEventListener('click', () => {
+    const horario = prompt('Informe o novo horário (ex: 08:00):');
+    if (!horario) return;
+    horariosRef.child(horario).set({
+      reservado: false,
+      nome_reserva: '',
+      data_reserva: ''
+    });
   });
-});
 
-loadHorarios();
+  loadHorarios();
+}
 </script>
 
 </body>
