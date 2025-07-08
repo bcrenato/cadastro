@@ -116,12 +116,43 @@
 <body>
 
      <!-- Verificação de Admin -->
-  <script type="module">
-    import { checkAdminAuth } from '../auth.js';
-    if (!await checkAdminAuth()) {
-      window.location.href = 'index.html';
+  <!-- Verificação de Admin -->
+<script type="module">
+  import { checkAuth } from '../auth.js';
+  
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const user = await checkAuth();
+      
+      if (!user) {
+        window.location.href = '../login.html';
+        return;
+      }
+      
+      // Verificar se é admin
+      const module = await import('../firebase-config.js');
+      firebase.initializeApp(module.firebaseConfig);
+      
+      const database = firebase.database();
+      const userRef = database.ref('users/' + user.uid);
+      
+      userRef.once('value').then((snapshot) => {
+        const userData = snapshot.val();
+        if (!userData || userData.isAdmin !== true) {
+          window.location.href = '../unauthorized.html';
+          return;
+        }
+        
+        // Se for admin, continua com a inicialização
+        initializeFirebase();
+      });
+      
+    } catch (error) {
+      console.error('Erro na verificação:', error);
+      window.location.href = '../login.html?error=auth';
     }
-  </script>
+  });
+</script>
 
    
     <div class="container">
@@ -193,32 +224,62 @@
     </div>
 
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    
-    <script>
-        // Variáveis globais
-        let database;
-        let horariosRef;
+    <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-        // Inicialização do Firebase
-        async function initializeFirebase() {
-            try {
-                const module = await import('../firebase-config.js');
-                firebase.initializeApp(module.firebaseConfig);
-                database = firebase.database();
-                horariosRef = database.ref('relogio/horarios');
-                loadHorarios();
-            } catch (error) {
-                console.error("Erro ao inicializar Firebase:", error);
-                document.getElementById('horariosBody').innerHTML = `
-                    <tr>
-                        <td colspan="4" style="color: red;">
-                            Erro ao carregar dados. Recarregue a página.
-                        </td>
-                    </tr>`;
+<script>
+    // Variáveis globais
+    let database;
+    let horariosRef;
+    let currentUser;
+
+    // Inicialização do Firebase
+    async function initializeFirebase() {
+        try {
+            const module = await import('../firebase-config.js');
+            firebase.initializeApp(module.firebaseConfig);
+            
+            // Obter o usuário atual
+            currentUser = firebase.auth().currentUser;
+            if (!currentUser) {
+                window.location.href = '../login.html';
+                return;
             }
+            
+            database = firebase.database();
+            horariosRef = database.ref('relogio/horarios');
+            
+            // Verificar se é admin novamente (dupla verificação)
+            const userRef = database.ref('users/' + currentUser.uid);
+            userRef.once('value').then((snapshot) => {
+                const userData = snapshot.val();
+                if (!userData || userData.isAdmin !== true) {
+                    window.location.href = '../unauthorized.html';
+                    return;
+                }
+                
+                loadHorarios();
+            });
+            
+        } catch (error) {
+            console.error("Erro ao inicializar Firebase:", error);
+            showError("Erro ao carregar dados. Recarregue a página.");
         }
+    }
+
+    // Função para mostrar erros
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.color = 'red';
+        errorDiv.style.padding = '20px';
+        errorDiv.style.textAlign = 'center';
+        errorDiv.textContent = message;
+        
+        const container = document.querySelector('.container');
+        container.insertBefore(errorDiv, container.firstChild);
+    }
 
         // Funções de CRUD
         function loadHorarios() {
@@ -287,92 +348,49 @@
         }
 
         function addNewTime() {
-            const horario = document.getElementById('newHorario').value.trim();
-            
-            if (!horario) {
-                document.getElementById('addHorarioError').textContent = 'Por favor, informe o horário';
+        const horario = document.getElementById('newHorario').value.trim();
+        
+        if (!horario) {
+            document.getElementById('addHorarioError').textContent = 'Por favor, informe o horário';
+            return;
+        }
+        
+        horariosRef.child(horario).once('value', (snapshot) => {
+            if (snapshot.exists()) {
+                document.getElementById('addHorarioError').textContent = 'Este horário já existe';
                 return;
             }
             
-            horariosRef.child(horario).once('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    document.getElementById('addHorarioError').textContent = 'Este horário já existe';
-                    return;
-                }
-                
-                horariosRef.child(horario).set({
-                    reservado: false,
-                    nome_reserva: '',
-                    data_reserva: ''
-                })
+            horariosRef.child(horario).set({
+                reservado: false,
+                nome_reserva: '',
+                data_reserva: '',
+                criadoPor: currentUser.uid,
+                criadoEm: new Date().toISOString()
+            })
+            .then(() => {
+                closeModal('addModal');
+                alert('Horário adicionado com sucesso!');
+            })
+            .catch((error) => {
+                document.getElementById('addHorarioError').textContent = 'Erro: ' + error.message;
+            });
+        });
+    }
+
+    // Adicionar tratamento de erro nas operações do banco de dados
+    function confirmDelete(horarioKey) {
+        if (confirm('Tem certeza que deseja excluir este horário?\nEsta ação não pode ser desfeita.')) {
+            horariosRef.child(horarioKey).remove()
                 .then(() => {
-                    closeModal('addModal');
-                    alert('Horário adicionado com sucesso!');
+                    alert('Horário excluído com sucesso!');
                 })
                 .catch((error) => {
-                    document.getElementById('addHorarioError').textContent = 'Erro: ' + error.message;
+                    console.error("Erro ao excluir:", error);
+                    alert('Erro ao excluir: ' + (error.message || 'Sem permissão'));
                 });
-            });
         }
-
-        function saveChanges() {
-            const oldKey = document.getElementById('editHorarioKey').value;
-            const newKey = document.getElementById('editHorario').value.trim();
-            const nome = document.getElementById('editNome').value.trim();
-            
-            if (!newKey) {
-                document.getElementById('editHorarioError').textContent = 'Por favor, informe o horário';
-                return;
-            }
-            
-            horariosRef.child(oldKey).once('value', (snapshot) => {
-                const horarioData = snapshot.val();
-                
-                if (!nome) {
-                    horarioData.reservado = false;
-                    horarioData.nome_reserva = '';
-                } else {
-                    horarioData.nome_reserva = nome;
-                    horarioData.reservado = true;
-                }
-                
-                if (oldKey !== newKey) {
-                    const updates = {};
-                    updates[`relogio/horarios/${oldKey}`] = null;
-                    updates[`relogio/horarios/${newKey}`] = horarioData;
-                    
-                    database.ref().update(updates)
-                        .then(() => {
-                            closeModal('editModal');
-                            alert('Horário atualizado com sucesso!');
-                        })
-                        .catch((error) => {
-                            document.getElementById('editHorarioError').textContent = 'Erro: ' + error.message;
-                        });
-                } else {
-                    horariosRef.child(oldKey).update(horarioData)
-                        .then(() => {
-                            closeModal('editModal');
-                            alert('Horário atualizado com sucesso!');
-                        })
-                        .catch((error) => {
-                            document.getElementById('editHorarioError').textContent = 'Erro: ' + error.message;
-                        });
-                }
-            });
-        }
-
-        function confirmDelete(horarioKey) {
-            if (confirm('Tem certeza que deseja excluir este horário?\nEsta ação não pode ser desfeita.')) {
-                horariosRef.child(horarioKey).remove()
-                    .then(() => {
-                        alert('Horário excluído com sucesso!');
-                    })
-                    .catch((error) => {
-                        alert('Erro ao excluir: ' + error.message);
-                    });
-            }
-        }
+    }
 
         // Event Listeners
         document.getElementById('btnAddHorario').addEventListener('click', openAddModal);
