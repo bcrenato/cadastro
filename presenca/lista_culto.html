@@ -370,7 +370,7 @@
 function adicionarLogoEFrase(doc, yPos, cultoDate, callback) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const lineHeight = 7;
-  const margin = 15; // 🔷 adicionado para corrigir o erro
+  const margin = 15;
 
   const logo = new Image();
   logo.src = './logo.png'; // ajuste para a URL correta do logo
@@ -394,12 +394,8 @@ function adicionarLogoEFrase(doc, yPos, cultoDate, callback) {
     doc.text('Famílias vivendo na graça e unção do Espírito', pageWidth / 2, yPos, { align: 'center' });
     yPos += lineHeight;
 
-    // 🔷 adiciona linha horizontal
-    yPos += 2;
-    doc.setDrawColor(150);
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPos, pageWidth - margin, yPos);
-    yPos += 5;
+    // 🔷 adiciona apenas um espaço extra aqui
+    yPos += lineHeight * 2;
 
     // título
     doc.setFont('helvetica', 'bold');
