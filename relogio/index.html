@@ -138,20 +138,19 @@
 
    <!-- 1. Carrega o SDK do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     
     <!-- 2. Carrega sua configuração como módulo dinâmico -->
     <script type="module">
 import { checkAuth } from '../auth.js';
 import { firebaseConfig } from '../firebase-config.js';
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-// Espera até que o DOM esteja pronto
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const user = await checkAuth();
+
     if (!user) {
       window.location.href = '../login.html';
       return;
@@ -159,17 +158,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     console.log('Usuário autenticado:', user.email);
 
-    // Inicializa Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const horariosRef = ref(db, 'relogio/horarios');
+    firebase.initializeApp(firebaseConfig);
+
+    const db = firebase.database();
+    const horariosRef = db.ref('relogio/horarios');
 
     const container = document.getElementById('horariosContainer');
 
-    // Função para renderizar horários
     function renderHorarios(snapshot) {
       container.innerHTML = '';
-      
       if (!snapshot.exists()) {
         container.innerHTML = '<div>Nenhum horário cadastrado.</div>';
         return;
@@ -183,11 +180,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         card.innerHTML = `
           <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${h}</div>
-          ${data.reservado ? 
+          ${data.reservado ?
             `<div style="font-size: 14px; color: #666; margin-top: 5px;">
               Reservado para: ${data.nome_reserva || 'Não informado'}
             </div>
-            <button class="reservar-btn" disabled>Indisponível</button>` : 
+            <button class="reservar-btn" disabled>Indisponível</button>` :
             `<button class="reservar-btn" onclick="reservar('${h}')">Reservar horário</button>`
           }
         `;
@@ -196,20 +193,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // Função para reservar horário
     window.reservar = function(horario) {
       const nome = prompt('Seu nome:');
       if (!nome) return;
 
-      update(ref(db, `relogio/horarios/${horario}`), {
+      horariosRef.child(horario).update({
         reservado: true,
         nome_reserva: nome,
         data_reserva: new Date().toISOString()
       }).then(() => alert('Reserva confirmada!'));
     }
 
-    // Observa mudanças
-    onValue(horariosRef, renderHorarios);
+    horariosRef.on('value', renderHorarios);
 
   } catch (err) {
     console.error('Erro na autenticação ou carregamento:', err);
@@ -217,5 +212,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 </script>
+    
 </body>
 </html>
