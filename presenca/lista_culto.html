@@ -464,17 +464,17 @@ function continuarGeracaoPDF(doc, yPos, cultoDate, presentesData) {
     
     // Formata a data para exibição
     function formatarData(dataString) {
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const date = new Date(dataString);
-      return date.toLocaleDateString('pt-BR', options);
-    }
-    
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const date = new Date(dataString + 'T12:00:00'); // 👈 aqui
+  return date.toLocaleDateString('pt-BR', options);
+}
+
     // Formata data simples para o PDF
     function formatarDataSimples(dataString) {
-      const date = new Date(dataString);
-      const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
-      return date.toLocaleDateString('pt-BR', options);
-    }
+  const date = new Date(dataString + 'T12:00:00'); // 👈 aqui
+  const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
+  return date.toLocaleDateString('pt-BR', options);
+}
     
     // Mostra alerta estilizado
     function mostrarAlerta(mensagem, tipo) {
