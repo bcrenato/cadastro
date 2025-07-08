@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Relógio de Oração</title>
-    
-    <!-- Adicione o Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="icon" href="data:,"> <!-- Remove erro do favicon -->
+    <link rel="icon" href="data:,">
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -111,77 +108,86 @@
             margin-top: 5px;
             font-size: 14px;
         }
+        .admin-error {
+            background-color: #ffebee;
+            color: #d32f2f;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <div id="adminError" class="admin-error"></div>
 
-     <!-- Verificação de Admin -->
-  <!-- Verificação de Admin -->
-<script type="module">
-  import { checkAuth } from '../auth.js';
-  
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-      const user = await checkAuth();
+    <!-- Verificação de Admin -->
+    <script type="module">
+      import { checkAuth } from '../auth.js';
       
-      if (!user) {
-        window.location.href = '../login.html';
-        return;
-      }
-      
-      // Verificar se é admin
-      const module = await import('../firebase-config.js');
-      firebase.initializeApp(module.firebaseConfig);
-      
-      const database = firebase.database();
-      const userRef = database.ref('users/' + user.uid);
-      
-      userRef.once('value').then((snapshot) => {
-        const userData = snapshot.val();
-        if (!userData || userData.isAdmin !== true) {
-          window.location.href = '../unauthorized.html';
-          return;
+      document.addEventListener('DOMContentLoaded', async () => {
+        try {
+          const user = await checkAuth();
+          
+          if (!user) {
+            window.location.href = '../login.html';
+            return;
+          }
+          
+          // Verificar se é admin
+          const module = await import('../firebase-config.js');
+          firebase.initializeApp(module.firebaseConfig);
+          
+          const database = firebase.database();
+          const userRef = database.ref('users/' + user.uid);
+          
+          userRef.once('value').then((snapshot) => {
+            const userData = snapshot.val();
+            if (!userData || userData.isAdmin !== true) {
+              window.location.href = '../unauthorized.html';
+              return;
+            }
+            
+            // Se for admin, continua com a inicialização
+            initializeFirebase();
+          });
+          
+        } catch (error) {
+          console.error('Erro na verificação:', error);
+          document.getElementById('adminError').textContent = 'Erro na autenticação. Redirecionando...';
+          document.getElementById('adminError').style.display = 'block';
+          setTimeout(() => window.location.href = '../login.html?error=auth', 2000);
         }
-        
-        // Se for admin, continua com a inicialização
-        initializeFirebase();
       });
-      
-    } catch (error) {
-      console.error('Erro na verificação:', error);
-      window.location.href = '../login.html?error=auth';
-    }
-  });
-</script>
+    </script>
 
-   
     <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <!-- Botão Voltar com ícone -->
-        <a href="../relogio/" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i> Voltar para o Relógio
-        </a>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <a href="../relogio/" class="btn" style="background-color: #e0e0e0;">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+            
+            <h1 style="margin: 0; text-align: center;">Painel Admin - Relógio de Oração</h1>
+            
+            <button class="btn btn-add" id="btnAddHorario">
+                <i class="fas fa-plus"></i> Adicionar
+            </button>
+        </div>
         
-        <h1 class="mb-0 mx-auto">Painel Admin - Relógio de Oração</h1>
-        
-        <!-- Botão Adicionar (mantido original) -->
-        <button class="btn btn-add" id="btnAddHorario">
-            <i class="fas fa-plus me-2"></i> Adicionar Horário
-        </button>
-    </div>
-        
-        <!-- Tabela -->
-        <table id="horariosTable" class="w-100">
+        <table id="horariosTable">
             <thead>
                 <tr>
-                    <th class="p-3">Horário</th>
-                    <th class="p-3">Nome</th>
-                    <th class="p-3">Status</th>
-                    <th class="p-3">Ações</th>
+                    <th>Horário</th>
+                    <th>Nome</th>
+                    <th>Status</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody id="horariosBody">
-                <!-- Os horários serão carregados aqui -->
+                <tr>
+                    <td colspan="4">Carregando horários...</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -224,68 +230,48 @@
     </div>
 
     <!-- Firebase SDK -->
-    <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <script>
+        // Variáveis globais
+        let database;
+        let horariosRef;
+        let currentUser;
 
-<script>
-    // Variáveis globais
-    let database;
-    let horariosRef;
-    let currentUser;
-
-    // Inicialização do Firebase
-    async function initializeFirebase() {
-        try {
-            const module = await import('../firebase-config.js');
-            firebase.initializeApp(module.firebaseConfig);
-            
-            // Obter o usuário atual
-            currentUser = firebase.auth().currentUser;
-            if (!currentUser) {
-                window.location.href = '../login.html';
-                return;
-            }
-            
-            database = firebase.database();
-            horariosRef = database.ref('relogio/horarios');
-            
-            // Verificar se é admin novamente (dupla verificação)
-            const userRef = database.ref('users/' + currentUser.uid);
-            userRef.once('value').then((snapshot) => {
-                const userData = snapshot.val();
-                if (!userData || userData.isAdmin !== true) {
-                    window.location.href = '../unauthorized.html';
-                    return;
-                }
+        // Inicialização do Firebase
+        async function initializeFirebase() {
+            try {
+                const module = await import('../firebase-config.js');
+                firebase.initializeApp(module.firebaseConfig);
+                
+                currentUser = firebase.auth().currentUser;
+                database = firebase.database();
+                horariosRef = database.ref('relogio/horarios');
                 
                 loadHorarios();
-            });
-            
-        } catch (error) {
-            console.error("Erro ao inicializar Firebase:", error);
-            showError("Erro ao carregar dados. Recarregue a página.");
+                setupEventListeners();
+                
+            } catch (error) {
+                showError("Erro ao inicializar Firebase: " + error.message);
+            }
         }
-    }
 
-    // Função para mostrar erros
-    function showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.style.color = 'red';
-        errorDiv.style.padding = '20px';
-        errorDiv.style.textAlign = 'center';
-        errorDiv.textContent = message;
-        
-        const container = document.querySelector('.container');
-        container.insertBefore(errorDiv, container.firstChild);
-    }
+        function showError(message) {
+            const errorDiv = document.getElementById('adminError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            console.error(message);
+        }
 
         // Funções de CRUD
         function loadHorarios() {
             horariosRef.on('value', (snapshot) => {
                 const horarios = snapshot.val();
                 renderHorarios(horarios);
+            }, (error) => {
+                showError("Erro ao carregar horários: " + error.message);
             });
         }
 
@@ -340,6 +326,8 @@
                 document.getElementById('editNome').value = horario.nome_reserva || '';
                 document.getElementById('editHorarioError').textContent = '';
                 document.getElementById('editModal').style.display = 'block';
+            }, (error) => {
+                showError("Erro ao carregar horário: " + error.message);
             });
         }
 
@@ -348,68 +336,114 @@
         }
 
         function addNewTime() {
-        const horario = document.getElementById('newHorario').value.trim();
-        
-        if (!horario) {
-            document.getElementById('addHorarioError').textContent = 'Por favor, informe o horário';
-            return;
-        }
-        
-        horariosRef.child(horario).once('value', (snapshot) => {
-            if (snapshot.exists()) {
-                document.getElementById('addHorarioError').textContent = 'Este horário já existe';
+            const horario = document.getElementById('newHorario').value.trim();
+            
+            if (!horario) {
+                document.getElementById('addHorarioError').textContent = 'Por favor, informe o horário';
                 return;
             }
             
-            horariosRef.child(horario).set({
-                reservado: false,
-                nome_reserva: '',
-                data_reserva: '',
-                criadoPor: currentUser.uid,
-                criadoEm: new Date().toISOString()
-            })
-            .then(() => {
-                closeModal('addModal');
-                alert('Horário adicionado com sucesso!');
-            })
-            .catch((error) => {
-                document.getElementById('addHorarioError').textContent = 'Erro: ' + error.message;
-            });
-        });
-    }
-
-    // Adicionar tratamento de erro nas operações do banco de dados
-    function confirmDelete(horarioKey) {
-        if (confirm('Tem certeza que deseja excluir este horário?\nEsta ação não pode ser desfeita.')) {
-            horariosRef.child(horarioKey).remove()
+            horariosRef.child(horario).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    document.getElementById('addHorarioError').textContent = 'Este horário já existe';
+                    return;
+                }
+                
+                horariosRef.child(horario).set({
+                    reservado: false,
+                    nome_reserva: '',
+                    data_reserva: new Date().toISOString()
+                })
                 .then(() => {
-                    alert('Horário excluído com sucesso!');
+                    closeModal('addModal');
+                    alert('Horário adicionado com sucesso!');
                 })
                 .catch((error) => {
-                    console.error("Erro ao excluir:", error);
-                    alert('Erro ao excluir: ' + (error.message || 'Sem permissão'));
+                    document.getElementById('addHorarioError').textContent = 'Erro: ' + error.message;
                 });
+            }, (error) => {
+                document.getElementById('addHorarioError').textContent = 'Erro: ' + error.message;
+            });
         }
-    }
 
-        // Event Listeners
-        document.getElementById('btnAddHorario').addEventListener('click', openAddModal);
-        document.getElementById('btnCancelAdd').addEventListener('click', () => closeModal('addModal'));
-        document.getElementById('btnConfirmAdd').addEventListener('click', addNewTime);
-        document.getElementById('btnCancelEdit').addEventListener('click', () => closeModal('editModal'));
-        document.getElementById('btnSaveEdit').addEventListener('click', saveChanges);
-
-        // Fechar modal ao clicar fora
-        window.addEventListener('click', (event) => {
-            if (event.target.classList.contains('modal')) {
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.style.display = 'none';
-                });
+        function saveChanges() {
+            const oldKey = document.getElementById('editHorarioKey').value;
+            const newKey = document.getElementById('editHorario').value.trim();
+            const nome = document.getElementById('editNome').value.trim();
+            
+            if (!newKey) {
+                document.getElementById('editHorarioError').textContent = 'Por favor, informe o horário';
+                return;
             }
-        });
+            
+            horariosRef.child(oldKey).once('value', (snapshot) => {
+                const horarioData = snapshot.val();
+                
+                if (!nome) {
+                    horarioData.reservado = false;
+                    horarioData.nome_reserva = '';
+                } else {
+                    horarioData.nome_reserva = nome;
+                    horarioData.reservado = true;
+                }
+                
+                if (oldKey !== newKey) {
+                    const updates = {};
+                    updates[`relogio/horarios/${oldKey}`] = null;
+                    updates[`relogio/horarios/${newKey}`] = horarioData;
+                    
+                    database.ref().update(updates)
+                        .then(() => {
+                            closeModal('editModal');
+                            alert('Horário atualizado com sucesso!');
+                        })
+                        .catch((error) => {
+                            document.getElementById('editHorarioError').textContent = 'Erro: ' + error.message;
+                        });
+                } else {
+                    horariosRef.child(oldKey).update(horarioData)
+                        .then(() => {
+                            closeModal('editModal');
+                            alert('Horário atualizado com sucesso!');
+                        })
+                        .catch((error) => {
+                            document.getElementById('editHorarioError').textContent = 'Erro: ' + error.message;
+                        });
+                }
+            }, (error) => {
+                document.getElementById('editHorarioError').textContent = 'Erro: ' + error.message;
+            });
+        }
 
-        // Inicializa o app
-        initializeFirebase();
+        function confirmDelete(horarioKey) {
+            if (confirm('Tem certeza que deseja excluir este horário?\nEsta ação não pode ser desfeita.')) {
+                horariosRef.child(horarioKey).remove()
+                    .then(() => {
+                        alert('Horário excluído com sucesso!');
+                    })
+                    .catch((error) => {
+                        alert('Erro ao excluir: ' + (error.message || 'Sem permissão'));
+                    });
+            }
+        }
+
+        // Configuração de Event Listeners
+        function setupEventListeners() {
+            document.getElementById('btnAddHorario').addEventListener('click', openAddModal);
+            document.getElementById('btnCancelAdd').addEventListener('click', () => closeModal('addModal'));
+            document.getElementById('btnConfirmAdd').addEventListener('click', addNewTime);
+            document.getElementById('btnCancelEdit').addEventListener('click', () => closeModal('editModal'));
+            document.getElementById('btnSaveEdit').addEventListener('click', saveChanges);
+
+            // Fechar modal ao clicar fora
+            window.addEventListener('click', (event) => {
+                if (event.target.classList.contains('modal')) {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.style.display = 'none';
+                    });
+                }
+            });
+        }
     </script>
 </body>
 </html>
