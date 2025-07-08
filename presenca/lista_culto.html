@@ -352,111 +352,146 @@
     }
     
     // Exporta a lista para PDF
-    function exportarParaPDF(cultoId, cultoDate, presentesData) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      
-      // Configurações do documento
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 15;
-      const lineHeight = 7;
-      let yPos = 15;
-      
-      // Títulos centralizados
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text('Lista de Presença - Culto', pageWidth/2, yPos, { align: 'center' });
-      yPos += lineHeight;
-      
-      doc.setFontSize(14);
-      doc.text(formatarDataSimples(cultoDate), pageWidth/2, yPos, { align: 'center' });
-      yPos += lineHeight * 2;
-      
-      // Prepara dados da tabela
-      const headers = [['Nome', 'Tipo', 'Função']];
-      const rows = [];
-      let membrosCount = 0;
-      let visitantesCount = 0;
-      
-      Object.entries(presentesData).forEach(([id, valor]) => {
-        if (valor === true) {
-          // É um membro
-          const membro = membrosCadastrados.find(m => m.id === id) || { nome: `Membro (ID: ${id})`, funcao: '' };
-          rows.push([membro.nome, 'Membro', membro.funcao || '']);
-          membrosCount++;
-        } else {
-          // É um visitante
-          rows.push([valor, 'Visitante', '']);
-          visitantesCount++;
-        }
-      });
-      
-      // Adiciona tabela
-      doc.autoTable({
-        startY: yPos,
-        head: headers,
-        body: rows,
-        margin: { left: margin, right: margin },
-        styles: {
-          fontSize: 10,
-          cellPadding: 3,
-          valign: 'middle'
-        },
-        headStyles: {
-          fillColor: [13, 110, 253],
-          textColor: 255,
-          fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-          fillColor: [240, 240, 240]
-        }
-      });
-      
-      // Adiciona totais
-      yPos = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(12);
-      doc.text('Total de Presentes:', margin, yPos);
-      doc.text(`Membros: ${membrosCount}`, margin + 50, yPos);
-      doc.text(`Visitantes: ${visitantesCount}`, margin + 100, yPos);
-      
-      // Salva o PDF
-      doc.save(`presenca_culto_${cultoDate}.pdf`);
-    }
+    // Exporta a lista para PDF
+    // Exporta a lista para PDF (versão completa e aprimorada)
+function exportarLista(cultoDate, presentesData, membrosData) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  // Configurações do documento
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  const lineHeight = 7;
+  let yPos = 15;
+  
+  // Configurações do logo
+  const logoConfig = {
+    width: 80, // Largura desejada em pontos (1cm ≈ 28.35 pontos)
+    maxHeight: 30, // Altura máxima permitida
+    src: 'logo.png', // Ou URL/base64
+    paddingBottom: 10 // Espaço após o logo
+  };
+  
+  // Função para adicionar conteúdo após carregar o logo
+  const addContent = (logoHeight = 0) => {
+    // Ajusta a posição Y considerando o logo (se carregado)
+    yPos += logoHeight > 0 ? logoHeight + logoConfig.paddingBottom : 0;
     
-    // Formata a data para exibição
-    function formatarData(dataString) {
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const date = new Date(dataString);
-      return date.toLocaleDateString('pt-BR', options);
-    }
+    // Títulos centralizados
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Famílias Vivendo na Graça e Unção do Espírito', pageWidth/2, yPos, { align: 'center' });
+    yPos += lineHeight * 2;
     
-    // Formata data simples para o PDF
-    function formatarDataSimples(dataString) {
-      const date = new Date(dataString);
-      const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
-      return date.toLocaleDateString('pt-BR', options);
-    }
+    doc.setFontSize(16);
+    doc.text('Lista presença culto', pageWidth/2, yPos, { align: 'center' });
+    yPos += lineHeight;
     
-    // Mostra alerta estilizado
-    function mostrarAlerta(mensagem, tipo) {
-      const alerta = document.createElement('div');
-      alerta.className = `alert alert-${tipo} alert-dismissible fade show mt-3`;
-      alerta.role = 'alert';
-      alerta.innerHTML = `
-        ${mensagem}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      `;
+    doc.setFontSize(14);
+    doc.text(formatarDataSimples(cultoDate), pageWidth/2, yPos, { align: 'center' });
+    yPos += lineHeight * 2;
+    
+    // Prepara dados da tabela
+    const headers = [['Nome', 'Função']];
+    const rows = [];
+    let membrosCount = 0;
+    let visitantesCount = 0;
+    
+    Object.entries(presentesData || {}).forEach(([id, valor]) => {
+      if (valor === true) {
+        rows.push([
+          membrosData[id]?.nome || `Membro (ID: ${id})`,
+          membrosData[id]?.funcao || 'Membro'
+        ]);
+        membrosCount++;
+      } else {
+        rows.push([valor, 'Visitante']);
+        visitantesCount++;
+      }
+    });
+    
+    // Adiciona tabela
+    doc.autoTable({
+      startY: yPos,
+      head: headers,
+      body: rows,
+      margin: { left: margin, right: margin },
+      styles: {
+        fontSize: 12,
+        cellPadding: 3,
+        valign: 'middle'
+      },
+      headStyles: {
+        fillColor: [13, 110, 253],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
+      }
+    });
+    
+    // Adiciona totais
+    yPos = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.text('Presentes:', margin, yPos);
+    doc.text(`Membros - ${membrosCount}`, margin + 30, yPos);
+    doc.text(`Visitantes - ${visitantesCount}`, margin + 80, yPos);
+    
+    // Salva o PDF
+    doc.save(`presenca_${cultoDate.replace(/-/g, '_')}.pdf`);
+  };
+  
+  // Tenta carregar o logo
+  try {
+    const logoImg = new Image();
+    logoImg.onload = () => {
+      // Calcula altura proporcional respeitando a altura máxima
+      const aspectRatio = logoImg.height / logoImg.width;
+      let height = logoConfig.width * aspectRatio;
       
-      // Adiciona temporariamente ao DOM
-      const container = document.querySelector('.card-body');
-      const primeiroFilho = container.firstChild;
-      container.insertBefore(alerta, primeiroFilho);
+      if (height > logoConfig.maxHeight) {
+        height = logoConfig.maxHeight;
+      }
       
-      // Remove após 5 segundos
-      setTimeout(() => {
-        alerta.remove();
-      }, 5000);
-    }
+      // Centraliza e adiciona o logo
+      doc.addImage(
+        logoImg, 
+        'PNG', 
+        (pageWidth - logoConfig.width) / 2, 
+        yPos, 
+        logoConfig.width, 
+        height
+      );
+      
+      addContent(height);
+    };
+    
+    logoImg.onerror = () => {
+      console.warn('Logo não carregado, continuando sem ele');
+      addContent();
+    };
+    
+    logoImg.src = logoConfig.src;
+  } catch (error) {
+    console.error('Erro ao processar logo:', error);
+    addContent();
+  }
+}
+    
+    // Inicializa a aplicação
+    document.addEventListener('DOMContentLoaded', () => {
+      // Define datas padrão (últimos 30 dias)
+      const fim = new Date();
+      const inicio = new Date();
+      inicio.setDate(inicio.getDate() - 30);
+      
+      document.getElementById('data-inicio').value = inicio.toISOString().split('T')[0];
+      document.getElementById('data-fim').value = fim.toISOString().split('T')[0];
+      
+      // Busca automaticamente
+      document.getElementById('btn-buscar').click();
+    });
   </script>
 </body>
 </html>
