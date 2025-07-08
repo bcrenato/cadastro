@@ -353,78 +353,107 @@
     
     // Exporta a lista para PDF
     function exportarParaPDF(cultoId, cultoDate, presentesData) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      
-      // Configurações do documento
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 15;
-      const lineHeight = 7;
-      let yPos = 15;
-      
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-  // Título
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.text('Lista de Presença - Culto', pageWidth/2, yPos, { align: 'center' });
-  yPos += lineHeight;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  const lineHeight = 7;
+  let yPos = 15;
 
-  // Data
-  doc.setFontSize(14);
-  doc.text(formatarDataSimples(cultoDate), pageWidth/2, yPos, { align: 'center' });
-  yPos += lineHeight * 2;
+  // chama a nova função que adiciona logo e frase
+  adicionarLogoEFrase(doc, yPos, cultoDate, function(novoYPos) {
+    continuarGeracaoPDF(doc, novoYPos, cultoDate, presentesData);
+  });
+}
 
-      
-      // Prepara dados da tabela
-      const headers = [['Nome', 'Tipo', 'Função']];
-      const rows = [];
-      let membrosCount = 0;
-      let visitantesCount = 0;
-      
-      Object.entries(presentesData).forEach(([id, valor]) => {
-        if (valor === true) {
-          // É um membro
-          const membro = membrosCadastrados.find(m => m.id === id) || { nome: `Membro (ID: ${id})`, funcao: '' };
-          rows.push([membro.nome, 'Membro', membro.funcao || '']);
-          membrosCount++;
-        } else {
-          // É um visitante
-          rows.push([valor, 'Visitante', '']);
-          visitantesCount++;
-        }
-      });
-      
-      // Adiciona tabela
-      doc.autoTable({
-        startY: yPos,
-        head: headers,
-        body: rows,
-        margin: { left: margin, right: margin },
-        styles: {
-          fontSize: 10,
-          cellPadding: 3,
-          valign: 'middle'
-        },
-        headStyles: {
-          fillColor: [13, 110, 253],
-          textColor: 255,
-          fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-          fillColor: [240, 240, 240]
-        }
-      });
-      
-      // Adiciona totais
-      yPos = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(12);
-      doc.text('Total de Presentes:', margin, yPos);
-      doc.text(`Membros: ${membrosCount}`, margin + 50, yPos);
-      doc.text(`Visitantes: ${visitantesCount}`, margin + 100, yPos);
-      
-      // Salva o PDF
-      doc.save(`presenca_culto_${cultoDate}.pdf`);
+function adicionarLogoEFrase(doc, yPos, cultoDate, callback) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const lineHeight = 7;
+
+  const logo = new Image();
+  logo.src = 'caminho/para/logo.png'; // ajuste para a URL correta do logo
+
+  logo.onload = () => {
+    const logoWidth = 40;
+    const logoHeight = 40;
+    const logoX = (pageWidth - logoWidth) / 2;
+
+    // adiciona logo
+    doc.addImage(logo, 'PNG', logoX, yPos, logoWidth, logoHeight);
+    yPos += logoHeight + 5;
+
+    // frase
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.text('Famílias vivendo na graça e unção do Espírito', pageWidth / 2, yPos, { align: 'center' });
+    yPos += lineHeight;
+
+    // título
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('Lista de Presença - Culto', pageWidth / 2, yPos, { align: 'center' });
+    yPos += lineHeight;
+
+    // data
+    doc.setFontSize(14);
+    doc.text(formatarDataSimples(cultoDate), pageWidth / 2, yPos, { align: 'center' });
+    yPos += lineHeight * 2;
+
+    // chama o próximo passo
+    callback(yPos);
+  };
+}
+
+function continuarGeracaoPDF(doc, yPos, cultoDate, presentesData) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+
+  const headers = [['Nome', 'Tipo', 'Função']];
+  const rows = [];
+  let membrosCount = 0;
+  let visitantesCount = 0;
+
+  Object.entries(presentesData).forEach(([id, valor]) => {
+    if (valor === true) {
+      const membro = membrosCadastrados.find(m => m.id === id) || { nome: `Membro (ID: ${id})`, funcao: '' };
+      rows.push([membro.nome, 'Membro', membro.funcao || '']);
+      membrosCount++;
+    } else {
+      rows.push([valor, 'Visitante', '']);
+      visitantesCount++;
     }
+  });
+
+  doc.autoTable({
+    startY: yPos,
+    head: headers,
+    body: rows,
+    margin: { left: margin, right: margin },
+    styles: {
+      fontSize: 10,
+      cellPadding: 3,
+      valign: 'middle'
+    },
+    headStyles: {
+      fillColor: [13, 110, 253],
+      textColor: 255,
+      fontStyle: 'bold'
+    },
+    alternateRowStyles: {
+      fillColor: [240, 240, 240]
+    }
+  });
+
+  yPos = doc.lastAutoTable.finalY + 10;
+
+  doc.setFontSize(12);
+  doc.text('Total de Presentes:', margin, yPos);
+  doc.text(`Membros: ${membrosCount}`, margin + 50, yPos);
+  doc.text(`Visitantes: ${visitantesCount}`, margin + 100, yPos);
+
+  doc.save(`presenca_culto_${cultoDate}.pdf`);
+}
     
     // Formata a data para exibição
     function formatarData(dataString) {
