@@ -340,5 +340,32 @@
       });
     });
   </script>
+  
+
+  <!-- Script para proteger a página -->
+<script type="module">
+  import { checkAuth } from '../auth.js';  // Usa ../ para voltar um nível
+  
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const user = await checkAuth();
+      
+      // Se não tiver usuário, redireciona para login
+      if (!user) {
+        window.location.href = '../login.html';  // Redireciona para login na pasta pai
+        return;
+      }
+      
+      // Se chegou aqui, o usuário está autenticado
+      console.log('Acesso permitido para:', user.email);
+      
+    } catch (error) {
+      console.error('Erro na autenticação:', error);
+      window.location.href = '../login.html?error=auth';
+    }
+  });
+</script>
+
+
 </body>
 </html>
