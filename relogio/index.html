@@ -89,40 +89,22 @@
             color: #2196F3;
             text-decoration: none;
         }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        
+        .error-message {
+            color: #d32f2f;
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
-
-
-    <!-- Script para proteger a página -->
-<script type="module">
-  import { checkAuth } from '../auth.js';  // Usa ../ para voltar um nível
-  
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-      const user = await checkAuth();
-      
-      // Se não tiver usuário, redireciona para login
-      if (!user) {
-        window.location.href = '../login.html';  // Redireciona para login na pasta pai
-        return;
-      }
-      
-      // Se chegou aqui, o usuário está autenticado
-      console.log('Acesso permitido para:', user.email);
-      
-    } catch (error) {
-      console.error('Erro na autenticação:', error);
-      window.location.href = '../login.html?error=auth';
-    }
-  });
-</script>
-
-
-
-
-
-    
     <div class="app-bar">
         <button onclick="window.location.href='https://bcrenato.github.io/cadastro/'" aria-label="Voltar">&#8592;</button>
         Relógio de Oração
@@ -131,79 +113,128 @@
     <h1>Relógio de Oração</h1>
     
     <div class="horario-container" id="horariosContainer">
-        <div>Carregando horários...</div>
+        <div class="loading">Verificando autenticação...</div>
     </div>
     
     <a href="admin.html" class="admin-link">Acesso Administrativo</a>
 
-   <!-- 1. Carrega o SDK do Firebase -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
-    <!-- 2. Carrega sua configuração como módulo dinâmico -->
+    <!-- Aplicação principal -->
     <script>
-        // Carrega o firebase-config.js como módulo dinâmico
-        import('../firebase-config.js')
-            .then(module => {
-                // Inicializa o Firebase com a configuração
-                firebase.initializeApp(module.firebaseConfig);
-                
-                // Agora pode usar o Firebase normalmente
-                const database = firebase.database();
-                const horariosRef = database.ref('relogio/horarios');
-                
+        // Configuração do Firebase (substitua pelo seu firebase-config.js)
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_PROJETO.firebaseapp.com",
+            databaseURL: "https://SEU_PROJETO.firebaseio.com",
+            projectId: "SEU_PROJETO",
+            storageBucket: "SEU_PROJETO.appspot.com",
+            messagingSenderId: "SEU_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
 
-        // Função para renderizar horários
-                function renderHorarios(snapshot) {
-                    const container = document.getElementById('horariosContainer');
-                    container.innerHTML = '';
-                    
-                    if (!snapshot.exists()) {
-                        container.innerHTML = '<div>Nenhum horário cadastrado.</div>';
-                        return;
-                    }
-
-                    snapshot.forEach((child) => {
-                        const h = child.key;
-                        const data = child.val();
-                        const card = document.createElement('div');
-                        card.className = 'horario-card';
-                        
-                        card.innerHTML = `
-                            <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${h}</div>
-                            ${data.reservado ? 
-                                `<div style="font-size: 14px; color: #666; margin-top: 5px;">
-                                    Reservado para: ${data.nome_reserva || 'Não informado'}
-                                </div>
-                                <button class="reservar-btn" disabled>Indisponível</button>` : 
-                                `<button class="reservar-btn" onclick="reservar('${h}')">Reservar horário</button>`
-                            }
-                        `;
-                        
-                        container.appendChild(card);
-                    });
-                }
-
-                // Função para reservar horário
-                window.reservar = function(horario) {
-                    const nome = prompt('Seu nome:');
-                    if (!nome) return;
-                    
-                    horariosRef.child(horario).update({
-                        reservado: true,
-                        nome_reserva: nome,
-                        data_reserva: new Date().toISOString()
-                    }).then(() => alert('Reserva confirmada!'));
-                }
-
-                // Observa mudanças nos horários
-                horariosRef.on('value', renderHorarios);
-            })
-            .catch(err => {
-                console.error("Erro ao carregar configuração:", err);
-                document.getElementById('horariosContainer').innerHTML = 
-                    '<div class="error">Erro ao carregar configuração. Recarregue a página.</div>';
+        // Inicializa o Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Referências globais
+        const auth = firebase.auth();
+        const database = firebase.database();
+        
+        // Elementos da página
+        const horariosContainer = document.getElementById('horariosContainer');
+        
+        // Monitora estado de autenticação
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                // Usuário não autenticado - redireciona para login
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            // Usuário autenticado - carrega os horários
+            loadHorarios();
+        }, (error) => {
+            showError("Erro na autenticação: " + error.message);
+        });
+        
+        // Carrega os horários do banco de dados
+        function loadHorarios() {
+            horariosContainer.innerHTML = '<div class="loading">Carregando horários...</div>';
+            
+            const horariosRef = database.ref('relogio/horarios');
+            
+            horariosRef.on('value', (snapshot) => {
+                renderHorarios(snapshot);
+            }, (error) => {
+                showError("Erro ao carregar horários: " + error.message);
             });
+        }
+        
+        // Renderiza os horários na página
+        function renderHorarios(snapshot) {
+            horariosContainer.innerHTML = '';
+            
+            if (!snapshot.exists()) {
+                horariosContainer.innerHTML = '<div class="loading">Nenhum horário cadastrado.</div>';
+                return;
+            }
+
+            snapshot.forEach((child) => {
+                const h = child.key;
+                const data = child.val();
+                const card = document.createElement('div');
+                card.className = 'horario-card';
+                
+                card.innerHTML = `
+                    <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${h}</div>
+                    ${data.reservado ? 
+                        `<div style="font-size: 14px; color: #666; margin-top: 5px;">
+                            Reservado por: ${data.nome_reserva || 'Não informado'}
+                        </div>
+                        <button class="reservar-btn" disabled>Indisponível</button>` : 
+                        `<button class="reservar-btn" onclick="reservar('${h}')">Reservar horário</button>`
+                    }
+                `;
+                
+                horariosContainer.appendChild(card);
+            });
+        }
+        
+        // Função para reservar horário (global)
+        window.reservar = function(horario) {
+            const nome = prompt('Digite seu nome para reservar:');
+            if (!nome || nome.trim() === '') return;
+            
+            const updates = {
+                reservado: true,
+                nome_reserva: nome.trim(),
+                data_reserva: new Date().toISOString(),
+                userId: auth.currentUser.uid
+            };
+            
+            database.ref('relogio/horarios/' + horario).update(updates)
+                .then(() => {
+                    alert('Horário reservado com sucesso!');
+                })
+                .catch((error) => {
+                    console.error("Erro na reserva:", error);
+                    alert('Erro ao reservar. Tente novamente.');
+                });
+        }
+        
+        // Mostra mensagem de erro
+        function showError(message) {
+            console.error(message);
+            horariosContainer.innerHTML = `
+                <div class="error-message">
+                    ${message}<br><br>
+                    <button onclick="window.location.reload()">Recarregar página</button>
+                </div>
+            `;
+        }
     </script>
 </body>
 </html>
