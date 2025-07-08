@@ -136,74 +136,85 @@
     
     <a href="admin.html" class="admin-link">Acesso Administrativo</a>
 
-   <!-- 1. Carrega o SDK do Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+   <<!-- 1. Carrega os SDKs do Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
-    <!-- 2. Carrega sua configuração como módulo dinâmico -->
-    <script>
-        // Carrega o firebase-config.js como módulo dinâmico
-        import('../firebase-config.js')
-            .then(module => {
-                // Inicializa o Firebase com a configuração
-                firebase.initializeApp(module.firebaseConfig);
-                
-                // Agora pode usar o Firebase normalmente
-                const database = firebase.database();
-                const horariosRef = database.ref('relogio/horarios');
-                
-
-        // Função para renderizar horários
-                function renderHorarios(snapshot) {
-                    const container = document.getElementById('horariosContainer');
-                    container.innerHTML = '';
+   <!-- 2. Carrega sua configuração como módulo dinâmico -->
+<script>
+    // Carrega o firebase-config.js como módulo dinâmico
+    import('../firebase-config.js')
+        .then(module => {
+            // Inicializa o Firebase com a configuração
+            const firebaseApp = firebase.initializeApp(module.firebaseConfig);
+            
+            // Adiciona autenticação
+            const auth = firebase.auth();
+            const database = firebase.database();
+            
+            // Verifica autenticação antes de acessar os dados
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // Usuário autenticado - pode acessar os dados
+                    const horariosRef = database.ref('relogio/horarios');
                     
-                    if (!snapshot.exists()) {
-                        container.innerHTML = '<div>Nenhum horário cadastrado.</div>';
-                        return;
+                    // Função para renderizar horários
+                    function renderHorarios(snapshot) {
+                        const container = document.getElementById('horariosContainer');
+                        container.innerHTML = '';
+                        
+                        if (!snapshot.exists()) {
+                            container.innerHTML = '<div>Nenhum horário cadastrado.</div>';
+                            return;
+                        }
+
+                        snapshot.forEach((child) => {
+                            const h = child.key;
+                            const data = child.val();
+                            const card = document.createElement('div');
+                            card.className = 'horario-card';
+                            
+                            card.innerHTML = `
+                                <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${h}</div>
+                                ${data.reservado ? 
+                                    `<div style="font-size: 14px; color: #666; margin-top: 5px;">
+                                        Reservado para: ${data.nome_reserva || 'Não informado'}
+                                    </div>
+                                    <button class="reservar-btn" disabled>Indisponível</button>` : 
+                                    `<button class="reservar-btn" onclick="reservar('${h}')">Reservar horário</button>`
+                                }
+                            `;
+                            
+                            container.appendChild(card);
+                        });
                     }
 
-                    snapshot.forEach((child) => {
-                        const h = child.key;
-                        const data = child.val();
-                        const card = document.createElement('div');
-                        card.className = 'horario-card';
+                    // Função para reservar horário
+                    window.reservar = function(horario) {
+                        const nome = prompt('Seu nome:');
+                        if (!nome) return;
                         
-                        card.innerHTML = `
-                            <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">${h}</div>
-                            ${data.reservado ? 
-                                `<div style="font-size: 14px; color: #666; margin-top: 5px;">
-                                    Reservado para: ${data.nome_reserva || 'Não informado'}
-                                </div>
-                                <button class="reservar-btn" disabled>Indisponível</button>` : 
-                                `<button class="reservar-btn" onclick="reservar('${h}')">Reservar horário</button>`
-                            }
-                        `;
-                        
-                        container.appendChild(card);
-                    });
-                }
+                        horariosRef.child(horario).update({
+                            reservado: true,
+                            nome_reserva: nome,
+                            data_reserva: new Date().toISOString()
+                        }).then(() => alert('Reserva confirmada!'));
+                    }
 
-                // Função para reservar horário
-                window.reservar = function(horario) {
-                    const nome = prompt('Seu nome:');
-                    if (!nome) return;
-                    
-                    horariosRef.child(horario).update({
-                        reservado: true,
-                        nome_reserva: nome,
-                        data_reserva: new Date().toISOString()
-                    }).then(() => alert('Reserva confirmada!'));
+                    // Observa mudanças nos horários
+                    horariosRef.on('value', renderHorarios);
+                } else {
+                    // Usuário não autenticado - redirecionar para login
+                    window.location.href = '../login.html';
                 }
-
-                // Observa mudanças nos horários
-                horariosRef.on('value', renderHorarios);
-            })
-            .catch(err => {
-                console.error("Erro ao carregar configuração:", err);
-                document.getElementById('horariosContainer').innerHTML = 
-                    '<div class="error">Erro ao carregar configuração. Recarregue a página.</div>';
             });
-    </script>
+        })
+        .catch(err => {
+            console.error("Erro ao carregar configuração:", err);
+            document.getElementById('horariosContainer').innerHTML = 
+                '<div class="error">Erro ao carregar configuração. Recarregue a página.</div>';
+        });
+</script>
 </body>
 </html>
