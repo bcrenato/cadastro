@@ -362,26 +362,6 @@
       const lineHeight = 7;
       let yPos = 15;
       
-      // Adiciona o logo (em Base64 ou URL pública)
-const logo = new Image();
-logo.src = 'caminho/para/logo.png'; // ajuste para o caminho correto ou base64
-
-logo.onload = () => {
-  // desenha o logo no topo, centralizado
-  const logoWidth = 40; // largura em mm
-  const logoHeight = 40; // altura em mm
-  const logoX = (pageWidth - logoWidth) / 2;
-  const logoY = yPos;
-
-  doc.addImage(logo, 'PNG', logoX, logoY, logoWidth, logoHeight);
-
-  yPos += logoHeight + 5;
-
-  // Frase
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(12);
-  doc.text('Famílias vivendo na graça e unção do Espírito', pageWidth/2, yPos, { align: 'center' });
-  yPos += lineHeight;
 
   // Título
   doc.setFont('helvetica', 'bold');
