@@ -361,22 +361,6 @@
       const margin = 15;
       const lineHeight = 7;
       let yPos = 15;
-
-     // Configurações do logo
-  const logoConfig = {
-    width: 80, // Largura desejada em pontos (1cm ≈ 28.35 pontos)
-    maxHeight: 30, // Altura máxima permitida
-    src: 'logo.png', // Ou URL/base64
-    paddingBottom: 10 // Espaço após o logo
-  };
-  
-  // Função para adicionar conteúdo após carregar o logo
-  const addContent = (logoHeight = 0) => {
-    // Ajusta a posição Y considerando o logo (se carregado)
-    yPos += logoHeight > 0 ? logoHeight + logoConfig.paddingBottom : 0;
-
-
-      
       
       // Títulos centralizados
       doc.setFont('helvetica', 'bold');
