@@ -26,9 +26,39 @@
       background-color: #6c757d;
       margin-left: 5px;
     }
-    .navbar {
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+ .navbar {
+  background-color: #4CAF50; /* verde */
+   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand {
+  color: #fff;
+}
+
+.navbar .nav-link:hover,
+.navbar .navbar-brand:hover {
+  color: #ddd;
+}
+
+    .bg-verde-escuro {
+        background-color: #1e7e34;
     }
+
+ .btn-primary {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    .btn-primary:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+    
+
+
+    
     .loading-spinner {
       display: none;
     }
@@ -40,7 +70,7 @@
 </head>
 <body class="bg-light">
   <!-- Navbar com botão de voltar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
       <a class="navbar-brand" href="#">Consulta de Presenças</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -65,7 +95,7 @@
 
   <div class="container py-4">
     <div class="card shadow">
-      <div class="card-header bg-primary text-white">
+      <div class="card-header bg-verde-escuro text-white">
         <h4 class="mb-0">Consulta de Presenças nos Cultos</h4>
       </div>
       <div class="card-body">
