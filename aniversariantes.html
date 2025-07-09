@@ -128,18 +128,18 @@
         for (const id in data) {
           const membro = data[id];
           if (membro.nascimento) {
-            const dataNasc = new Date(membro.nascimento);
-            const mes = dataNasc.getMonth() + 1;
-            if (mes === mesSelecionado) {
-              aniversariantes.push({
-                id: id,
-                nome: membro.nome,
-                fotoURL: membro.fotoURL || "./sem-foto.jpg",
-                dia: dataNasc.getDate(),
-                mes: mes,
-                mesNome: mesesNomes[mes]
-              });
-            }
+            const [ano, mesStr, diaStr] = membro.nascimento.split("-");
+const mes = parseInt(mesStr, 10);
+if (mes === mesSelecionado) {
+  aniversariantes.push({
+    id: id,
+    nome: membro.nome,
+    fotoURL: membro.fotoURL || "./sem-foto.jpg",
+    dia: parseInt(diaStr, 10),
+    mes: mes,
+    mesNome: mesesNomes[mes]
+  });
+}
           }
         }
 
@@ -257,14 +257,15 @@ doc.line(styles.margin, 58, 210 - styles.margin, 58); // Desenha linha horizonta
       for (const id in snapshot.val()) {
         const membro = snapshot.val()[id];
         if (membro.nascimento) {
-          const nascimento = new Date(membro.nascimento);
-          if ((nascimento.getMonth() + 1) === mesSelecionado) {
-            aniversariantes.push({
-              nome: membro.nome,
-              dia: nascimento.getDate(),
-              fotoURL: membro.fotoURL || ""
-            });
-          }
+          const [ano, mesStr, diaStr] = membro.nascimento.split("-");
+const mes = parseInt(mesStr, 10);
+if (mes === mesSelecionado) {
+  aniversariantes.push({
+    nome: membro.nome,
+    dia: parseInt(diaStr, 10),
+    fotoURL: membro.fotoURL || ""
+  });
+}
         }
       }
 
