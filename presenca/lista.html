@@ -29,14 +29,29 @@
       justify-content: space-between;
       align-items: center;
     }
-    .navbar {
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+
+ .navbar {
+  background-color: #4CAF50; /* verde */
+   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand {
+  color: #fff;
+}
+
+.navbar .nav-link:hover,
+.navbar .navbar-brand:hover {
+  color: #ddd;
+}
+    
+   
   </style>
 </head>
 <body class="bg-light">
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
       <a class="navbar-brand" href="#">Controle de Presença</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
