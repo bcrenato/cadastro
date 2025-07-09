@@ -291,42 +291,41 @@
 
     // Carrega as presenças já cadastradas para a data selecionada
     async function carregarPresencasExistente(dataCulto) {
-      try {
-        const cultoId = 'culto_' + dataCulto.replace(/-/g, '_');
-        
-        const snapshot = await database.ref(`presencas_culto/${cultoId}/presentes`).once('value');
-        const presentesData = snapshot.val();
-        
-        if (!presentesData) {
-          mostrarAlerta('Nenhum registro encontrado para esta data', 'info');
-          return;
-        }
-        
-        // Busca os membros para obter os nomes
-        const membrosSnapshot = await database.ref('membros').once('value');
-        const membrosData = membrosSnapshot.val();
-        
-        // Limpa a lista atual
-        presentes = [];
-        
-        // Adiciona os presentes já cadastrados
-        for (const [id, valor] of Object.entries(presentesData)) {
-          if (valor === true) {
-            // É um membro
-            const nome = membrosData[id]?.nome || `Membro (ID: ${id})`;
-            adicionarPresente(id, nome, 'membro');
-          } else {
-            // É um visitante
-            adicionarPresente(id, valor, 'visitante');
-          }
-        }
-        
-        mostrarAlerta('Presenças carregadas com sucesso', 'success');
-      } catch (error) {
-        console.error('Erro ao carregar presenças existentes:', error);
-        mostrarAlerta('Erro ao carregar presenças', 'danger');
+  try {
+    const cultoId = 'culto_' + dataCulto.replace(/-/g, '_');
+
+    const snapshot = await database.ref(`presencas_culto/${cultoId}/presentes`).once('value');
+    const presentesData = snapshot.val();
+
+    // Sempre limpa a lista antes
+    presentes = [];
+    atualizarListaPresentes();
+
+    if (!presentesData) {
+      mostrarAlerta('Nenhum registro encontrado para esta data', 'info');
+      return;
+    }
+
+    // Busca os membros para obter os nomes
+    const membrosSnapshot = await database.ref('membros').once('value');
+    const membrosData = membrosSnapshot.val();
+
+    // Adiciona os presentes já cadastrados
+    for (const [id, valor] of Object.entries(presentesData)) {
+      if (valor === true) {
+        const nome = membrosData[id]?.nome || `Membro (ID: ${id})`;
+        adicionarPresente(id, nome, 'membro');
+      } else {
+        adicionarPresente(id, valor, 'visitante');
       }
     }
+
+    mostrarAlerta('Presenças carregadas com sucesso', 'success');
+  } catch (error) {
+    console.error('Erro ao carregar presenças existentes:', error);
+    mostrarAlerta('Erro ao carregar presenças', 'danger');
+  }
+}
 
     // Salva as presenças no Firebase
     async function salvarPresencas() {
