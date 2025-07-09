@@ -1,52 +1,39 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lista de Membros</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    body { padding-top: 70px; }
-    .foto-miniatura {
-      width: 50px;
-      height: 50px;
-      object-fit: cover;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
-    .membro-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-    }
-    .info-membro {
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-      color: inherit;
-      flex-grow: 1;
-    }
-    .checkbox-selecao {
-      display: none;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lista de Membros</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<style>
+body { padding-top: 70px; }
+.foto-miniatura {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.membro-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+.info-membro {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  flex-grow: 1;
+}
+.checkbox-selecao {
+  display: none;
+}
+</style>
 </head>
 <body>
-
-<!-- 🔒 Verificação de autenticação -->
-<script type="module">
-  import { checkAuth } from './auth.js';
-  import { isUserAdmin } from './users.js';
-
-  document.addEventListener('DOMContentLoaded', async () => {
-    const user = await checkAuth();
-    if (user && await isUserAdmin()) {
-      document.getElementById('adminMenuItem').style.display = 'block';
-    }
-  });
-</script>
 
 <!-- 🔹 Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
@@ -60,19 +47,12 @@
         <li class="nav-item"><a class="nav-link" href="index.html">Cadastro</a></li>
         <li class="nav-item"><a class="nav-link active" href="listagem.html">Listagem</a></li>
         <li class="nav-item"><a class="nav-link" href="aniversariantes.html">Aniversariantes</a></li>
-        <li class="nav-item" id="adminMenuItem" style="display: none;"><a class="nav-link" href="register.html">Cadastrar Usuários</a></li>
       </ul>
-      <div class="d-flex align-items-center">
-        <span class="navbar-text text-white me-3"><i class="fas fa-user-circle me-1"></i> <span>Carregando...</span></span>
-        <button id="logoutBtn" class="btn btn-sm btn-outline-light">Sair</button>
-      </div>
     </div>
   </div>
 </nav>
 
-<!-- 🔹 Conteúdo -->
 <div class="container mt-4">
-
   <div class="mb-3 d-flex justify-content-between">
     <div>
       <button id="btnSelecionar" class="btn btn-secondary">Selecionar Cadastros</button>
@@ -81,238 +61,198 @@
     <button id="btnExcluir" class="btn btn-danger d-none">Excluir Selecionados</button>
   </div>
 
+  <!-- Mensagem de sucesso -->
+  <div id="mensagemPDF"></div>
+
   <div id="lista-membros" class="list-group"></div>
 </div>
 
-<!-- 🔹 Firebase + lógica -->
 <script type="module">
-  import { db } from './firebase-config.js';
-  import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { db } from './firebase-config.js';
+import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  const lista = document.getElementById("lista-membros");
-  const btnSelecionar = document.getElementById("btnSelecionar");
-  const btnExcluir = document.getElementById("btnExcluir");
-  let modoSelecao = false;
-  const membrosRef = ref(db, "membros");
+const lista = document.getElementById("lista-membros");
+const btnSelecionar = document.getElementById("btnSelecionar");
+const btnExcluir = document.getElementById("btnExcluir");
+let modoSelecao = false;
+const membrosRef = ref(db, "membros");
 
-  function carregarMembros(data) {
-    lista.innerHTML = "";
-    if (!data) {
-      lista.innerHTML = "<p class='text-center'>Nenhum membro cadastrado.</p>";
+function carregarMembros(data) {
+  lista.innerHTML = "";
+  if (!data) {
+    lista.innerHTML = "<p class='text-center'>Nenhum membro cadastrado.</p>";
+    return;
+  }
+
+  for (const id in data) {
+    const membro = data[id];
+    const item = document.createElement("div");
+    item.className = "list-group-item membro-item";
+
+    item.innerHTML = `
+      <input type="checkbox" class="form-check-input me-2 checkbox-selecao" data-id="${id}">
+      <a href="ficha.html?id=${id}" class="info-membro">
+        <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
+        <div>
+          <div><strong>${membro.nome}</strong></div>
+          <small>${membro.funcao}</small>
+        </div>
+      </a>
+    `;
+    lista.appendChild(item);
+  }
+
+  atualizarVisibilidadeCheckboxes();
+}
+
+function atualizarVisibilidadeCheckboxes() {
+  const checkboxes = document.querySelectorAll(".checkbox-selecao");
+  checkboxes.forEach(cb => cb.style.display = modoSelecao ? "inline-block" : "none");
+  btnExcluir.classList.toggle("d-none", !modoSelecao);
+  btnSelecionar.textContent = modoSelecao ? "Cancelar Seleção" : "Selecionar Cadastros";
+}
+
+btnSelecionar.addEventListener("click", () => {
+  modoSelecao = !modoSelecao;
+  atualizarVisibilidadeCheckboxes();
+});
+
+btnExcluir.addEventListener("click", () => {
+  const selecionados = document.querySelectorAll(".checkbox-selecao:checked");
+  if (selecionados.length === 0) return alert("Nenhum cadastro selecionado.");
+  if (!confirm("Deseja excluir os cadastros selecionados?")) return;
+
+  selecionados.forEach(cb => {
+    const id = cb.getAttribute("data-id");
+    remove(ref(db, `membros/${id}`));
+  });
+});
+
+onValue(membrosRef, (snapshot) => {
+  const data = snapshot.val();
+  carregarMembros(data);
+});
+</script>
+
+<script>
+const btnExportarPDF = document.getElementById("btnExportarPDF");
+
+btnExportarPDF.addEventListener("click", async () => {
+  btnExportarPDF.disabled = true;
+  btnExportarPDF.innerHTML = `
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando PDF...
+  `;
+
+  try {
+    const doc = new window.jsPDFGlobal({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
+    const logoUrl = "./logo.png";
+    const img = await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = logoUrl;
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let startY = 15;
+
+    if (img) {
+      const logoWidth = 70;
+      const logoHeight = (img.height / img.width) * logoWidth;
+      const logoX = (pageWidth - logoWidth) / 2;
+
+      doc.addImage(img, 'JPEG', logoX, 15, logoWidth, logoHeight);
+      doc.setFontSize(14);
+      doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 15 + logoHeight + 8, { align: "center" });
+      doc.setFontSize(12);
+      doc.text("Lista Completa de Membros", pageWidth / 2, 15 + logoHeight + 15, { align: "center" });
+
+      startY = 15 + logoHeight + 25;
+    }
+
+    const { db } = await import("./firebase-config.js");
+    const { get, ref, child } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js");
+    const snapshot = await get(child(ref(db), "membros"));
+
+    if (!snapshot.exists()) {
+      alert("Nenhum membro encontrado.");
       return;
     }
 
-    for (const id in data) {
-      const membro = data[id];
-      const item = document.createElement("div");
-      item.className = "list-group-item membro-item";
-
-      item.innerHTML = `
-        <input type="checkbox" class="form-check-input me-2 checkbox-selecao" data-id="${id}">
-        <a href="ficha.html?id=${id}" class="info-membro">
-          <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
-          <div>
-            <div><strong>${membro.nome}</strong></div>
-            <small>${membro.funcao}</small>
-          </div>
-        </a>
-      `;
-
-      lista.appendChild(item);
-    }
-
-    atualizarVisibilidadeCheckboxes();
-  }
-
-  function atualizarVisibilidadeCheckboxes() {
-    const checkboxes = document.querySelectorAll(".checkbox-selecao");
-    checkboxes.forEach(cb => cb.style.display = modoSelecao ? "inline-block" : "none");
-    btnExcluir.classList.toggle("d-none", !modoSelecao);
-    btnSelecionar.textContent = modoSelecao ? "Cancelar Seleção" : "Selecionar Cadastros";
-  }
-
-  btnSelecionar.addEventListener("click", () => {
-    modoSelecao = !modoSelecao;
-    atualizarVisibilidadeCheckboxes();
-  });
-
-  btnExcluir.addEventListener("click", () => {
-    const selecionados = document.querySelectorAll(".checkbox-selecao:checked");
-    if (selecionados.length === 0) return alert("Nenhum cadastro selecionado.");
-    if (!confirm("Deseja excluir os cadastros selecionados?")) return;
-
-    selecionados.forEach(cb => {
-      const id = cb.getAttribute("data-id");
-      remove(ref(db, `membros/${id}`));
-    });
-  });
-
-  onValue(membrosRef, (snapshot) => {
-    const data = snapshot.val();
-    carregarMembros(data);
-  });
-</script>
-
-<!-- 🔹 Exportar PDF --> 
-<script> // Início do bloco de script JavaScript
-
-  // Adiciona um event listener para o clique no botão de exportar PDF
-  document.getElementById("btnExportarPDF").addEventListener("click", async () => {
-  try { // Início do bloco try para tratamento de erros
-
-    // 1. Configuração do PDF
-    const doc = new window.jsPDFGlobal({ // Cria um novo documento PDF
-      orientation: "landscape", // Orientação horizontal
-      unit: "mm", // Unidade de medida em milímetros
-      format: "a4", // Formato A4
-      compress: true // Ativa compressão para reduzir tamanho
-    });
-
-    // 2. Carregar a logo
-    const logoUrl = "./logo.png"; // Caminho para a imagem da logo
-    const img = await new Promise((resolve, reject) => { // Promessa para carregar a imagem
-      const img = new Image(); // Cria um novo objeto de imagem
-      img.onload = () => resolve(img); // Resolve a promessa quando a imagem carrega
-      img.onerror = () => resolve(null); // Resolve com null se houver erro
-      img.src = logoUrl; // Define o caminho da imagem
-    });
-
-    const pageWidth = doc.internal.pageSize.getWidth(); // Obtém largura da página
-    let startY = 15; // Posição inicial padrão no eixo Y
-
-    // 3. Adicionar cabeçalho na primeira página
-    if (img) { // Se a imagem foi carregada com sucesso
-      const logoWidth = 70; // Largura desejada para a logo
-      const logoHeight = (img.height / img.width) * logoWidth; // Calcula altura proporcional
-      const logoX = (pageWidth - logoWidth) / 2; // Calcula posição X para centralizar
-      
-      doc.addImage(img, 'JPEG', logoX, 15, logoWidth, logoHeight); // Adiciona a logo ao PDF
-      doc.setFontSize(14); // Define tamanho da fonte para o título principal
-      doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 15 + logoHeight + 8, { align: "center" }); // Adiciona título principal
-      doc.setFontSize(12); // Define tamanho da fonte para o subtítulo
-      doc.text("Lista Completa de Membros", pageWidth / 2, 15 + logoHeight + 15, { align: "center" }); // Adiciona subtítulo
-      
-      startY = 15 + logoHeight + 25; // Atualiza a posição Y inicial para depois do cabeçalho
-    }
-
-    // 4. Obter dados do Firebase
-    const { db } = await import("./firebase-config.js"); // Importa configuração do Firebase
-    const { get, ref, child } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"); // Importa funções do Firebase
-    const snapshot = await get(child(ref(db), "membros")); // Obtém dados dos membros
-
-    if (!snapshot.exists()) { // Verifica se existem dados
-      alert("Nenhum membro encontrado."); // Alerta se não houver membros
-      return; // Sai da função
-    }
-
-    // 5. Ordenar e preparar os dados
     const membrosArray = Object.values(snapshot.val())
-  .map(m => {
-    const funcao = (m.funcao || "").toLowerCase();
+    .map(m => {
+      const funcao = (m.funcao || "").toLowerCase();
+      let ordemFuncao = 6;
+      if (funcao === "pastor") ordemFuncao = 1;
+      else if (funcao === "missionario" || funcao === "missionario(a)") ordemFuncao = 2;
+      else if (funcao === "diacono") ordemFuncao = 3;
+      else if (funcao === "obreiro" || funcao === "obreiro(a)") ordemFuncao = 4;
+      else if (funcao === "membro") ordemFuncao = 5;
 
-    let ordemFuncao = 6; // padrão (se não encontrar nada)
-    if (funcao === "pastor") ordemFuncao = 1;
-    else if (funcao === "missionario" || funcao === "missionario(a)") ordemFuncao = 2;
-    else if (funcao === "diacono") ordemFuncao = 3;
-    else if (funcao === "obreiro" || funcao === "obreiro(a)") ordemFuncao = 4;
-    else if (funcao === "membro") ordemFuncao = 5;
+      return {
+        ...m,
+        ordemFuncao,
+        sexoFormatado: m.sexo === "M" || (m.sexo || "").toLowerCase() === "masculino" ? "Masculino" :
+                       m.sexo === "F" || (m.sexo || "").toLowerCase() === "feminino" ? "Feminino" :
+                       "Não informado",
+        nomeFormatado: m.nome ? m.nome.toUpperCase() : "Não informado",
+        funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "Não informado"
+      };
+    })
+    .sort((a, b) => {
+      const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
+      if (ordemFuncao !== 0) return ordemFuncao;
+      return a.nome?.localeCompare(b.nome);
+    })
+    .map(m => {
+      const partesEndereco = [
+        m.endereco,
+        m.numero && `Nº${m.numero}`,
+        m.bairro,
+        m.cidade,
+        m.estado
+      ].filter(Boolean);
 
-    return {
-      ...m,
-      ordemFuncao,
-      sexoFormatado: m.sexo === "M" || (m.sexo || "").toLowerCase() === "masculino" ? "Masculino" :
-                     m.sexo === "F" || (m.sexo || "").toLowerCase() === "feminino" ? "Feminino" :
-                     "Não informado",
-      nomeFormatado: m.nome ? m.nome.toUpperCase() : "Não informado",
-      funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "Não informado"
-    };
-  })
-  .sort((a, b) => {
-    const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
-    if (ordemFuncao !== 0) return ordemFuncao;
-    return a.nome?.localeCompare(b.nome);
-  })
-  .map(m => {
-    const partesEndereco = [
-      m.endereco,
-      m.numero && `Nº${m.numero}`,
-      m.bairro,
-      m.cidade,
-      m.estado
-    ].filter(Boolean);
+      const enderecoCompleto = partesEndereco.join(", ");
 
-    const enderecoCompleto = partesEndereco.join(", ");
+      return [
+        m.nomeFormatado,
+        m.nascimento ? formatDate(m.nascimento) : "Não informado",
+        m.sexoFormatado,
+        m.telefone || "Não informado",
+        m.funcaoFormatada,
+        m.batismo ? formatDate(m.batismo) : "Não informado",
+        enderecoCompleto
+      ];
+    });
 
-    return [
-      m.nomeFormatado,
-      m.nascimento ? formatDate(m.nascimento) : "Não informado",
-      m.sexoFormatado,
-      m.telefone || "Não informado",
-      m.funcaoFormatada,
-      m.batismo ? formatDate(m.batismo) : "Não informado",
-      enderecoCompleto
-    ];
-  });
-
-    // 6. Configuração da tabela
-    doc.autoTable({ // Cria tabela no PDF
-      head: [["NOME", "NASCIM", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]], // Cabeçalhos
-      body: membrosArray, // Dados dos membros
-      startY: startY, // Posição inicial Y
-      margin: { top: 10, bottom: 15 }, // Margens
-      styles: { // Estilos gerais
-        fontSize: 10, // Tamanho da fonte
-        overflow: "linebreak", // Quebra de linha
-        fontStyle: 'normal', // Estilo normal
-        cellPadding: 2.5, // Espaçamento interno das células
-        lineWidth: 0.0, // Espessura da linha
-        lineColor: [200, 200, 200], // Cor da linha (cinza claro 200, 200, 200)
-        fillColor: [255, 255, 255], // Cor padrão das linhas ímpares (branco)
-        textColor: [0, 0, 0]        // Texto preto
-      },
-      alternateRowStyles: {
-        fillColor: [200, 200, 200], // Cinza claro para linhas pares
-        textColor: [0, 0, 0]        // Texto preto
-      },
-      headStyles: { // Estilos do cabeçalho
-        fillColor: [0, 128, 0], // Cor de fundo atual verde (azul 41, 128, 185)
-        textColor: [255, 255, 255], // Cor do texto (branco)
-        fontSize: 10, // Tamanho da fonte
-        fontStyle: 'bold', // Negrito
-        cellPadding: 4 // Mais espaçamento no cabeçalho
-      },
-      columnStyles: { // Larguras das colunas
-          0: { cellWidth: 64 }, // NOME
-          1: { cellWidth: 25 }, // NASCIMENTO
-          2: { cellWidth: 21 }, // SEXO
-          3: { cellWidth: 31 }, // TELEFONE
-          4: { cellWidth: 24 }, // FUNÇÃO
-          5: { cellWidth: 25 }, // BATISMO
-          6: { cellWidth: 79 }  // ENDEREÇO
-        },
-      didDrawPage: function(data) { // Callback após desenhar cada página
-        doc.setFontSize(8); // Tamanho da fonte do rodapé
-        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" }); // Número da página
-        
-        const now = new Date(); // Data atual
-        doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" }); // Data de geração
-
-        if (data.pageNumber > 1) { // Ajuste para páginas seguintes
-          data.table.startY = 15; // Posição Y inicial menor
-        }
+    doc.autoTable({
+      head: [["NOME", "NASCIM", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
+      body: membrosArray,
+      startY: startY,
+      margin: { top: 10, bottom: 15 },
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [0, 128, 0], textColor: [255, 255, 255], fontSize: 10, fontStyle: 'bold' },
+      didDrawPage: function(data) {
+        doc.setFontSize(8);
+        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
+        const now = new Date();
+        doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" });
       }
     });
 
-    // 7. Salvar o PDF
-    doc.save("Lista_Membros.pdf"); // Salva o PDF com o nome especificado
+    doc.save("Lista_Membros.pdf");
+    mostrarMensagemPDF("✅ PDF gerado com sucesso!");
 
-  } catch (error) { // Captura de erros
-    console.error("Erro ao gerar PDF:", error); // Log no console
-    alert("Erro ao gerar PDF: " + error.message); // Alerta para o usuário
+  } catch (error) {
+    console.error("Erro ao gerar PDF:", error);
+    alert("Erro ao gerar PDF: " + error.message);
+  } finally {
+    btnExportarPDF.disabled = false;
+    btnExportarPDF.innerHTML = `Exportar PDF`;
   }
 });
 
-// Função para formatar datas
 function formatDate(dateString) {
   if (!dateString) return "";
   try {
@@ -322,18 +262,23 @@ function formatDate(dateString) {
     return dateString;
   }
 }
-</script> 
 
+function mostrarMensagemPDF(mensagem) {
+  const container = document.getElementById("mensagemPDF");
+  container.innerHTML = `
+    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+      ${mensagem}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
+}
+</script>
 
-
-<!-- 🔹 Bibliotecas externas -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script>
-  // Inicializa corretamente jsPDF e autoTable
-  window.jsPDFGlobal = window.jspdf.jsPDF;
+window.jsPDFGlobal = window.jspdf.jsPDF;
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
