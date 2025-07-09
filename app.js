@@ -2,7 +2,6 @@
 import { db } from './firebase-config.js';
 import { ref, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// Função que envia a imagem para o Cloudinary e retorna a URL
 async function uploadImagemCloudinary(file) {
   const formData = new FormData();
   formData.append("file", file);
@@ -18,12 +17,10 @@ async function uploadImagemCloudinary(file) {
   return data.secure_url;
 }
 
-// Elementos da página
 const form = document.getElementById("form-membro");
 const fotoInput = document.getElementById("foto");
 const preview = document.getElementById("preview");
 
-// Evento de envio do formulário
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -40,13 +37,12 @@ form.addEventListener("submit", async (e) => {
   const sexo = form.sexo.value;
   const fotoFile = fotoInput.files[0];
 
-  if (!fotoFile) {
-    alert("Selecione uma foto.");
-    return;
-  }
+  let fotoURL = "imagens/sem-foto.png"; // URL padrão para quem não envia foto
 
   try {
-    const fotoURL = await uploadImagemCloudinary(fotoFile);
+    if (fotoFile) {
+      fotoURL = await uploadImagemCloudinary(fotoFile);
+    }
 
     const novoRef = push(ref(db, "membros"));
     await set(novoRef, {
@@ -65,7 +61,7 @@ form.addEventListener("submit", async (e) => {
     });
 
     alert("Membro cadastrado com sucesso!");
-    location.reload(); // 🔁 Recarrega a página e limpa tudo
+    location.reload();
 
   } catch (error) {
     console.error("Erro ao cadastrar:", error);
@@ -73,7 +69,6 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Preview da foto ao selecionar imagem
 fotoInput.addEventListener("change", () => {
   const file = fotoInput.files[0];
   if (file) {
@@ -84,19 +79,16 @@ fotoInput.addEventListener("change", () => {
     };
     reader.readAsDataURL(file);
   } else {
-    preview.src = "";
-    preview.style.display = "none";
+    preview.src = "imagens/sem-foto.png";
+    preview.style.display = "block";
   }
 });
 
-// Função global para buscar o endereço pelo CEP
-// Aplica a máscara ao campo de CEP ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
   const cepInput = document.getElementById('cep');
   IMask(cepInput, { mask: '00000-000' });
 });
 
-// Função para buscar e preencher os dados do CEP
 window.buscarCEP = function () {
   const cepInput = document.getElementById('cep');
   const cep = cepInput.value.replace(/\D/g, '');
@@ -111,7 +103,6 @@ window.buscarCEP = function () {
           document.getElementById('cidade').value = '';
           document.getElementById('estado').value = '';
         } else {
-          // Preenche a rua com vírgula e "Nº" ao final
           const ruaComNumero = `${data.logradouro}, Nº`;
           document.getElementById('endereco').value = ruaComNumero;
 
@@ -141,10 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
   IMask(telefoneInput, {
     mask: [
       {
-        mask: '(00) 0000-0000', // formato para telefone fixo
+        mask: '(00) 0000-0000',
       },
       {
-        mask: '(00) 00000-0000', // formato para celular
+        mask: '(00) 00000-0000',
       }
     ],
     dispatch: function (appended, dynamicMasked) {
