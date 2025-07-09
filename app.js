@@ -37,7 +37,7 @@ form.addEventListener("submit", async (e) => {
   const sexo = form.sexo.value;
   const fotoFile = fotoInput.files[0];
 
-  let fotoURL = "imagens/sem-foto.png"; // URL padrão para quem não envia foto
+  let fotoURL = "sem-foto.png"; // URL padrão para quem não envia foto
 
   try {
     if (fotoFile) {
@@ -79,7 +79,7 @@ fotoInput.addEventListener("change", () => {
     };
     reader.readAsDataURL(file);
   } else {
-    preview.src = "imagens/sem-foto.png";
+    preview.src = "sem-foto.png";
     preview.style.display = "block";
   }
 });
