@@ -4,573 +4,161 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Administrativo - Igreja</title>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4154f1;
-            --primary-light: #f6f6fe;
-            --secondary: #717ff5;
-            --accent: #2eca6a;
-            --danger: #ff3d3d;
-            --warning: #ffa137;
-            --dark: #012970;
-            --light: #f6f9ff;
-            --gray: #444;
-            --gray-light: #eee;
-            --white: #fff;
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --light: #ecf0f1;
+            --white: #ffffff;
         }
-
-        * {
+        
+        body {
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            background-color: #f5f5f5;
+            color: #333;
         }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--light);
-            color: var(--dark);
-            line-height: 1.6;
+        
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
         }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        /* Sidebar */
-        #sidebar {
-            width: 300px;
-            background: var(--white);
-            box-shadow: 0 0 20px rgba(1, 41, 112, 0.1);
-            position: fixed;
-            height: 100vh;
-            transition: all 0.3s;
-            z-index: 1000;
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--gray-light);
-        }
-
-        .sidebar-header h3 {
-            color: var(--dark);
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .sidebar-header h3 i {
-            color: var(--primary);
-            margin-right: 10px;
-        }
-
-        .sidebar-nav {
+        
+        .sidebar {
+            width: 250px;
+            background-color: var(--primary);
+            color: var(--white);
             padding: 20px 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
-
-        .sidebar-nav ul {
-            list-style: none;
+        
+        .logo {
+            text-align: center;
+            padding: 20px 0 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-
-        .sidebar-nav li a {
+        
+        .logo h2 {
+            margin: 0;
+            font-weight: 500;
+        }
+        
+        .nav-menu {
+            margin-top: 30px;
+        }
+        
+        .nav-item {
+            padding: 12px 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            padding: 12px 20px;
-            font-size: 15px;
-            transition: all 0.3s;
         }
-
-        .sidebar-nav li a:hover {
-            background: var(--primary-light);
-            color: var(--primary);
+        
+        .nav-item:hover {
+            background-color: var(--secondary);
         }
-
-        .sidebar-nav li a.active {
-            background: var(--primary-light);
-            color: var(--primary);
-            border-left: 3px solid var(--primary);
+        
+        .nav-item.active {
+            background-color: var(--accent);
         }
-
-        .sidebar-nav li a i {
+        
+        .nav-item i {
             margin-right: 10px;
             font-size: 18px;
-            width: 20px;
-            text-align: center;
         }
-
-        .sidebar-nav .nav-title {
-            padding: 15px 20px 5px;
-            font-size: 12px;
-            text-transform: uppercase;
-            color: #899bbd;
-            font-weight: 600;
+        
+        .main-content {
+            flex: 1;
+            padding: 30px;
         }
-
-        /* Main Content */
-        #main {
-            margin-left: 300px;
-            transition: all 0.3s;
-        }
-
-        /* Top Bar */
-        #topbar {
-            background: var(--white);
-            height: 70px;
+        
+        .header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
-            box-shadow: 0 2px 20px rgba(1, 41, 112, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 999;
-        }
-
-        .toggle-sidebar {
-            font-size: 20px;
-            color: var(--dark);
-            cursor: pointer;
-        }
-
-        .user-profile {
-            display: flex;
             align-items: center;
+            margin-bottom: 30px;
         }
-
-        .user-profile img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-            object-fit: cover;
-        }
-
-        .user-info h5 {
-            font-size: 15px;
-            margin-bottom: 0;
-        }
-
-        .user-info small {
-            font-size: 12px;
-            color: #899bbd;
-        }
-
-        /* Dashboard */
-        #dashboard {
-            padding: 20px;
-        }
-
-        .page-title {
-            margin-bottom: 20px;
-        }
-
-        .page-title h4 {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        /* Cards */
-        .card {
-            background: var(--white);
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-            border: none;
-            overflow: hidden;
-        }
-
-        .card-body {
-            padding: 20px;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 15px;
-        }
-
-        .info-card {
-            display: flex;
-            align-items: center;
-        }
-
-        .info-card .icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: var(--white);
-            margin-right: 15px;
-        }
-
-        .info-card .icon.primary {
-            background: var(--primary);
-        }
-
-        .info-card .icon.success {
-            background: var(--accent);
-        }
-
-        .info-card .icon.warning {
-            background: var(--warning);
-        }
-
-        .info-card .icon.danger {
-            background: var(--danger);
-        }
-
-        .info-card .numbers {
-            flex: 1;
-        }
-
-        .info-card .numbers h6 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 0;
-        }
-
-        .info-card .numbers p {
-            font-size: 14px;
-            color: #899bbd;
-            margin-bottom: 0;
-        }
-
-        /* Recent Activity */
-        .recent-activity {
-            list-style: none;
-        }
-
-        .recent-activity li {
-            padding: 15px 0;
-            border-bottom: 1px solid var(--gray-light);
-            display: flex;
-        }
-
-        .recent-activity li:last-child {
-            border-bottom: none;
-        }
-
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--primary-light);
+        
+        .page-title h1 {
+            margin: 0;
             color: var(--primary);
+        }
+        
+        .user-info {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 16px;
         }
-
-        .activity-content {
-            flex: 1;
-        }
-
-        .activity-content h5 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .activity-content time {
-            font-size: 13px;
-            color: #899bbd;
-        }
-
-        /* Responsive */
-        @media (max-width: 992px) {
-            #sidebar {
-                left: -300px;
-            }
-            #sidebar.active {
-                left: 0;
-            }
-            #main {
-                margin-left: 0;
-            }
+        
+        .content-area {
+            background-color: var(--white);
+            border-radius: 5px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <!-- Sidebar -->
-    <aside id="sidebar">
-        <div class="sidebar-header">
-            <h3><i class="fas fa-church"></i> Igreja Admin</h3>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h2>Igreja Admin</h2>
+            </div>
+            
+            <div class="nav-menu">
+                <div class="nav-item active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-list"></i>
+                    <span>Listagem</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-birthday-cake"></i>
+                    <span>Aniversariantes</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Relógio de Oração</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-church"></i>
+                    <span>Presença Cultos</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-database"></i>
+                    <span>Backup e Restauração</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Cadastrar Usuários</span>
+                </div>
+            </div>
         </div>
-
-        <nav class="sidebar-nav">
-            <ul>
-                <li class="nav-title">Menu Principal</li>
-                <li><a href="#" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
-                
-                <li class="nav-title">Gerenciamento</li>
-                <li><a href="#"><i class="fas fa-users"></i> Membros</a></li>
-                <li><a href="#"><i class="fas fa-user-plus"></i> Cadastros</a></li>
-                <li><a href="#"><i class="fas fa-birthday-cake"></i> Aniversariantes</a></li>
-                <li><a href="#"><i class="fas fa-calendar-alt"></i> Eventos</a></li>
-                <li><a href="#"><i class="fas fa-dollar-sign"></i> Financeiro</a></li>
-                
-                <li class="nav-title">Configurações</li>
-                <li><a href="#"><i class="fas fa-user-cog"></i> Usuários</a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> Configurações</a></li>
-            </ul>
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <main id="main">
-        <!-- Top Bar -->
-        <header id="topbar">
-            <div class="toggle-sidebar" id="toggle-sidebar">
-                <i class="fas fa-bars"></i>
-            </div>
-            
-            <div class="user-profile">
-                <img src="https://ui-avatars.com/api/?name=João+Dias&background=4154f1&color=fff" alt="User">
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="page-title">
+                    <h1>Dashboard</h1>
+                </div>
                 <div class="user-info">
-                    <h5>João Dias</h5>
-                    <small>Administrador</small>
+                    <span>Bem-vindo, Administrador</span>
+                    <img src="user-avatar.jpg" alt="User" style="width:40px;height:40px;border-radius:50%;margin-left:15px;">
                 </div>
             </div>
-        </header>
-
-        <!-- Dashboard Content -->
-        <section id="dashboard">
-            <div class="page-title">
-                <h4>Dashboard</h4>
+            
+            <div class="content-area">
+                <!-- Conteúdo dinâmico será carregado aqui -->
+                <p>Selecione uma opção no menu à esquerda para começar.</p>
             </div>
-
-            <div class="row">
-                <!-- Cards -->
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="info-card">
-                                <div class="icon primary">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                                <div class="numbers">
-                                    <h6 id="total-members">248</h6>
-                                    <p>Total de Membros</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="info-card">
-                                <div class="icon success">
-                                    <i class="fas fa-user-plus"></i>
-                                </div>
-                                <div class="numbers">
-                                    <h6 id="new-members">14</h6>
-                                    <p>Novos Membros</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="info-card">
-                                <div class="icon warning">
-                                    <i class="fas fa-birthday-cake"></i>
-                                </div>
-                                <div class="numbers">
-                                    <h6 id="today-birthdays">3</h6>
-                                    <p>Aniversariantes</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="info-card">
-                                <div class="icon danger">
-                                    <i class="fas fa-calendar-check"></i>
-                                </div>
-                                <div class="numbers">
-                                    <h6 id="upcoming-events">2</h6>
-                                    <p>Próximos Eventos</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="card-title">Atividade Recente</div>
-                            <ul class="recent-activity" id="activity-list">
-                                <li>
-                                    <div class="activity-icon">
-                                        <i class="fas fa-user-plus"></i>
-                                    </div>
-                                    <div class="activity-content">
-                                        <h5>Novo membro cadastrado</h5>
-                                        <time>Hoje, 10:30 AM</time>
-                                        <p>Maria Silva foi cadastrada no sistema</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="activity-icon">
-                                        <i class="fas fa-birthday-cake"></i>
-                                    </div>
-                                    <div class="activity-content">
-                                        <h5>Aniversário hoje</h5>
-                                        <time>Hoje, 09:15 AM</time>
-                                        <p>Carlos Oliveira está fazendo aniversário hoje</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="activity-icon">
-                                        <i class="fas fa-pray"></i>
-                                    </div>
-                                    <div class="activity-content">
-                                        <h5>Pedido de oração</h5>
-                                        <time>Ontem, 04:45 PM</time>
-                                        <p>Ana Paula solicitou oração por saúde</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="activity-icon">
-                                        <i class="fas fa-calendar-plus"></i>
-                                    </div>
-                                    <div class="activity-content">
-                                        <h5>Novo evento criado</h5>
-                                        <time>Ontem, 02:30 PM</time>
-                                        <p>Retiro Espiritual marcado para 15/10</p>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Aniversariantes do Mês -->
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="card-title">Aniversariantes do Mês</div>
-                            <ul class="recent-activity">
-                                <li>
-                                    <div class="activity-icon">
-                                        <i class="fas fa-birthday-cake"></i>
-                                    </div>
-                                    <div class="activity-content">
-                                        <h5>Carlos Oliveira</h5>
-                                        <time>Hoje, 12/10</time>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="activity-icon">
-                                        <i class="fas fa-birthday-cake"></i>
-                                    </div>
-                                    <div class="activity-content">
-                                        <h5>Ana Paula</h5>
-                                        <time>15/10</time>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="activity-icon">
-                                        <i class="fas fa-birthday-cake"></i>
-                                    </div>
-                                    <div class="activity-content">
-                                        <h5>João Dias</h5>
-                                        <time>20/10</time>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="activity-icon">
-                                        <i class="fas fa-birthday-cake"></i>
-                                    </div>
-                                    <div class="activity-content">
-                                        <h5>Maria Silva</h5>
-                                        <time>25/10</time>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script>
-        // Toggle Sidebar
-        document.getElementById('toggle-sidebar').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('main').classList.toggle('active');
-        });
-
-        // Simulação de dados do usuário logado
-        document.addEventListener('DOMContentLoaded', function() {
-            // Atualizar informações do usuário (substituir por dados reais)
-            const userData = {
-                name: "João Dias",
-                role: "Administrador",
-                lastAccess: new Date()
-            };
-            
-            // Atualizar dados do dashboard
-            updateDashboardData();
-            
-            // Atualizar a cada minuto (simulação)
-            setInterval(updateDashboardData, 60000);
-        });
-
-        function updateDashboardData() {
-            // Simulação de dados atualizados
-            const randomVariation = Math.floor(Math.random() * 5) - 2;
-            
-            // Atualiza os cards
-            const totalMembers = 248 + randomVariation;
-            document.getElementById('total-members').textContent = totalMembers;
-            
-            const newMembers = 14 + (randomVariation > 0 ? randomVariation : 0);
-            document.getElementById('new-members').textContent = newMembers;
-            
-            const todayBirthdays = 3 + (randomVariation % 2);
-            document.getElementById('today-birthdays').textContent = todayBirthdays;
-        }
-
-        // Simulação de notificações
-        function showNotification(title, message) {
-            if (!("Notification" in window)) {
-                console.log("Este navegador não suporta notificações");
-            } else if (Notification.permission === "granted") {
-                new Notification(title, { body: message });
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        new Notification(title, { body: message });
-                    }
-                });
-            }
-        }
-    </script>
+        </div>
+    </div>
 </body>
 </html>
