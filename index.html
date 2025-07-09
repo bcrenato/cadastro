@@ -108,7 +108,7 @@
       </div>
 
       <div class="form-grid">
-        <!-- Coluna 1 -->
+        <!-- Campo nome -->
         <div>
           <label for="nome" class="form-label required-field">Nome Completo</label>
           <div class="relative">
@@ -119,18 +119,18 @@
 
         <!-- Campo CEP -->
         <div>
-          <label for="cep" class="form-label required-field">CEP</label>
+          <label for="cep" class="form-label">CEP</label>
           <div class="relative">
             <input type="text" id="cep" name="cep" class="form-control" placeholder="00000-000" maxlength="9" oninput="buscarCEP()" onblur="buscarCEP()">
             <i class="fas fa-map-marker-alt input-icon"></i>
           </div>
         </div>
         
-        <!-- Coluna 2 -->
+        <!-- Campo endereco -->
         <div>
           <label for="endereco" class="form-label required-field">Endereço</label>
           <div class="relative">
-            <input type="text" id="endereco" name="endereco" class="form-control" placeholder="Digite o endereço completo">
+            <input type="text" id="endereco" name="endereco" class="form-control" required placeholder="Digite o endereço completo">
             <i class="fas fa-map-marker-alt input-icon"></i>
           </div>
         </div>
@@ -139,7 +139,7 @@
         <div>
           <label for="bairro" class="form-label required-field">Bairro</label>
             <div class="relative">
-              <input type="text" id="bairro" name="bairro" class="form-control" placeholder="Digite o Bairro">
+              <input type="text" id="bairro" name="bairro" class="form-control" required placeholder="Digite o Bairro">
               <i class="fas fa-map-marker-alt input-icon"></i>
             </div>
           </div>
@@ -148,7 +148,7 @@
           <div>
             <label for="cidade" class="form-label required-field">Cidade</label>
             <div class="relative">
-              <input type="text" id="cidade" name="cidade" class="form-control" placeholder="Digite a Cidade">
+              <input type="text" id="cidade" name="cidade" class="form-control" required placeholder="Digite a Cidade">
               <i class="fas fa-map-marker-alt input-icon"></i>
             </div>
           </div>
@@ -157,12 +157,12 @@
           <div>
             <label for="estado" class="form-label required-field">Estado</label>
             <div class="relative">
-              <input type="text" id="estado" name="estado" class="form-control" placeholder="Digite o Estado">
+              <input type="text" id="estado" name="estado" class="form-control" required placeholder="Digite o Estado">
               <i class="fas fa-map-marker-alt input-icon"></i>
             </div>
           </div>
 
-        <!-- Coluna 1 -->
+        <!-- Campo data de batismo -->
         <div>
           <label for="batismo" class="form-label">Data de Batismo</label>
           <div class="relative">
@@ -171,7 +171,7 @@
           </div>
         </div>
 
-        <!-- Coluna 2 -->
+        <!-- Campo data nascimento -->
         <div>
           <label for="nascimento" class="form-label required-field">Data de Nascimento</label>
           <div class="relative">
