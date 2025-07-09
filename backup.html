@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backup e Restauração</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// 🔷 Configuração do Firebase
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_AUTH_DOMAIN",
+  databaseURL: "SUA_DATABASE_URL",
+  projectId: "SEU_PROJECT_ID",
+  storageBucket: "SEU_STORAGE_BUCKET",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Backup do Database
+document.getElementById('backup-db').addEventListener('click', async () => {
+  resetProgress();
+  setProgress(10, "Iniciando backup...");
+  const snapshot = await get(ref(db, '/'));
+  const dados = snapshot.val();
+  setProgress(50, "Preparando arquivo...");
+  await new Promise(r => setTimeout(r, 500)); // Simula progresso
+  const blob = new Blob([JSON.stringify(dados, null, 2)], {type : 'application/json'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `backup-database-${new Date().toISOString()}.json`;
+  setProgress(90, "Pronto para baixar...");
+  await new Promise(r => setTimeout(r, 500));
+  link.click();
+  setProgress(100, "Backup concluído!");
+});
+
+// Pré-visualizar e Restaurar Database
+document.getElementById('restaurar-db').addEventListener('change', async (e) => {
+  resetProgress();
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const json = JSON.parse(text);
+
+  // Exibir pré-visualização
+  const preview = document.getElementById("preview");
+  preview.textContent = JSON.stringify(json, null, 2);
+  document.getElementById("confirm-restore").disabled = false;
+
+  // Salvar os dados para confirmar depois
+  window.dadosParaRestaurar = json;
+});
+
+document.getElementById('confirm-restore').addEventListener('click', async () => {
+  if (!window.dadosParaRestaurar) return;
+  setProgress(10, "Iniciando restauração...");
+  await new Promise(r => setTimeout(r, 500));
+  await set(ref(db, '/'), window.dadosParaRestaurar);
+  setProgress(100, "Restauração concluída!");
+  alert("Banco de dados restaurado com sucesso!");
+  document.getElementById("confirm-restore").disabled = true;
+  document.getElementById("preview").textContent = "";
+  window.dadosParaRestaurar = null;
+});
+
+// Funções da barra de progresso
+function setProgress(percent, text) {
+  const bar = document.getElementById("progress-bar");
+  const label = document.getElementById("progress-label");
+  bar.style.width = percent + "%";
+  label.textContent = text;
+}
+
+function resetProgress() {
+  setProgress(0, "");
+}
+</script>
+</head>
+
+<body class="bg-light">
+<div class="container py-5">
+  <h1 class="mb-4">Backup & Restauração Firebase</h1>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5>Backup do Realtime Database</h5>
+      <button class="btn btn-primary" id="backup-db">📥 Fazer Backup</button>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5>Restauração do Realtime Database</h5>
+      <input type="file" class="form-control mb-2" id="restaurar-db" accept=".json">
+      <pre id="preview" class="bg-light p-2 border" style="max-height: 300px; overflow:auto;"></pre>
+      <button class="btn btn-danger mt-2" id="confirm-restore" disabled>🔄 Confirmar Restauração</button>
+    </div>
+  </div>
+
+  <div class="progress mt-4">
+    <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%"></div>
+  </div>
+  <div class="text-center mt-2" id="progress-label"></div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
