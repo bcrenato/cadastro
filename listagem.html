@@ -206,54 +206,53 @@
     }
 
     // 5. Ordenar e preparar os dados
-    const membrosArray = Object.values(snapshot.val()) // Converte objeto em array
-      .map(m => ({ // Mapeia cada membro
-        ...m, // Copia todas as propriedades existentes
-        // Define ordem de prioridade para funções (case insensitive)
-        ordemFuncao: m.funcao?.toLowerCase() === "Pastor" ? 1 :
-                    m.funcao?.toLowerCase() === "Missionario(a)" ? 2 :
-                    m.funcao?.toLowerCase() === "Diacono" ? 3 : 
-                    m.funcao?.toLowerCase() === "Obreiro(a)" ? 4 :
-                    m.funcao?.toLowerCase() === "Membro" ? 5 : 6,
+    const membrosArray = Object.values(snapshot.val())
+  .map(m => {
+    const funcao = (m.funcao || "").toLowerCase();
 
-        
-        // Formata sexo corretamente
-        sexoFormatado: m.sexo === "M" || m.sexo?.toLowerCase() === "masculino" ? "Masculino" : 
-                      m.sexo === "F" || m.sexo?.toLowerCase() === "feminino" ? "Feminino" : 
-                      "Não informado",
-        // Garante nome em maiúsculas
-        nomeFormatado: m.nome ? m.nome.toUpperCase() : "Não informado",
-        // Garante função em maiúsculas
-        funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "Não informado"
-      }))
-      // Ordena primeiro por função, depois por nome
-      .sort((a, b) => {
-        const ordemFuncao = a.ordemFuncao - b.ordemFuncao; // Ordem numérica pela função
-        if (ordemFuncao !== 0) return ordemFuncao; // Se funções diferentes, mantém ordem
-        return a.nome?.localeCompare(b.nome); // Se funções iguais, ordena por nome
-      })
-      .map(m => { // Mapeia para o formato final da tabela
-        // Formata endereço completo em UMA ÚNICA LINHA
-        const partesEndereco = [ // Array com partes do endereço
-          m.endereco, 
-          m.numero && `Nº${m.numero}`, // Número apenas se existir
-          m.bairro,
-          m.cidade,
-          m.estado
-        ].filter(Boolean); // Remove valores vazios/nulos
-        
-        const enderecoCompleto = partesEndereco.join(", "); // Junta partes com vírgulas
-        
-        return [ // Retorna array com dados formatados para a tabela
-          m.nomeFormatado,
-          m.nascimento ? formatDate(m.nascimento) : "Não informado",
-          m.sexoFormatado,
-          m.telefone || "Não informado",
-          m.funcaoFormatada,
-          m.batismo ? formatDate(m.batismo) : "Não informado",
-          enderecoCompleto
-        ];
-      });
+    let ordemFuncao = 6; // padrão (se não encontrar nada)
+    if (funcao === "pastor") ordemFuncao = 1;
+    else if (funcao === "missionario" || funcao === "missionario(a)") ordemFuncao = 2;
+    else if (funcao === "diacono") ordemFuncao = 3;
+    else if (funcao === "obreiro" || funcao === "obreiro(a)") ordemFuncao = 4;
+    else if (funcao === "membro") ordemFuncao = 5;
+
+    return {
+      ...m,
+      ordemFuncao,
+      sexoFormatado: m.sexo === "M" || (m.sexo || "").toLowerCase() === "masculino" ? "Masculino" :
+                     m.sexo === "F" || (m.sexo || "").toLowerCase() === "feminino" ? "Feminino" :
+                     "Não informado",
+      nomeFormatado: m.nome ? m.nome.toUpperCase() : "Não informado",
+      funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "Não informado"
+    };
+  })
+  .sort((a, b) => {
+    const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
+    if (ordemFuncao !== 0) return ordemFuncao;
+    return a.nome?.localeCompare(b.nome);
+  })
+  .map(m => {
+    const partesEndereco = [
+      m.endereco,
+      m.numero && `Nº${m.numero}`,
+      m.bairro,
+      m.cidade,
+      m.estado
+    ].filter(Boolean);
+
+    const enderecoCompleto = partesEndereco.join(", ");
+
+    return [
+      m.nomeFormatado,
+      m.nascimento ? formatDate(m.nascimento) : "Não informado",
+      m.sexoFormatado,
+      m.telefone || "Não informado",
+      m.funcaoFormatada,
+      m.batismo ? formatDate(m.batismo) : "Não informado",
+      enderecoCompleto
+    ];
+  });
 
     // 6. Configuração da tabela
     doc.autoTable({ // Cria tabela no PDF
