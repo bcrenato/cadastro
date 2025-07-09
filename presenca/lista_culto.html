@@ -432,6 +432,24 @@ function continuarGeracaoPDF(doc, yPos, cultoDate, presentesData) {
     }
   });
 
+  // 🔷 Ordenar as linhas pela função na ordem desejada
+  const ordemFuncoes = ['Pastor', 'Missionario(a)', 'Diacono', 'Obreiro(a)', 'Membro'];
+
+  rows.sort((a, b) => {
+    const funcA = a[2] || 'ZZZ'; // se não tem função, vai para o final
+    const funcB = b[2] || 'ZZZ';
+
+    const idxA = ordemFuncoes.indexOf(funcA) !== -1 ? ordemFuncoes.indexOf(funcA) : ordemFuncoes.length;
+    const idxB = ordemFuncoes.indexOf(funcB) !== -1 ? ordemFuncoes.indexOf(funcB) : ordemFuncoes.length;
+
+    if (idxA !== idxB) {
+      return idxA - idxB;
+    }
+
+    // opcional: se a função for a mesma, ordena por nome
+    return a[0].localeCompare(b[0]);
+  });
+
   doc.autoTable({
     startY: yPos,
     head: headers,
