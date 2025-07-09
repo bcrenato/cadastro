@@ -313,17 +313,13 @@
 });
 
 // Função para formatar datas
-function formatDate(dateString) { // Recebe string de data
-  if (!dateString) return ""; // Retorna vazio se não houver data
+function formatDate(dateString) {
+  if (!dateString) return "";
   try {
-    const date = new Date(dateString); // Cria objeto Date
-    return date.toLocaleDateString('pt-BR', { // Formata para padrão brasileiro
-      day: '2-digit', // Dia com 2 dígitos
-      month: '2-digit', // Mês com 2 dígitos
-      year: 'numeric' // Ano com 4 dígitos
-    });
-  } catch { // Se houver erro na conversão
-    return dateString; // Retorna a string original
+    const [ano, mes, dia] = dateString.split("-");
+    return `${dia}/${mes}/${ano}`;
+  } catch {
+    return dateString;
   }
 }
 </script> 
