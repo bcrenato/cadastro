@@ -210,9 +210,13 @@
       .map(m => ({ // Mapeia cada membro
         ...m, // Copia todas as propriedades existentes
         // Define ordem de prioridade para funções (case insensitive)
-        ordemFuncao: m.funcao?.toLowerCase() === "pastor" ? 1 : 
-                    m.funcao?.toLowerCase() === "diácono" || m.funcao?.toLowerCase() === "diacono" ? 2 : 
-                    m.funcao?.toLowerCase() === "membro" ? 3 : 4,
+        ordemFuncao: m.funcao?.toLowerCase() === "Pastor" ? 1 :
+                    m.funcao?.toLowerCase() === "Missionario(a)" ? 2 :
+                    m.funcao?.toLowerCase() === "Diacono" ? 3 : 
+                    m.funcao?.toLowerCase() === "Obreiro(a)" ? 4 :
+                    m.funcao?.toLowerCase() === "Membro" ? 5 : 6,
+
+        
         // Formata sexo corretamente
         sexoFormatado: m.sexo === "M" || m.sexo?.toLowerCase() === "masculino" ? "Masculino" : 
                       m.sexo === "F" || m.sexo?.toLowerCase() === "feminino" ? "Feminino" : 
