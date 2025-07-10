@@ -7,192 +7,103 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-        :root {
-            --primary: #2e7d32;
-            --secondary: #1b5e20;
-            --accent: #4caf50;
-            --light: #e8f5e9;
-            --white: #ffffff;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-            overflow-x: hidden;
-        }
-        
-        .dashboard {
-            display: flex;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-        
-        /* Sidebar Styles */
-        .sidebar {
-            width: 100%;
-            background-color: var(--primary);
-            color: var(--white);
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            position: relative;
-            z-index: 100;
-        }
-        
-        .logo {
-            text-align: center;
-            padding: 15px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .logo img {
-            height: 50px;
-            width: auto;
-        }
-        
-        .logo h2 {
-            margin: 10px 0 0;
-            font-weight: 500;
-            font-size: 1.2rem;
-        }
-        
-        .menu-toggle {
-            display: block;
-            padding: 15px;
-            cursor: pointer;
-            text-align: right;
-            position: absolute;
-            right: 0;
-            top: 0;
-        }
-        
-        .menu-toggle i {
-            font-size: 1.5rem;
-        }
-        
-        .nav-menu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-        
-        .nav-menu.open {
-            max-height: 1000px;
-        }
-        
-        .nav-item {
-            padding: 12px 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            text-decoration: none;
-            color: var(--white);
-        }
-        
-        .nav-item:hover {
-            background-color: var(--secondary);
-        }
-        
-        .nav-item.active {
-            background-color: var(--accent);
-        }
-        
-        .nav-item i {
-            margin-right: 10px;
-            font-size: 18px;
-            min-width: 25px;
-            text-align: center;
-        }
-        
-        /* Main Content Styles */
-        .main-content {
-            flex: 1;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .page-title h1 {
-            margin: 0;
-            color: var(--primary);
-            font-size: 1.5rem;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            margin-top: 10px;
-        }
-        
-        .user-info span {
-            margin-right: 10px;
-            font-size: 0.9rem;
-        }
-        
-        .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        
-        .content-area {
-            background-color: var(--white);
-            border-radius: 5px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-        
-        /* Responsive Styles */
-        @media (min-width: 768px) {
-            .dashboard {
-                flex-direction: row;
-            }
-            
-            .sidebar {
-                width: 250px;
-                min-height: 100vh;
-                position: fixed;
-            }
-            
-            .menu-toggle {
-                display: none;
-            }
-            
-            .nav-menu {
-                max-height: none;
-            }
-            
-            .main-content {
-                padding: 30px;
-                margin-left: 250px;
-                margin-top: 0;
-            }
-            
-            .header {
-                margin-bottom: 30px;
-            }
-            
-            .user-info {
-                margin-top: 0;
-            }
-        }
-    </style>
+/* estilos originais inalterados */
+:root {
+    --primary: #2e7d32;
+    --secondary: #1b5e20;
+    --accent: #4caf50;
+    --light: #e8f5e9;
+    --white: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    overflow-x: hidden;
+}
+.dashboard { display: flex; min-height: 100vh; flex-direction: column; }
+/* Sidebar Styles */
+.sidebar {
+    width: 100%;
+    background-color: var(--primary);
+    color: var(--white);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 100;
+}
+.logo {
+    text-align: center;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.logo img { height: 50px; width: auto; }
+.logo h2 { margin: 10px 0 0; font-weight: 500; font-size: 1.2rem; }
+.menu-toggle {
+    display: block;
+    padding: 15px;
+    cursor: pointer;
+    text-align: right;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+.menu-toggle i { font-size: 1.5rem; }
+.nav-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+.nav-menu.open { max-height: 1000px; }
+.nav-item {
+    padding: 12px 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    text-decoration: none;
+    color: var(--white);
+}
+.nav-item:hover { background-color: var(--secondary); }
+.nav-item.active { background-color: var(--accent); }
+.nav-item i {
+    margin-right: 10px;
+    font-size: 18px;
+    min-width: 25px;
+    text-align: center;
+}
+/* Main Content */
+.main-content { flex: 1; padding: 20px; margin-top: 20px; }
+.header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap;
+}
+.page-title h1 { margin: 0; color: var(--primary); font-size: 1.5rem; }
+.user-info { display: flex; align-items: center; margin-top: 10px; }
+.user-info span { margin-right: 10px; font-size: 0.9rem; }
+.user-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.content-area {
+    background-color: var(--white);
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+@media (min-width: 768px) {
+    .dashboard { flex-direction: row; }
+    .sidebar {
+        width: 250px;
+        min-height: 100vh;
+        position: fixed;
+    }
+    .menu-toggle { display: none; }
+    .nav-menu { max-height: none; }
+    .main-content {
+        padding: 30px;
+        margin-left: 250px;
+        margin-top: 0;
+    }
+    .header { margin-bottom: 30px; }
+    .user-info { margin-top: 0; }
+}
+</style>
 </head>
 <body>
 <div class="dashboard">
@@ -211,7 +122,7 @@
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
             </a>
-           
+
             <a href="cadastro-membros.html" class="nav-item">
                 <i class="fas fa-users"></i>
                 <span>Cadastrar Membros</span>
@@ -221,23 +132,27 @@
                 <i class="fas fa-list"></i>
                 <span>Lista de Membros</span>
             </a>
-                
+
             <a href="aniversariantes.html" class="nav-item">
                 <i class="fas fa-birthday-cake"></i>
                 <span>Aniversariantes</span>
             </a>
+
             <a href="relogio/index.html" class="nav-item">
                 <i class="fas fa-clock"></i>
                 <span>Relógio de Oração</span>
             </a>
+
             <a href="presenca/lista.html" class="nav-item admin-only" style="display: none;">
                 <i class="fas fa-church"></i>
                 <span>Presença Cultos</span>
             </a>
+
             <a href="backup.html" class="nav-item admin-only" style="display: none;">
                 <i class="fas fa-database"></i>
                 <span>Backup e Restauração</span>
             </a>
+
             <a href="register.html" class="nav-item admin-only" style="display: none;">
                 <i class="fas fa-user-plus"></i>
                 <span>Gerenciar Usuários</span>
@@ -273,7 +188,6 @@
 </div>
 
 <script type="module">
-// Importa autenticação
 import { checkAuth } from './auth.js';
 import { isUserAdmin } from './users.js';
 
@@ -283,25 +197,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (user) {
         let nome = user.displayName || user.email;
 
-if (nome.includes(' ')) {
-    nome = nome.split(' ')[0]; // pega só o primeiro nome
-} else if (nome.includes('@')) {
-    nome = nome.split('@')[0]; // se for e-mail, pega antes do @
-}
+        if (nome.includes(' ')) {
+            nome = nome.split(' ')[0];
+        } else if (nome.includes('@')) {
+            nome = nome.split('@')[0];
+        }
 
-document.getElementById('currentUserDisplay').innerHTML =
-    `<i class="fas fa-user-circle"></i> Bem-vindo, ${nome}`;
-        
+        document.getElementById('currentUserDisplay').innerHTML =
+            `<i class="fas fa-user-circle"></i> Bem-vindo, ${nome}`;
+
         if (await isUserAdmin()) {
-    document.querySelectorAll('.admin-only').forEach(el => {
-        el.style.display = 'block';
-    });
-}
+            document.querySelectorAll('.admin-only').forEach(el => {
+                el.style.display = 'block';
+            });
+        }
+    }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         const { logout } = await import('./auth.js');
         await logout();
-        window.location.href = 'login.html'; // redireciona para login
+        window.location.href = 'login.html';
     });
 });
 
