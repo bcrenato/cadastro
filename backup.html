@@ -136,16 +136,21 @@ document.getElementById('backup-db').addEventListener('click', async () => {
   setProgress(10, "Iniciando backup...");
 
   const dados = {};
-  const paths = ['membros', 'presencas_culto', 'relogio', 'users'];
-  let percent = 10;
+  const paths = [
+  { path: 'membros', label: 'membros' },
+  { path: 'presencas_culto', label: 'presencas_culto' },
+  { path: 'relogio/horarios', label: 'relogio' },
+  { path: 'users', label: 'users' }
+];
 
-  for (const path of paths) {
-    setProgress(percent, `Lendo ${path}...`);
-    const snapshot = await get(ref(db, `/${path}`));
-    dados[path] = snapshot.exists() ? snapshot.val() : {};
-    percent += 20;
-    await new Promise(r => setTimeout(r, 200));
-  }
+for (const {path, label} of paths) {
+  setProgress(percent, `Lendo ${label}...`);
+  const snapshot = await get(ref(db, `/${path}`));
+  dados[label] = snapshot.exists() ? snapshot.val() : {};
+  percent += 20;
+  await new Promise(r => setTimeout(r, 200));
+}
+
 
   setProgress(90, "Preparando arquivo...");
   const blob = new Blob([JSON.stringify(dados, null, 2)], {type : 'application/json'});
