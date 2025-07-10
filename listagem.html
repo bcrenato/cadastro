@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -135,7 +136,7 @@ for (const membro of membrosArray) {
   const item = document.createElement("div");
   item.className = "list-group-item membro-item";
 
-  item.innerHTML = 
+  item.innerHTML = `
     <input type="checkbox" class="form-check-input me-2 checkbox-selecao" data-id="${membro.id}">
     <a href="ficha.html?id=${membro.id}" class="info-membro">
       <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
@@ -144,7 +145,7 @@ for (const membro of membrosArray) {
         <small>${membro.funcao}</small>
       </div>
     </a>
-  ;
+  `;
   lista.appendChild(item);
 }
 
@@ -170,7 +171,7 @@ btnExcluir.addEventListener("click", () => {
 
   selecionados.forEach(cb => {
     const id = cb.getAttribute("data-id");
-    remove(ref(db, membros/${id}));
+    remove(ref(db, `membros/${id}`));
   });
 });
 
@@ -185,9 +186,9 @@ const btnExportarPDF = document.getElementById("btnExportarPDF");
 
 btnExportarPDF.addEventListener("click", async () => {
   btnExportarPDF.disabled = true;
-  btnExportarPDF.innerHTML = 
+  btnExportarPDF.innerHTML = `
     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando PDF...
-  ;
+  `;
 
   try {
     const doc = new window.jsPDFGlobal({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
@@ -253,7 +254,7 @@ btnExportarPDF.addEventListener("click", async () => {
     .map(m => {
       const partesEndereco = [
         m.endereco,
-        m.numero && Nº${m.numero},
+        m.numero && `Nº${m.numero}`,
         m.bairro,
         m.cidade,
         m.estado
@@ -286,9 +287,9 @@ btnExportarPDF.addEventListener("click", async () => {
   },
   didDrawPage: function(data) {
     doc.setFontSize(8);
-    doc.text(Página ${data.pageNumber}, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
+    doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
     const now = new Date();
-    doc.text(Gerado em: ${now.toLocaleString("pt-BR")}, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" });
+    doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" });
   }
 });
 
@@ -300,7 +301,7 @@ btnExportarPDF.addEventListener("click", async () => {
     alert("Erro ao gerar PDF: " + error.message);
   } finally {
     btnExportarPDF.disabled = false;
-    btnExportarPDF.innerHTML = Exportar PDF;
+    btnExportarPDF.innerHTML = `Exportar PDF`;
   }
 });
 
@@ -308,7 +309,7 @@ function formatDate(dateString) {
   if (!dateString) return "";
   try {
     const [ano, mes, dia] = dateString.split("-");
-    return ${dia}/${mes}/${ano};
+    return `${dia}/${mes}/${ano}`;
   } catch {
     return dateString;
   }
@@ -316,12 +317,12 @@ function formatDate(dateString) {
 
 function mostrarMensagemPDF(mensagem) {
   const container = document.getElementById("mensagemPDF");
-  container.innerHTML = 
+  container.innerHTML = `
     <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
       ${mensagem}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-  ;
+  `;
 }
 </script>
 
@@ -331,6 +332,52 @@ function mostrarMensagemPDF(mensagem) {
 window.jsPDFGlobal = window.jspdf.jsPDF;
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+
+  
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<div id="accessDenied" style="display:none; text-align:center; margin-top:50px;">
+  <i class="fas fa-exclamation-triangle" style="font-size:48px;color:#f39c12;"></i>
+  <h2>Acesso Restrito</h2>
+  <p>Somente Administradores</p>
+  <button id="goBackBtn" class="login-btn">Voltar</button>
+</div>
+
+<script>
+  async function checkIfAdmin() {
+    const user = firebase.auth().currentUser;
+    if (!user) return false;
+
+    const snapshot = await firebase.database()
+      .ref(`users/${user.uid}/isAdmin`)
+      .get();
+
+    return snapshot.exists() && snapshot.val() === true;
+  }
+
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+      const isAdmin = await checkIfAdmin();
+      if (!isAdmin) {
+        document.querySelector('.container').style.display = 'none';
+        document.getElementById('accessDenied').style.display = 'block';
+      }
+    }
+  });
+
+  document.getElementById('goBackBtn').addEventListener('click', () => {
+    if (document.referrer) {
+      window.history.back();
+    } else {
+      window.location.href = 'index.html';
+    }
+  });
+</script>
 
 
 </body>
