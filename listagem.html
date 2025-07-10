@@ -81,53 +81,38 @@ body.autorizado .conteudo-restrito {
 </div>
 
 <script type="module">
-  // Importa as configurações do Firebase
   import { app } from './firebase-config.js';
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  async function verifyAdmin() {
-    try {
-      const auth = getAuth(app);
-      const user = auth.currentUser;
-      
-      if (!user) return false;
-      
-      const token = await user.getIdTokenResult();
-      return !!token.claims.admin;
-      
-    } catch (error) {
-      console.error("Erro na verificação:", error);
-      return false;
+  // Mostra conteúdo para admin, mensagem para não-admin
+  function handleAuthState(isAdmin) {
+    if (isAdmin) {
+      document.body.classList.add('autorizado');
+      document.getElementById('nao-autorizado').style.display = 'none';
+      document.querySelectorAll('.conteudo-restrito').forEach(el => el.style.display = 'block');
+    } else {
+      document.body.classList.remove('autorizado');
+      document.getElementById('nao-autorizado').style.display = 'block';
+      document.querySelectorAll('.conteudo-restrito').forEach(el => el.style.display = 'none');
     }
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-      const auth = getAuth(app);
-      
-      // Usa onAuthStateChanged para garantir que o usuário está carregado
-      onAuthStateChanged(auth, async (user) => {
+  document.addEventListener('DOMContentLoaded', () => {
+    const auth = getAuth(app);
+    
+    onAuthStateChanged(auth, async (user) => {
+      try {
         if (user) {
-          const isAdmin = await verifyAdmin();
-          
-          if (isAdmin) {
-            document.body.classList.add('autorizado');
-            document.getElementById('nao-autorizado').style.display = 'none';
-          } else {
-            document.getElementById('nao-autorizado').style.display = 'block';
-            document.querySelectorAll('.conteudo-restrito').forEach(el => el.remove());
-          }
+          const token = await user.getIdTokenResult();
+          handleAuthState(!!token.claims.admin);
         } else {
-          document.getElementById('nao-autorizado').style.display = 'block';
-          document.querySelectorAll('.conteudo-restrito').forEach(el => el.remove());
+          handleAuthState(false);
         }
-      });
-      
-    } catch (error) {
-      console.error("Erro no carregamento:", error);
-      document.getElementById('nao-autorizado').style.display = 'block';
-      document.querySelectorAll('.conteudo-restrito').forEach(el => el.remove());
-    }
+      } catch (error) {
+        console.error("Erro na verificação:", error);
+        handleAuthState(false);
+      }
+    });
   });
 </script>
   
