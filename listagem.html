@@ -83,21 +83,43 @@ body.autorizado .conteudo-restrito {
 <script type="module">
   async function safeCheckAdminAuth() {
     try {
-      // Temporariamente desativa redirecionamentos e alerts
+      // Guarda a implementação original das funções
       const originalAlert = window.alert;
-      const originalLocationAssign = window.location.assign;
+      let wasRedirected = false;
       
+      // Substitui temporariamente as funções
       window.alert = () => {};
-      window.location.assign = () => {};
+      
+      // Cria um handler para capturar redirecionamentos
+      const originalLocation = window.location;
+      const locationProxy = new Proxy(originalLocation, {
+        set(target, prop, value) {
+          if (prop === 'href' || prop === 'assign') {
+            wasRedirected = true;
+            return false; // Bloqueia o redirecionamento
+          }
+          return Reflect.set(...arguments);
+        }
+      });
+      
+      Object.defineProperty(window, 'location', {
+        value: locationProxy,
+        configurable: true
+      });
       
       const { checkAdminAuth } = await import('./auth.js');
       const isAdmin = await checkAdminAuth();
       
-      // Restaura funções originais
+      // Restaura as implementações originais
       window.alert = originalAlert;
-      window.location.assign = originalLocationAssign;
+      Object.defineProperty(window, 'location', {
+        value: originalLocation,
+        configurable: true
+      });
       
-      return isAdmin;
+      // Se tentou redirecionar, não é admin
+      return !wasRedirected && isAdmin;
+      
     } catch (error) {
       console.error("Erro na verificação:", error);
       return false;
@@ -111,7 +133,6 @@ body.autorizado .conteudo-restrito {
       document.body.classList.add('autorizado');
     } else {
       document.getElementById('nao-autorizado').style.display = 'block';
-      // Remove o conteúdo restrito ao invés de apenas ocultar
       document.querySelectorAll('.conteudo-restrito').forEach(el => el.remove());
     }
   });
