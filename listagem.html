@@ -81,21 +81,21 @@ body.autorizado .conteudo-restrito {
 </div>
 
 <script type="module">
-  async function checkAuthWithoutRedirect() {
+  // Versão modificada do auth.js que não mostra popups
+  async function checkAdminAuthWithoutPopup() {
     try {
-      // 1. Cria um iframe oculto para executar a verificação
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
+      // 1. Carrega o auth.js dinamicamente
+      const authModule = await import('./auth.js');
       
-      // 2. Carrega o auth.js no iframe
-      const { checkAdminAuth } = await import('./auth.js');
+      // 2. Substitui temporariamente o alert
+      const originalAlert = window.alert;
+      window.alert = () => {};
       
       // 3. Executa a verificação
-      const isAdmin = await checkAdminAuth();
+      const isAdmin = await authModule.checkAdminAuth();
       
-      // 4. Remove o iframe
-      document.body.removeChild(iframe);
+      // 4. Restaura o alert original
+      window.alert = originalAlert;
       
       return isAdmin;
     } catch (error) {
@@ -106,11 +106,15 @@ body.autorizado .conteudo-restrito {
 
   document.addEventListener('DOMContentLoaded', async () => {
     try {
-      const isAdmin = await checkAuthWithoutRedirect();
+      // 1. Verifica autenticação sem popups
+      const isAdmin = await checkAdminAuthWithoutPopup();
       
+      // 2. Se for admin, mostra o conteúdo
       if (isAdmin) {
         document.body.classList.add('autorizado');
-      } else {
+      } 
+      // 3. Se não for admin, mostra mensagem e remove conteúdo
+      else {
         document.getElementById('nao-autorizado').style.display = 'block';
         document.querySelectorAll('.conteudo-restrito').forEach(el => el.remove());
       }
