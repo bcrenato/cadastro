@@ -54,6 +54,7 @@ body { padding-top: 70px; }
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+  display: none;
 }
 
 /* Oculta conteúdo restrito por padrão */
@@ -83,19 +84,23 @@ body.autorizado .conteudo-restrito {
 <script type="module">
   import { checkAdminAuth } from './auth.js';
   
-  try {
-    if (await checkAdminAuth()) {
-      document.body.classList.add('autorizado');
-      document.getElementById('nao-autorizado').style.display = 'none';
-    } else {
-      document.body.classList.remove('autorizado');
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const isAdmin = await checkAdminAuth();
+      
+      if (isAdmin) {
+        document.body.classList.add('autorizado');
+      } else {
+        document.getElementById('nao-autorizado').style.display = 'block';
+        // Remove qualquer conteúdo que possa ter vazado durante o carregamento
+        document.querySelectorAll('.conteudo-restrito').forEach(el => el.style.display = 'none');
+      }
+    } catch (error) {
+      console.error('Erro na verificação de autenticação:', error);
       document.getElementById('nao-autorizado').style.display = 'block';
+      document.querySelectorAll('.conteudo-restrito').forEach(el => el.style.display = 'none');
     }
-  } catch (error) {
-    console.error('Erro na verificação de autenticação:', error);
-    document.body.classList.remove('autorizado');
-    document.getElementById('nao-autorizado').style.display = 'block';
-  }
+  });
 </script>
 
 <!-- 🔹 Navbar -->
