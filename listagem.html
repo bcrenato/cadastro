@@ -81,48 +81,23 @@ body.autorizado .conteudo-restrito {
 </div>
 
 <script type="module">
-  async function safeCheckAdminAuth() {
+  async function checkAuthWithoutRedirect() {
     try {
-      // 1. Substitui temporariamente funções que podem causar redirecionamento
-      const originalFunctions = {
-        alert: window.alert,
-        locationAssign: window.location.assign,
-        locationReplace: window.location.replace,
-        locationHref: Object.getOwnPropertyDescriptor(window.location, 'href')?.set
-      };
+      // 1. Cria um iframe oculto para executar a verificação
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
       
-      // 2. Variável para detectar tentativas de redirecionamento
-      let redirectAttempted = false;
-      
-      // 3. Sobrescreve funções temporariamente
-      window.alert = () => {};
-      window.location.assign = () => { redirectAttempted = true; };
-      window.location.replace = () => { redirectAttempted = true; };
-      
-      Object.defineProperty(window.location, 'href', {
-        set: () => { redirectAttempted = true; },
-        configurable: true
-      });
-      
-      // 4. Executa a verificação original
+      // 2. Carrega o auth.js no iframe
       const { checkAdminAuth } = await import('./auth.js');
+      
+      // 3. Executa a verificação
       const isAdmin = await checkAdminAuth();
       
-      // 5. Restaura funções originais
-      window.alert = originalFunctions.alert;
-      window.location.assign = originalFunctions.locationAssign;
-      window.location.replace = originalFunctions.locationReplace;
+      // 4. Remove o iframe
+      document.body.removeChild(iframe);
       
-      if (originalFunctions.locationHref) {
-        Object.defineProperty(window.location, 'href', {
-          set: originalFunctions.locationHref,
-          configurable: true
-        });
-      }
-      
-      // 6. Se tentou redirecionar, não é admin
-      return !redirectAttempted && isAdmin;
-      
+      return isAdmin;
     } catch (error) {
       console.error("Erro na verificação:", error);
       return false;
@@ -131,7 +106,7 @@ body.autorizado .conteudo-restrito {
 
   document.addEventListener('DOMContentLoaded', async () => {
     try {
-      const isAdmin = await safeCheckAdminAuth();
+      const isAdmin = await checkAuthWithoutRedirect();
       
       if (isAdmin) {
         document.body.classList.add('autorizado');
@@ -146,7 +121,7 @@ body.autorizado .conteudo-restrito {
     }
   });
 </script>
-
+  
 <!-- 🔹 Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
   <div class="container">
