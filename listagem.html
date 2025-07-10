@@ -331,5 +331,51 @@ function mostrarMensagemPDF(mensagem) {
 window.jsPDFGlobal = window.jspdf.jsPDF;
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+
+  
+
+<div id="accessDenied" style="display:none; text-align:center; margin-top:50px;">
+  <i class="fas fa-exclamation-triangle" style="font-size:48px;color:#f39c12;"></i>
+  <h2>Acesso Restrito</h2>
+  <p>Somente Administradores</p>
+  <button id="goBackBtn" class="login-btn">Voltar</button>
+</div>
+
+<script>
+  async function checkIfAdmin() {
+    const user = firebase.auth().currentUser;
+    if (!user) return false;
+
+    const snapshot = await firebase.database()
+      .ref(users/${user.uid}/isAdmin)
+      .get();
+
+    return snapshot.exists() && snapshot.val() === true;
+  }
+
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+      const isAdmin = await checkIfAdmin();
+      if (!isAdmin) {
+        document.getElementById('adminContent').style.display = 'none';
+        document.getElementById('authContainer').style.display = 'none';
+        document.getElementById('accessDenied').style.display = 'block';
+      }
+    }
+  });
+
+  document.getElementById('goBackBtn').addEventListener('click', () => {
+    if (document.referrer) {
+      window.history.back();
+    } else {
+      window.location.href = 'index.html';
+    }
+  });
+</script>
+
+
 </body>
 </html>
