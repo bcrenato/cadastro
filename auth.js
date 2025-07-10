@@ -73,7 +73,7 @@ function redirectToHome() {
 
 function showAccessDenied() {
   if (!window.location.pathname.includes('login.html')) {
-    alert('Acesso Restrito a Administradores');
+    alert(' Restrito a Administradores');
   }
 }
 
