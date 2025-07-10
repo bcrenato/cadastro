@@ -337,6 +337,9 @@ window.jsPDFGlobal = window.jspdf.jsPDF;
 
   
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <div id="accessDenied" style="display:none; text-align:center; margin-top:50px;">
   <i class="fas fa-exclamation-triangle" style="font-size:48px;color:#f39c12;"></i>
   <h2>Acesso Restrito</h2>
@@ -350,7 +353,7 @@ window.jsPDFGlobal = window.jspdf.jsPDF;
     if (!user) return false;
 
     const snapshot = await firebase.database()
-      .ref(users/${user.uid}/isAdmin)
+      .ref(`users/${user.uid}/isAdmin`)
       .get();
 
     return snapshot.exists() && snapshot.val() === true;
@@ -360,8 +363,7 @@ window.jsPDFGlobal = window.jspdf.jsPDF;
     if (user) {
       const isAdmin = await checkIfAdmin();
       if (!isAdmin) {
-        document.getElementById('adminContent').style.display = 'none';
-        document.getElementById('authContainer').style.display = 'none';
+        document.querySelector('.container').style.display = 'none';
         document.getElementById('accessDenied').style.display = 'block';
       }
     }
