@@ -81,42 +81,57 @@ body.autorizado .conteudo-restrito {
 </div>
 
 <script type="module">
-  // Versão modificada do auth.js que não mostra popups
-  async function checkAdminAuthWithoutPopup() {
+  // Versão ultra-segura que previne QUALQUER redirecionamento
+  async function checkAuthWithoutRedirect() {
     try {
-      // 1. Carrega o auth.js dinamicamente
-      const authModule = await import('./auth.js');
+      // 1. Cria um iframe invisível para isolar completamente a verificação
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
       
-      // 2. Substitui temporariamente o alert
-      const originalAlert = window.alert;
-      window.alert = () => {};
+      // 2. Carrega o auth.js dentro do iframe
+      const { checkAdminAuth } = await iframe.contentWindow.import('./auth.js');
       
-      // 3. Executa a verificação
-      const isAdmin = await authModule.checkAdminAuth();
+      // 3. Substitui TODAS as funções que podem redirecionar ou mostrar popups
+      iframe.contentWindow.alert = () => {};
+      iframe.contentWindow.confirm = () => true;
+      iframe.contentWindow.location.assign = () => {};
+      iframe.contentWindow.location.replace = () => {};
+      Object.defineProperty(iframe.contentWindow.location, 'href', {
+        set: () => {},
+        configurable: true
+      });
       
-      // 4. Restaura o alert original
-      window.alert = originalAlert;
+      // 4. Executa a verificação
+      const isAdmin = await checkAdminAuth();
+      
+      // 5. Remove o iframe
+      document.body.removeChild(iframe);
       
       return isAdmin;
     } catch (error) {
-      console.error("Erro na verificação:", error);
+      console.error("Erro na verificação segura:", error);
       return false;
     }
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
     try {
-      // 1. Verifica autenticação sem popups
-      const isAdmin = await checkAdminAuthWithoutPopup();
+      // 1. Executa a verificação segura
+      const isAdmin = await checkAuthWithoutRedirect();
       
       // 2. Se for admin, mostra o conteúdo
       if (isAdmin) {
         document.body.classList.add('autorizado');
-      } 
-      // 3. Se não for admin, mostra mensagem e remove conteúdo
+      }
+      // 3. Se não for admin, mostra apenas a mensagem
       else {
         document.getElementById('nao-autorizado').style.display = 'block';
         document.querySelectorAll('.conteudo-restrito').forEach(el => el.remove());
+        
+        // 4. Remove completamente qualquer script que possa redirecionar
+        const scripts = document.querySelectorAll('script[src*="auth.js"], script[type="module"]');
+        scripts.forEach(script => script.remove());
       }
     } catch (error) {
       console.error("Erro no carregamento:", error);
