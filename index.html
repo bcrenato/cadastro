@@ -278,8 +278,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const user = await checkAuth();
 
     if (user) {
-        document.getElementById('currentUserDisplay').innerHTML =
-            `<i class="fas fa-user-circle"></i> ${user.displayName || user.email}`;
+        let nome = user.displayName || user.email;
+
+if (nome.includes(' ')) {
+    nome = nome.split(' ')[0]; // pega só o primeiro nome
+} else if (nome.includes('@')) {
+    nome = nome.split('@')[0]; // se for e-mail, pega antes do @
+}
+
+document.getElementById('currentUserDisplay').innerHTML =
+    `<i class="fas fa-user-circle"></i> Bem-vindo, ${nome}`;
         
         if (await isUserAdmin()) {
             document.getElementById('adminMenuItem').style.display = 'block';
