@@ -77,6 +77,23 @@ body { padding-top: 70px; }
   </div> 
   </nav>
 
+
+  
+<div id="acesso-restrito" class="container mt-4 d-none">
+  <div class="alert alert-warning text-center">
+    <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+    <h3 class="mt-2">Acesso Restrito</h3>
+    <p>Somente Administradores</p>
+    <button id="btnVoltar" class="btn btn-primary mt-2">
+      <i class="fas fa-arrow-left"></i> Voltar
+    </button>
+  </div>
+</div>
+
+
+
+  
+
 <div class="container mt-4">
   <div class="mb-3 d-flex justify-content-between">
     <div>
@@ -335,5 +352,28 @@ window.jsPDFGlobal = window.jspdf.jsPDF;
 
 
 
+<script>
+(function(){
+  const acessoRestritoDiv = document.getElementById("acesso-restrito");
+  const conteudoPagina = document.querySelector(".container.mt-4"); // o conteúdo principal
+  const btnVoltar = document.getElementById("btnVoltar");
+
+  // Simule aqui a verificação do admin — troque por sua lógica real
+  const usuario = JSON.parse(localStorage.getItem("usuarioLogado")) || {};
+  const isAdmin = usuario?.role === "admin"; // exemplo: admin = true
+
+  if (!isAdmin) {
+    conteudoPagina.classList.add("d-none");
+    acessoRestritoDiv.classList.remove("d-none");
+  }
+
+  btnVoltar?.addEventListener("click", () => {
+    history.back();
+  });
+})();
+</script>
+
+
+  
 </body>
 </html>
