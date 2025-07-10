@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <style>
-/* … estilos originais … */
 body {
   padding-top: 70px;
   background-color: #f8f9fa;
@@ -34,7 +33,6 @@ body {
 
 <body>
 
-<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
   <div class="container">
     <a class="navbar-brand" href="#"><i class="fas fa-database me-2"></i>Backup Firebase</a>
@@ -51,7 +49,6 @@ body {
   </div>
 </nav>
 
-<!-- Conteúdo -->
 <div class="container py-5 adminContent">
   <h1 class="mb-4 text-center"><i class="fas fa-cloud me-2"></i>Backup & Restauração</h1>
 
@@ -92,7 +89,6 @@ body {
   <div class="text-center mt-2" id="progress-label"></div>
 </div>
 
-<!-- Acesso Restrito -->
 <div id="accessDenied" style="display:none; text-align:center; margin-top:100px;">
   <i class="fas fa-exclamation-triangle" style="font-size:48px;color:#f39c12;"></i>
   <h2>Acesso Restrito</h2>
@@ -105,6 +101,7 @@ body {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // 🔷 Configuração do Firebase
 const firebaseConfig = {
@@ -116,8 +113,23 @@ const firebaseConfig = {
   messagingSenderId: "977906864836",
   appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  const snapshot = await get(ref(db, `users/${user.uid}/isAdmin`));
+  if (!snapshot.exists() || snapshot.val() !== true) {
+    document.querySelector('.adminContent').style.display = 'none';
+    document.getElementById('accessDenied').style.display = 'block';
+  }
+});
 
 // Backup
 document.getElementById('backup-db').addEventListener('click', async () => {
@@ -161,7 +173,6 @@ document.getElementById('confirm-restore').addEventListener('click', async () =>
   window.dadosParaRestaurar = null;
 });
 
-// Barra de progresso
 function setProgress(percent, text) {
   const bar = document.getElementById("progress-bar");
   const label = document.getElementById("progress-label");
@@ -170,26 +181,6 @@ function setProgress(percent, text) {
   label.textContent = text;
 }
 function resetProgress() { setProgress(0, ""); }
-</script>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<script>
-firebase.auth().onAuthStateChanged(async (user) => {
-  if (!user) {
-    window.location.href = 'login.html';
-    return;
-  }
-  const snapshot = await firebase.database()
-    .ref(`users/${user.uid}/isAdmin`)
-    .get();
-
-  if (!snapshot.exists() || snapshot.val() !== true) {
-    document.querySelector('.adminContent').style.display = 'none';
-    document.getElementById('accessDenied').style.display = 'block';
-  }
-});
 
 document.getElementById('goBackBtn').addEventListener('click', () => {
   if (document.referrer) {
