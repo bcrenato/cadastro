@@ -83,42 +83,33 @@ body.autorizado .conteudo-restrito {
 <script type="module">
   async function safeCheckAdminAuth() {
     try {
-      // Guarda a implementação original das funções
+      // 1. Substitui temporariamente o alert para evitar popups
       const originalAlert = window.alert;
-      let wasRedirected = false;
-      
-      // Substitui temporariamente as funções
       window.alert = () => {};
       
-      // Cria um handler para capturar redirecionamentos
-      const originalLocation = window.location;
-      const locationProxy = new Proxy(originalLocation, {
-        set(target, prop, value) {
-          if (prop === 'href' || prop === 'assign') {
-            wasRedirected = true;
-            return false; // Bloqueia o redirecionamento
-          }
-          return Reflect.set(...arguments);
-        }
-      });
+      // 2. Verifica se há tentativa de redirecionamento
+      let redirectAttempted = false;
+      const originalLocationHref = Object.getOwnPropertyDescriptor(window.location, 'href');
       
-      Object.defineProperty(window, 'location', {
-        value: locationProxy,
+      // 3. Monitora tentativas de redirecionamento sem modificar location
+      Object.defineProperty(window.location, 'href', {
+        set: function(value) {
+          redirectAttempted = true;
+          return false; // Bloqueia o redirecionamento
+        },
         configurable: true
       });
       
+      // 4. Executa a verificação original
       const { checkAdminAuth } = await import('./auth.js');
       const isAdmin = await checkAdminAuth();
       
-      // Restaura as implementações originais
+      // 5. Restaura o comportamento original
       window.alert = originalAlert;
-      Object.defineProperty(window, 'location', {
-        value: originalLocation,
-        configurable: true
-      });
+      Object.defineProperty(window.location, 'href', originalLocationHref);
       
-      // Se tentou redirecionar, não é admin
-      return !wasRedirected && isAdmin;
+      // 6. Se tentou redirecionar, não é admin
+      return !redirectAttempted && isAdmin;
       
     } catch (error) {
       console.error("Erro na verificação:", error);
@@ -127,11 +118,17 @@ body.autorizado .conteudo-restrito {
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    const isAdmin = await safeCheckAdminAuth();
-    
-    if (isAdmin) {
-      document.body.classList.add('autorizado');
-    } else {
+    try {
+      const isAdmin = await safeCheckAdminAuth();
+      
+      if (isAdmin) {
+        document.body.classList.add('autorizado');
+      } else {
+        document.getElementById('nao-autorizado').style.display = 'block';
+        document.querySelectorAll('.conteudo-restrito').forEach(el => el.remove());
+      }
+    } catch (error) {
+      console.error("Erro no carregamento:", error);
       document.getElementById('nao-autorizado').style.display = 'block';
       document.querySelectorAll('.conteudo-restrito').forEach(el => el.remove());
     }
