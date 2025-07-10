@@ -70,25 +70,33 @@ body.autorizado .conteudo-restrito {
 <body>
 
 <!-- Mensagem de não autorizado -->
-<div id="nao-autorizado" class="container mt-5 text-center" style="display: none;">
-  <div class="alert alert-danger">
+<div id="nao-autorizado">
+  <div class="alert alert-danger text-center">
     <h4><i class="fas fa-exclamation-triangle me-2"></i>Acesso Restrito</h4>
     <p class="mb-4">Você não tem permissão para acessar esta área administrativa.</p>
-    <a href="index.html" class="btn btn-primary">Voltar à página inicial</a>
+    <a href="index.html" class="btn btn-primary">
+      <i class="fas fa-arrow-left me-2"></i>Voltar à página inicial
+    </a>
   </div>
 </div>
 
 <script type="module">
-  // Wrapper para evitar popups
   async function safeCheckAdminAuth() {
     try {
+      // Temporariamente desativa redirecionamentos e alerts
       const originalAlert = window.alert;
+      const originalLocationAssign = window.location.assign;
+      
       window.alert = () => {};
+      window.location.assign = () => {};
       
       const { checkAdminAuth } = await import('./auth.js');
       const isAdmin = await checkAdminAuth();
       
+      // Restaura funções originais
       window.alert = originalAlert;
+      window.location.assign = originalLocationAssign;
+      
       return isAdmin;
     } catch (error) {
       console.error("Erro na verificação:", error);
@@ -103,7 +111,7 @@ body.autorizado .conteudo-restrito {
       document.body.classList.add('autorizado');
     } else {
       document.getElementById('nao-autorizado').style.display = 'block';
-      // Remove completamente o conteúdo ao invés de apenas ocultar
+      // Remove o conteúdo restrito ao invés de apenas ocultar
       document.querySelectorAll('.conteudo-restrito').forEach(el => el.remove());
     }
   });
