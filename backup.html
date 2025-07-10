@@ -5,110 +5,222 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Backup e Restauração</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-// 🔷 Configuração do Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyCv6pzl34tyPTARtGxV6g2AJfkrtQeA-xU",
-  authDomain: "cadastro-igreja-23042.firebaseapp.com",
-  databaseURL: "https://cadastro-igreja-23042-default-rtdb.firebaseio.com",
-  projectId: "cadastro-igreja-23042",
-  storageBucket: "cadastro-igreja-23042.firebasestorage.app",
-  messagingSenderId: "977906864836",
-  appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// Backup do Database
-document.getElementById('backup-db').addEventListener('click', async () => {
-  resetProgress();
-  setProgress(10, "Iniciando backup...");
-  const snapshot = await get(ref(db, '/'));
-  const dados = snapshot.val();
-  setProgress(50, "Preparando arquivo...");
-  await new Promise(r => setTimeout(r, 500)); // Simula progresso
-  const blob = new Blob([JSON.stringify(dados, null, 2)], {type : 'application/json'});
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `backup-database-${new Date().toISOString()}.json`;
-  setProgress(90, "Pronto para baixar...");
-  await new Promise(r => setTimeout(r, 500));
-  link.click();
-  setProgress(100, "Backup concluído!");
-});
-
-// Pré-visualizar e Restaurar Database
-document.getElementById('restaurar-db').addEventListener('change', async (e) => {
-  resetProgress();
-  const file = e.target.files[0];
-  if (!file) return;
-  const text = await file.text();
-  const json = JSON.parse(text);
-
-  // Exibir pré-visualização
-  const preview = document.getElementById("preview");
-  preview.textContent = JSON.stringify(json, null, 2);
-  document.getElementById("confirm-restore").disabled = false;
-
-  // Salvar os dados para confirmar depois
-  window.dadosParaRestaurar = json;
-});
-
-document.getElementById('confirm-restore').addEventListener('click', async () => {
-  if (!window.dadosParaRestaurar) return;
-  setProgress(10, "Iniciando restauração...");
-  await new Promise(r => setTimeout(r, 500));
-  await set(ref(db, '/'), window.dadosParaRestaurar);
-  setProgress(100, "Restauração concluída!");
-  alert("Banco de dados restaurado com sucesso!");
-  document.getElementById("confirm-restore").disabled = true;
-  document.getElementById("preview").textContent = "";
-  window.dadosParaRestaurar = null;
-});
-
-// Funções da barra de progresso
-function setProgress(percent, text) {
-  const bar = document.getElementById("progress-bar");
-  const label = document.getElementById("progress-label");
-  bar.style.width = percent + "%";
-  label.textContent = text;
-}
-
-function resetProgress() {
-  setProgress(0, "");
-}
-</script>
+<style>
+  /* Estilos personalizados */
+  body {
+    padding-top: 70px; /* Espaço para o navbar fixo */
+    background-color: #f8f9fa;
+  }
+  
+  .navbar {
+    background-color: #4CAF50; /* Verde */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .navbar-brand, .nav-link {
+    color: white !important;
+  }
+  
+  .navbar-brand:hover, .nav-link:hover {
+    color: #e0e0e0 !important;
+  }
+  
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    border: none;
+  }
+  
+  .card-header {
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+  }
+  
+  #preview {
+    font-size: 14px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+  }
+  
+  .progress {
+    height: 25px;
+    border-radius: 5px;
+  }
+  
+  .progress-bar {
+    background-color: #4CAF50;
+  }
+  
+  .btn-primary {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+  }
+  
+  .btn-primary:hover {
+    background-color: #3e8e41;
+    border-color: #3e8e41;
+  }
+  
+  .btn-danger {
+    background-color: #f44336;
+    border-color: #f44336;
+  }
+</style>
 </head>
 
-<body class="bg-light">
-<div class="container py-5">
-  <h1 class="mb-4">Backup & Restauração Firebase</h1>
-
-  <div class="card mb-3">
-    <div class="card-body">
-      <h5>Backup do Realtime Database</h5>
-      <button class="btn btn-primary" id="backup-db">📥 Fazer Backup</button>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <i class="fas fa-database me-2"></i>Backup Firebase
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="../index.html">
+              <i class="fas fa-home me-1"></i> Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../membros/lista-membros.html">
+              <i class="fas fa-users me-1"></i> Membros
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="#">
+              <i class="fas fa-cloud-upload-alt me-1"></i> Backup
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
-  </div>
+  </nav>
 
-  <div class="card mb-3">
-    <div class="card-body">
-      <h5>Restauração do Realtime Database</h5>
-      <input type="file" class="form-control mb-2" id="restaurar-db" accept=".json">
-      <pre id="preview" class="bg-light p-2 border" style="max-height: 300px; overflow:auto;"></pre>
-      <button class="btn btn-danger mt-2" id="confirm-restore" disabled>🔄 Confirmar Restauração</button>
+  <div class="container py-5">
+    <h1 class="mb-4 text-center"><i class="fas fa-cloud me-2"></i>Backup & Restauração</h1>
+
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-download me-2"></i>Backup do Banco de Dados</h5>
+      </div>
+      <div class="card-body">
+        <p class="card-text">Crie um backup completo do seu banco de dados Firebase em formato JSON.</p>
+        <button class="btn btn-primary" id="backup-db">
+          <i class="fas fa-file-download me-2"></i>Gerar Backup
+        </button>
+      </div>
     </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-upload me-2"></i>Restaurar Banco de Dados</h5>
+      </div>
+      <div class="card-body">
+        <p class="card-text">Selecione um arquivo de backup (.json) para restaurar seus dados.</p>
+        <div class="mb-3">
+          <input type="file" class="form-control" id="restaurar-db" accept=".json">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Pré-visualização:</label>
+          <pre id="preview" class="bg-light p-3 border rounded" style="max-height: 300px; overflow:auto;"></pre>
+        </div>
+        <button class="btn btn-danger" id="confirm-restore" disabled>
+          <i class="fas fa-redo me-2"></i>Confirmar Restauração
+        </button>
+      </div>
+    </div>
+
+    <div class="progress mt-4">
+      <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%"></div>
+    </div>
+    <div class="text-center mt-2" id="progress-label"></div>
   </div>
 
-  <div class="progress mt-4">
-    <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%"></div>
-  </div>
-  <div class="text-center mt-2" id="progress-label"></div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    // 🔷 Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCv6pzl34tyPTARtGxV6g2AJfkrtQeA-xU",
+      authDomain: "cadastro-igreja-23042.firebaseapp.com",
+      databaseURL: "https://cadastro-igreja-23042-default-rtdb.firebaseio.com",
+      projectId: "cadastro-igreja-23042",
+      storageBucket: "cadastro-igreja-23042.appspot.com",
+      messagingSenderId: "977906864836",
+      appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Backup do Database
+    document.getElementById('backup-db').addEventListener('click', async () => {
+      resetProgress();
+      setProgress(10, "Iniciando backup...");
+      const snapshot = await get(ref(db, '/'));
+      const dados = snapshot.val();
+      setProgress(50, "Preparando arquivo...");
+      await new Promise(r => setTimeout(r, 500)); // Simula progresso
+      const blob = new Blob([JSON.stringify(dados, null, 2)], {type : 'application/json'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `backup-database-${new Date().toISOString()}.json`;
+      setProgress(90, "Pronto para baixar...");
+      await new Promise(r => setTimeout(r, 500));
+      link.click();
+      setProgress(100, "Backup concluído!");
+    });
+
+    // Pré-visualizar e Restaurar Database
+    document.getElementById('restaurar-db').addEventListener('change', async (e) => {
+      resetProgress();
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const json = JSON.parse(text);
+
+      // Exibir pré-visualização
+      const preview = document.getElementById("preview");
+      preview.textContent = JSON.stringify(json, null, 2);
+      document.getElementById("confirm-restore").disabled = false;
+
+      // Salvar os dados para confirmar depois
+      window.dadosParaRestaurar = json;
+    });
+
+    document.getElementById('confirm-restore').addEventListener('click', async () => {
+      if (!window.dadosParaRestaurar) return;
+      setProgress(10, "Iniciando restauração...");
+      await new Promise(r => setTimeout(r, 500));
+      await set(ref(db, '/'), window.dadosParaRestaurar);
+      setProgress(100, "Restauração concluída!");
+      alert("Banco de dados restaurado com sucesso!");
+      document.getElementById("confirm-restore").disabled = true;
+      document.getElementById("preview").textContent = "";
+      window.dadosParaRestaurar = null;
+    });
+
+    // Funções da barra de progresso
+    function setProgress(percent, text) {
+      const bar = document.getElementById("progress-bar");
+      const label = document.getElementById("progress-label");
+      bar.style.width = percent + "%";
+      bar.setAttribute('aria-valuenow', percent);
+      label.textContent = text;
+    }
+
+    function resetProgress() {
+      setProgress(0, "");
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
