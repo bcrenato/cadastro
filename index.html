@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo - Igreja Nova Esperança</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Administrativo - Igreja Nova Esperança</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
         :root {
             --primary: #2e7d32;
             --secondary: #1b5e20;
@@ -195,105 +195,129 @@
     </style>
 </head>
 <body>
-    <div class="dashboard">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="menu-toggle" id="menuToggle">
-                <i class="fas fa-bars"></i>
-            </div>
-            <div class="logo">
-                <img src="logo.png" alt="Logo da Igreja">
-                <h2>Igreja Nova Esperança</h2>
-            </div>
-            
-            <div class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-item active">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="listagem.html" class="nav-item">
-                    <i class="fas fa-list"></i>
-                    <span>Listagem</span>
-                </a>
-                <a href="cadastro-membros.html" class="nav-item">
-                    <i class="fas fa-users"></i>
-                    <span>Cadastrar Membros</span>
-                </a>
-                <a href="aniversariantes.html" class="nav-item">
-                    <i class="fas fa-birthday-cake"></i>
-                    <span>Aniversariantes</span>
-                </a>
-                <a href="relogio/index.html" class="nav-item">
-                    <i class="fas fa-clock"></i>
-                    <span>Relógio de Oração</span>
-                </a>
-                <a href="presenca/lista.html" class="nav-item">
-                    <i class="fas fa-church"></i>
-                    <span>Presença Cultos</span>
-                </a>
-                <a href="backup.html" class="nav-item">
-                    <i class="fas fa-database"></i>
-                    <span>Backup e Restauração</span>
-                </a>
-                <a href="register.html" class="nav-item">
-                    <i class="fas fa-user-plus"></i>
-                    <span>Cadastrar Usuários</span>
-                </a>
-            </div>
+<div class="dashboard">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
         </div>
-        
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="header">
-                <div class="page-title">
-                    <h1>Dashboard</h1>
-                </div>
-                <div class="user-info">
-                    <span>Bem-vindo, Administrador</span>
-                    <img src="user-avatar.jpg" alt="Usuário">
-                </div>
-            </div>
-            
-            <div class="content-area">
-                <!-- Conteúdo dinâmico será carregado aqui -->
-                <p>Selecione uma opção no menu à esquerda para começar.</p>
-                
-                <div style="margin-top: 20px; padding: 15px; background-color: var(--light); border-radius: 5px;">
-                    <h3 style="margin-top: 0; color: var(--secondary);">Resumo do Sistema</h3>
-                    <p>Este painel administrativo permite gerenciar todas as atividades da igreja de forma centralizada.</p>
-                </div>
-            </div>
+        <div class="logo">
+            <img src="logo.png" alt="Logo da Igreja">
+            <h2>Igreja Nova Esperança</h2>
+        </div>
+
+        <div class="nav-menu" id="navMenu">
+            <a href="index.html" class="nav-item active">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="listagem.html" class="nav-item">
+                <i class="fas fa-list"></i>
+                <span>Listagem</span>
+            </a>
+            <a href="cadastro-membros.html" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Cadastrar Membros</span>
+            </a>
+            <a href="aniversariantes.html" class="nav-item">
+                <i class="fas fa-birthday-cake"></i>
+                <span>Aniversariantes</span>
+            </a>
+            <a href="relogio/index.html" class="nav-item">
+                <i class="fas fa-clock"></i>
+                <span>Relógio de Oração</span>
+            </a>
+            <a href="presenca/lista.html" class="nav-item">
+                <i class="fas fa-church"></i>
+                <span>Presença Cultos</span>
+            </a>
+            <a href="backup.html" class="nav-item">
+                <i class="fas fa-database"></i>
+                <span>Backup e Restauração</span>
+            </a>
+            <a href="register.html" class="nav-item" id="adminMenuItem" style="display: none;">
+                <i class="fas fa-user-plus"></i>
+                <span>Cadastrar Usuários</span>
+            </a>
         </div>
     </div>
 
-    <script>
-        // Menu toggle para mobile
-        document.getElementById('menuToggle').addEventListener('click', function() {
-            document.getElementById('navMenu').classList.toggle('open');
-        });
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <div class="page-title">
+                <h1>Dashboard</h1>
+            </div>
+            <div class="user-info">
+                <span id="currentUserDisplay">
+                    <i class="fas fa-user-circle"></i> Carregando...
+                </span>
+                <button id="logoutBtn" class="btn btn-sm btn-outline-light" style="margin-left:10px;">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <p>Selecione uma opção no menu à esquerda para começar.</p>
+
+            <div style="margin-top: 20px; padding: 15px; background-color: var(--light); border-radius: 5px;">
+                <h3 style="margin-top: 0; color: var(--secondary);">Resumo do Sistema</h3>
+                <p>Este painel administrativo permite gerenciar todas as atividades da igreja de forma centralizada.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+// Importa autenticação
+import { checkAuth } from './auth.js';
+import { isUserAdmin } from './users.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const user = await checkAuth();
+
+    if (user) {
+        document.getElementById('currentUserDisplay').innerHTML =
+            `<i class="fas fa-user-circle"></i> ${user.displayName || user.email}`;
         
-        // Ativar item do menu correspondente à página atual
-        const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
-        const navItems = document.querySelectorAll('.nav-item');
-        
-        navItems.forEach(item => {
-            const itemHref = item.getAttribute('href');
-            if (itemHref === currentPage) {
-                navItems.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                
-                // Atualizar título da página
-                const pageTitle = item.querySelector('span').textContent;
-                document.querySelector('.page-title h1').textContent = pageTitle;
-            }
-            
-            // Fechar menu em mobile após seleção
-            item.addEventListener('click', function() {
-                if (window.innerWidth < 768) {
-                    document.getElementById('navMenu').classList.remove('open');
-                }
-            });
-        });
-    </script>
+        if (await isUserAdmin()) {
+            document.getElementById('adminMenuItem').style.display = 'block';
+        }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        const { logout } = await import('./auth.js');
+        await logout();
+        window.location.href = 'login.html'; // redireciona para login
+    });
+});
+
+// Menu toggle mobile
+document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('navMenu').classList.toggle('open');
+});
+
+// Ativa o menu correto
+const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+const navItems = document.querySelectorAll('.nav-item');
+
+navItems.forEach(item => {
+    const itemHref = item.getAttribute('href');
+    if (itemHref === currentPage) {
+        navItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+
+        const pageTitle = item.querySelector('span').textContent;
+        document.querySelector('.page-title h1').textContent = pageTitle;
+    }
+
+    item.addEventListener('click', () => {
+        if (window.innerWidth < 768) {
+            document.getElementById('navMenu').classList.remove('open');
+        }
+    });
+});
+</script>
 </body>
 </html>
