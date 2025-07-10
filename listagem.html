@@ -83,20 +83,24 @@ body.autorizado .conteudo-restrito {
 <script type="module">
   async function safeCheckAdminAuth() {
     try {
-      // 1. Substitui temporariamente o alert para evitar popups
-      const originalAlert = window.alert;
-      window.alert = () => {};
+      // 1. Substitui temporariamente funções que podem causar redirecionamento
+      const originalFunctions = {
+        alert: window.alert,
+        locationAssign: window.location.assign,
+        locationReplace: window.location.replace,
+        locationHref: Object.getOwnPropertyDescriptor(window.location, 'href')?.set
+      };
       
-      // 2. Verifica se há tentativa de redirecionamento
+      // 2. Variável para detectar tentativas de redirecionamento
       let redirectAttempted = false;
-      const originalLocationHref = Object.getOwnPropertyDescriptor(window.location, 'href');
       
-      // 3. Monitora tentativas de redirecionamento sem modificar location
+      // 3. Sobrescreve funções temporariamente
+      window.alert = () => {};
+      window.location.assign = () => { redirectAttempted = true; };
+      window.location.replace = () => { redirectAttempted = true; };
+      
       Object.defineProperty(window.location, 'href', {
-        set: function(value) {
-          redirectAttempted = true;
-          return false; // Bloqueia o redirecionamento
-        },
+        set: () => { redirectAttempted = true; },
         configurable: true
       });
       
@@ -104,9 +108,17 @@ body.autorizado .conteudo-restrito {
       const { checkAdminAuth } = await import('./auth.js');
       const isAdmin = await checkAdminAuth();
       
-      // 5. Restaura o comportamento original
-      window.alert = originalAlert;
-      Object.defineProperty(window.location, 'href', originalLocationHref);
+      // 5. Restaura funções originais
+      window.alert = originalFunctions.alert;
+      window.location.assign = originalFunctions.locationAssign;
+      window.location.replace = originalFunctions.locationReplace;
+      
+      if (originalFunctions.locationHref) {
+        Object.defineProperty(window.location, 'href', {
+          set: originalFunctions.locationHref,
+          configurable: true
+        });
+      }
       
       // 6. Se tentou redirecionar, não é admin
       return !redirectAttempted && isAdmin;
