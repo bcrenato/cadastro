@@ -217,7 +217,7 @@
                 <span>Cadastrar Membros</span>
             </a>
 
-            <a href="listagem.html" class="nav-item" id="adminMenuItem" style="display: none;">
+            <a href="listagem.html" class="nav-item admin-only" style="display: none;">
                 <i class="fas fa-list"></i>
                 <span>Lista de Membros</span>
             </a>
@@ -230,15 +230,15 @@
                 <i class="fas fa-clock"></i>
                 <span>Relógio de Oração</span>
             </a>
-            <a href="presenca/lista.html" class="nav-item" id="adminMenuItem" style="display: none;">
+            <a href="presenca/lista.html" class="nav-item admin-only" style="display: none;">
                 <i class="fas fa-church"></i>
                 <span>Presença Cultos</span>
             </a>
-            <a href="backup.html" class="nav-item" id="adminMenuItem" style="display: none;">
+            <a href="backup.html" class="nav-item admin-only" style="display: none;">
                 <i class="fas fa-database"></i>
                 <span>Backup e Restauração</span>
             </a>
-            <a href="register.html" class="nav-item" id="adminMenuItem" style="display: none;">
+            <a href="register.html" class="nav-item admin-only" style="display: none;">
                 <i class="fas fa-user-plus"></i>
                 <span>Gerenciar Usuários</span>
             </a>
@@ -293,9 +293,10 @@ document.getElementById('currentUserDisplay').innerHTML =
     `<i class="fas fa-user-circle"></i> Bem-vindo, ${nome}`;
         
         if (await isUserAdmin()) {
-            document.getElementById('adminMenuItem').style.display = 'block';
-        }
-    }
+    document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = 'block';
+    });
+}
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         const { logout } = await import('./auth.js');
