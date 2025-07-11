@@ -7,6 +7,8 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     #foto {
@@ -57,6 +59,64 @@
       align-items: center;
       margin-bottom: 20px;
     }
+    .pdf-form {
+      display: none;
+    }
+    .pdf-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .pdf-header img {
+      max-width: 150px;
+      height: auto;
+    }
+    .pdf-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .pdf-photo-container {
+      float: left;
+      margin-right: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .pdf-photo {
+      width: 100px;
+      height: 120px;
+      object-fit: cover;
+      border: 1px solid #000;
+      margin-bottom: 5px;
+    }
+    .pdf-personal-info {
+      overflow: hidden;
+    }
+    .pdf-section {
+      margin-bottom: 15px;
+    }
+    .pdf-section-title {
+      font-weight: bold;
+      border-bottom: 1px solid #000;
+      margin-bottom: 5px;
+    }
+    .pdf-row {
+      display: flex;
+      flex-wrap: wrap;
+      margin-bottom: 5px;
+    }
+    .pdf-col {
+      flex: 1;
+      min-width: 200px;
+      margin-right: 10px;
+    }
+    .pdf-checkbox {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 15px;
+    }
+    .pdf-checkbox input {
+      margin-right: 5px;
+    }
   </style>
 </head>
 <body>
@@ -83,10 +143,13 @@
     </div>
   </nav>
 
-  <main class="container my-5" style="max-width: 450px;">
+  <main class="container my-5" style="max-width: 800px;">
     <div class="header-actions">
       <h2 class="mb-0">Ficha do Membro</h2>
-      <button id="editBtn" class="btn btn-primary">Editar</button>
+      <div>
+        <button id="editBtn" class="btn btn-primary me-2">Editar</button>
+        <button id="pdfBtn" class="btn btn-success">Salvar PDF</button>
+      </div>
     </div>
     
     <div class="card p-4 shadow-sm">
@@ -169,14 +232,170 @@
           <select class="form-select" id="editSexo">
             <option value="masculino">Masculino</option>
             <option value="feminino">Feminino</option>
-            
           </select>
+        </div>
+        <div class="mb-3">
+          <label for="editPai" class="form-label">Pai</label>
+          <input type="text" class="form-control" id="editPai">
+        </div>
+        <div class="mb-3">
+          <label for="editMae" class="form-label">Mãe</label>
+          <input type="text" class="form-control" id="editMae">
+        </div>
+        <div class="mb-3">
+          <label for="editFilhos" class="form-label">Filhos</label>
+          <input type="text" class="form-control" id="editFilhos">
+        </div>
+        <div class="mb-3">
+          <label for="editAmigo" class="form-label">Nome do Amigo</label>
+          <input type="text" class="form-control" id="editAmigo">
+        </div>
+        <div class="mb-3">
+          <label for="editAmigoTelefone" class="form-label">Telefone do Amigo</label>
+          <input type="text" class="form-control" id="editAmigoTelefone">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Estado Civil</label>
+          <div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="editEstadoCivil" id="editCasado" value="Casado(a)">
+              <label class="form-check-label" for="editCasado">Casado(a)</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="editEstadoCivil" id="editSolteiro" value="Solteiro(a)">
+              <label class="form-check-label" for="editSolteiro">Solteiro(a)</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="editEstadoCivil" id="editViuvo" value="Viúvo(a)">
+              <label class="form-check-label" for="editViuvo">Viúvo(a)</label>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="editProfissao" class="form-label">Profissão</label>
+          <input type="text" class="form-control" id="editProfissao">
+        </div>
+        <div class="mb-3">
+          <label for="editEmail" class="form-label">E-mail</label>
+          <input type="email" class="form-control" id="editEmail">
+        </div>
+        <div class="mb-3">
+          <label for="editIdentidade" class="form-label">Identidade</label>
+          <input type="text" class="form-control" id="editIdentidade">
+        </div>
+        <div class="mb-3">
+          <label for="editCPF" class="form-label">CPF</label>
+          <input type="text" class="form-control" id="editCPF">
+        </div>
+        <div class="mb-3">
+          <label for="editOrigem" class="form-label">Origem (última Igreja)</label>
+          <input type="text" class="form-control" id="editOrigem">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Foi aceito como membro por:</label>
+          <div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="editAclamacao">
+              <label class="form-check-label" for="editAclamacao">Aclamação</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="editBatismoCheck">
+              <label class="form-check-label" for="editBatismoCheck">Batismo</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="editCartaTransferencia">
+              <label class="form-check-label" for="editCartaTransferencia">Carta de Transferência</label>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="editDataAceito" class="form-label">Data</label>
+          <input type="date" class="form-control" id="editDataAceito">
         </div>
         <div class="d-flex justify-content-between mt-3">
           <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary">Cancelar</button>
           <button type="submit" class="btn btn-primary">Salvar</button>
         </div>
       </form>
+    </div>
+
+    <!-- Formulário para PDF (oculto) -->
+    <div id="pdfForm" class="pdf-form">
+      <div class="pdf-header">
+        <img src="logo.png" alt="Logo" id="pdfLogo">
+        <div class="pdf-title">Famílias na Unção</div>
+        <div class="pdf-title">Ficha de Membro</div>
+      </div>
+      
+      <div class="pdf-section">
+        <div class="pdf-photo-container">
+          <img id="pdfPhoto" class="pdf-photo" src="https://via.placeholder.com/100x120?text=Foto+3x4">
+          <div>Telefone: <span id="pdfTelefone"></span></div>
+        </div>
+        
+        <div class="pdf-personal-info">
+          <div class="pdf-row">
+            <div class="pdf-col">
+              <div>Nome: <span id="pdfNome"></span></div>
+              <div>Nascimento: <span id="pdfNascimento"></span></div>
+              <div>Batismo: <span id="pdfBatismo"></span></div>
+            </div>
+            <div class="pdf-col">
+              <div>Endereço: <span id="pdfEndereco"></span></div>
+              <div>Bairro: <span id="pdfBairro"></span></div>
+              <div>Cidade/Estado: <span id="pdfCidadeEstado"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="pdf-section">
+        <div class="pdf-section-title">Dados Pessoais</div>
+        <div class="pdf-row">
+          <div class="pdf-col">
+            <div>Pai: <span id="pdfPai"></span></div>
+            <div>Mãe: <span id="pdfMae"></span></div>
+            <div>Filhos: <span id="pdfFilhos"></span></div>
+          </div>
+          <div class="pdf-col">
+            <div>Amigo: <span id="pdfAmigo"></span></div>
+            <div>Tel. Amigo: <span id="pdfAmigoTelefone"></span></div>
+          </div>
+          <div class="pdf-col">
+            <div>Estado Civil: <span id="pdfEstadoCivil"></span></div>
+            <div>Profissão: <span id="pdfProfissao"></span></div>
+            <div>E-mail: <span id="pdfEmail"></span></div>
+          </div>
+        </div>
+        <div class="pdf-row">
+          <div class="pdf-col">
+            <div>Identidade: <span id="pdfIdentidade"></span></div>
+            <div>CPF: <span id="pdfCPF"></span></div>
+          </div>
+          <div class="pdf-col">
+            <div>Origem (última Igreja): <span id="pdfOrigem"></span></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="pdf-section">
+        <div class="pdf-section-title">Aceitação como Membro</div>
+        <div class="pdf-row">
+          <div class="pdf-checkbox">
+            <input type="checkbox" id="pdfAclamacao" disabled>
+            <label for="pdfAclamacao">Aclamação</label>
+          </div>
+          <div class="pdf-checkbox">
+            <input type="checkbox" id="pdfBatismoCheck" disabled>
+            <label for="pdfBatismoCheck">Batismo</label>
+          </div>
+          <div class="pdf-checkbox">
+            <input type="checkbox" id="pdfCartaTransferencia" disabled>
+            <label for="pdfCartaTransferencia">Carta de Transferência</label>
+          </div>
+        </div>
+        <div>Data: <span id="pdfDataAceito"></span></div>
+      </div>
     </div>
   </main>
 
@@ -198,6 +417,7 @@
     const fotoInput = document.getElementById('fotoInput');
     const fotoPreview = document.getElementById('fotoPreview');
     const fotoView = document.getElementById('foto');
+    const pdfBtn = document.getElementById('pdfBtn');
 
     // Função para alternar entre modos de visualização e edição
     function toggleEditMode(isEditing) {
@@ -256,6 +476,27 @@
           document.getElementById("editNascimento").value = membroData.nascimento || '';
           document.getElementById("editTelefone").value = membroData.telefone || '';
           document.getElementById("editSexo").value = membroData.sexo || 'Masculino';
+          document.getElementById("editPai").value = membroData.pai || '';
+          document.getElementById("editMae").value = membroData.mae || '';
+          document.getElementById("editFilhos").value = membroData.filhos || '';
+          document.getElementById("editAmigo").value = membroData.amigo || '';
+          document.getElementById("editAmigoTelefone").value = membroData.amigoTelefone || '';
+          document.getElementById("editProfissao").value = membroData.profissao || '';
+          document.getElementById("editEmail").value = membroData.email || '';
+          document.getElementById("editIdentidade").value = membroData.identidade || '';
+          document.getElementById("editCPF").value = membroData.cpf || '';
+          document.getElementById("editOrigem").value = membroData.origem || '';
+          document.getElementById("editDataAceito").value = membroData.dataAceito || '';
+
+          // Estado Civil
+          if (membroData.estadoCivil) {
+            document.querySelector(`input[name="editEstadoCivil"][value="${membroData.estadoCivil}"]`).checked = true;
+          }
+
+          // Aceitação como membro
+          if (membroData.aclamacao) document.getElementById("editAclamacao").checked = membroData.aclamacao;
+          if (membroData.batismoCheck) document.getElementById("editBatismoCheck").checked = membroData.batismoCheck;
+          if (membroData.cartaTransferencia) document.getElementById("editCartaTransferencia").checked = membroData.cartaTransferencia;
 
           // Preencher o campo de função
           const funcoes = ["Pastor", "Missionário(a)", "Diácono", "Obreiro(a)", "Membro"];
@@ -334,7 +575,22 @@
         funcao: document.getElementById("editFuncao").value,
         telefone: document.getElementById("editTelefone").value,
         sexo: document.getElementById("editSexo").value,
-        fotoURL: fotoURL
+        fotoURL: fotoURL,
+        pai: document.getElementById("editPai").value,
+        mae: document.getElementById("editMae").value,
+        filhos: document.getElementById("editFilhos").value,
+        amigo: document.getElementById("editAmigo").value,
+        amigoTelefone: document.getElementById("editAmigoTelefone").value,
+        estadoCivil: document.querySelector('input[name="editEstadoCivil"]:checked')?.value || '',
+        profissao: document.getElementById("editProfissao").value,
+        email: document.getElementById("editEmail").value,
+        identidade: document.getElementById("editIdentidade").value,
+        cpf: document.getElementById("editCPF").value,
+        origem: document.getElementById("editOrigem").value,
+        dataAceito: document.getElementById("editDataAceito").value,
+        aclamacao: document.getElementById("editAclamacao").checked,
+        batismoCheck: document.getElementById("editBatismoCheck").checked,
+        cartaTransferencia: document.getElementById("editCartaTransferencia").checked
       };
 
       try {
@@ -379,6 +635,79 @@
         console.error("Erro ao atualizar membro:", error);
         alert("Erro ao atualizar membro. Por favor, tente novamente.");
       }
+    });
+
+    // Gerar PDF
+    pdfBtn.addEventListener('click', async () => {
+      // Preencher o formulário PDF com os dados
+      document.getElementById('pdfNome').textContent = membroData.nome || '';
+      document.getElementById('pdfNascimento').textContent = membroData.nascimento || '';
+      document.getElementById('pdfBatismo').textContent = membroData.batismo || '';
+      document.getElementById('pdfTelefone').textContent = membroData.telefone || '';
+      document.getElementById('pdfEndereco').textContent = membroData.endereco || '';
+      document.getElementById('pdfBairro').textContent = membroData.bairro || '';
+      document.getElementById('pdfCidadeEstado').textContent = `${membroData.cidade || ''}/${membroData.estado || ''}`;
+      document.getElementById('pdfPai').textContent = membroData.pai || '';
+      document.getElementById('pdfMae').textContent = membroData.mae || '';
+      document.getElementById('pdfFilhos').textContent = membroData.filhos || '';
+      document.getElementById('pdfAmigo').textContent = membroData.amigo || '';
+      document.getElementById('pdfAmigoTelefone').textContent = membroData.amigoTelefone || '';
+      document.getElementById('pdfEstadoCivil').textContent = membroData.estadoCivil || '';
+      document.getElementById('pdfProfissao').textContent = membroData.profissao || '';
+      document.getElementById('pdfEmail').textContent = membroData.email || '';
+      document.getElementById('pdfIdentidade').textContent = membroData.identidade || '';
+      document.getElementById('pdfCPF').textContent = membroData.cpf || '';
+      document.getElementById('pdfOrigem').textContent = membroData.origem || '';
+      document.getElementById('pdfDataAceito').textContent = membroData.dataAceito || '';
+      
+      // Checkboxes
+      document.getElementById('pdfAclamacao').checked = membroData.aclamacao || false;
+      document.getElementById('pdfBatismoCheck').checked = membroData.batismoCheck || false;
+      document.getElementById('pdfCartaTransferencia').checked = membroData.cartaTransferencia || false;
+      
+      // Foto
+      const pdfPhoto = document.getElementById('pdfPhoto');
+      if (membroData.fotoURL) {
+        pdfPhoto.src = membroData.fotoURL;
+      } else {
+        pdfPhoto.src = 'https://via.placeholder.com/100x120?text=Foto+3x4';
+      }
+      
+      // Mostrar o formulário PDF temporariamente
+      const pdfForm = document.getElementById('pdfForm');
+      pdfForm.style.display = 'block';
+      
+      // Gerar PDF
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      
+      await html2canvas(pdfForm, {
+        scale: 2,
+        logging: false,
+        useCORS: true
+      }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 295; // A4 height in mm
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        
+        pdf.save(`ficha_membro_${membroData.nome || 'sem_nome'}.pdf`);
+      });
+      
+      // Esconder o formulário PDF novamente
+      pdfForm.style.display = 'none';
     });
 
     // Inicializar visualização
