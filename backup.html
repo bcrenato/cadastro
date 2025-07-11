@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -34,7 +33,7 @@ body {
 
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
   <div class="container">
     <a class="navbar-brand" href="#"><i class="fas fa-database me-2"></i>Backup Firebase</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -50,7 +49,7 @@ body {
   </div>
 </nav>
 
-<div class="container py-5 adminContent">
+<div class="container py-5 adminContent conteudo-restrito">
   <h1 class="mb-4 text-center"><i class="fas fa-cloud me-2"></i>Backup & Restauração</h1>
 
   <div class="card">
@@ -118,19 +117,57 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = 'login.html';
-    return;
+// Verifica se é admin no Realtime Database
+async function checkAdmin(user) {
+  try {
+    if (!user) return false;
+    
+    const userRef = ref(db, `users/${user.uid}`);
+    const snapshot = await get(userRef);
+    
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      console.log("Dados do usuário:", userData);
+      return userData.isAdmin === true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Erro na verificação:", error);
+    return false;
   }
+}
 
-  const snapshot = await get(ref(db, `users/${user.uid}/isAdmin`));
-  if (!snapshot.exists() || snapshot.val() !== true) {
-    document.querySelector('.adminContent').style.display = 'none';
-    document.getElementById('accessDenied').style.display = 'block';
+// Controla a exibição do conteúdo
+function toggleContent(isAdmin) {
+  const authMsg = document.getElementById('accessDenied');
+  const content = document.querySelector('.adminContent');
+  
+  if (isAdmin) {
+    console.log("Acesso concedido: usuário é admin");
+    authMsg.style.display = 'none';
+    content.style.display = 'block';
+  } else {
+    console.log("Acesso negado: usuário não é admin");
+    authMsg.style.display = 'block';
+    content.style.display = 'none';
   }
+}
+
+// Verificação de autenticação e permissões
+document.addEventListener('DOMContentLoaded', () => {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+    
+    const isAdmin = await checkAdmin(user);
+    toggleContent(isAdmin);
+  });
 });
 
+// Funções de backup e restauração (código original)
 document.getElementById('backup-db').addEventListener('click', async () => {
   resetProgress();
   setProgress(10, "Iniciando backup...");
@@ -161,7 +198,6 @@ document.getElementById('backup-db').addEventListener('click', async () => {
   link.click();
   setProgress(100, "Backup concluído!");
 });
-
 
 document.getElementById('restaurar-db').addEventListener('change', async (e) => {
   resetProgress();
