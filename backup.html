@@ -263,29 +263,90 @@ document.getElementById('confirm-restore').addEventListener('click', async () =>
   if (!window.dadosParaRestaurar) return;
 
   const dados = window.dadosParaRestaurar;
-  const paths = Object.keys(dados);
   let percent = 10;
+  const delayBetweenOperations = 300;
 
-  for (const path of paths) {
-    setProgress(percent, `Restaurando ${path}...`);
-    await set(ref(db, `/${path}`), dados[path]);
-    percent += Math.floor(80 / paths.length);
-    await new Promise(r => setTimeout(r, 300));
+  try {
+    // Verificação de admin
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado");
+    
+    const userRef = ref(db, `users/${user.uid}/isAdmin`);
+    const snapshot = await get(userRef);
+    if (!snapshot.exists() || !snapshot.val()) {
+      throw new Error("Apenas administradores podem restaurar backups");
+    }
+
+    // Restauração dos membros
+    if (dados.membros) {
+      setProgress(percent, "Restaurando membros...");
+      await set(ref(db, 'membros'), dados.membros);
+      percent += 25;
+      await new Promise(r => setTimeout(r, delayBetweenOperations));
+    }
+
+    // Restauração das presenças
+    if (dados.presencas_culto) {
+      setProgress(percent, "Restaurando presenças...");
+      await set(ref(db, 'presencas_culto'), dados.presencas_culto);
+      percent += 25;
+      await new Promise(r => setTimeout(r, delayBetweenOperations));
+    }
+
+    // Restauração do relógio/horarios
+    if (dados.relogio?.horarios) {
+      setProgress(percent, "Restaurando horários...");
+      await set(ref(db, 'relogio/horarios'), dados.relogio.horarios);
+      percent += 25;
+      await new Promise(r => setTimeout(r, delayBetweenOperations));
+    }
+
+    // Restauração dos usuários
+    if (dados.users) {
+      setProgress(percent, "Restaurando usuários...");
+      const usersData = dados.users;
+      
+      for (const userId in usersData) {
+        if (usersData[userId]) {
+          await set(ref(db, `users/${userId}`), {
+            username: usersData[userId].username,
+            fullName: usersData[userId].fullName,
+            isAdmin: usersData[userId].isAdmin
+          });
+          await new Promise(r => setTimeout(r, 100));
+        }
+      }
+      percent += 25;
+    }
+
+    setProgress(100, "Restauração concluída com sucesso!");
+    alert("Banco de dados restaurado com sucesso!");
+    
+  } catch (error) {
+    console.error("Erro na restauração:", error);
+    setProgress(0, `Erro: ${error.message}`, true);
+    alert(`Falha na restauração: ${error.message}`);
+  } finally {
+    document.getElementById("confirm-restore").disabled = true;
+    document.getElementById("preview").textContent = "";
+    window.dadosParaRestaurar = null;
   }
-
-  setProgress(100, "Restauração concluída!");
-  alert("Banco de dados restaurado com sucesso!");
-  document.getElementById("confirm-restore").disabled = true;
-  document.getElementById("preview").textContent = "";
-  window.dadosParaRestaurar = null;
 });
 
-function setProgress(percent, text) {
+function setProgress(percent, text, isError = false) {
   const bar = document.getElementById("progress-bar");
   const label = document.getElementById("progress-label");
   bar.style.width = percent + "%";
   bar.setAttribute('aria-valuenow', percent);
+  if (isError) {
+    bar.classList.remove('bg-success');
+    bar.classList.add('bg-danger');
+  } else {
+    bar.classList.remove('bg-danger');
+    bar.classList.add('bg-success');
+  }
   label.textContent = text;
+  label.style.color = isError ? 'red' : 'inherit';
 }
 function resetProgress() { setProgress(0, ""); }
 </script>
