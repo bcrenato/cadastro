@@ -21,9 +21,6 @@
     .edit-mode {
       display: none;
     }
-    .view-mode {
-      display: block;
-    }
     #fotoPreview {
       width: 150px;
       height: 150px;
@@ -54,6 +51,12 @@
       justify-content: center;
       cursor: pointer;
     }
+    .header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
@@ -81,7 +84,11 @@
   </nav>
 
   <main class="container my-5" style="max-width: 450px;">
-    <h2 class="text-center mb-4">Ficha do Membro</h2>
+    <div class="header-actions">
+      <h2 class="mb-0">Ficha do Membro</h2>
+      <button id="editBtn" class="btn btn-primary">Editar</button>
+    </div>
+    
     <div class="card p-4 shadow-sm">
       <!-- Modo Visualização -->
       <div id="viewMode">
@@ -97,10 +104,7 @@
         <p><strong>Função:</strong> <span id="funcao"></span></p>
         <p><strong>Telefone:</strong> <span id="telefone"></span></p>
         <p><strong>Sexo:</strong> <span id="sexo"></span></p>
-        <div class="d-flex justify-content-between mt-3">
-          <a href="listagem.html" class="btn btn-outline-primary">← Voltar para lista</a>
-          <button id="editBtn" class="btn btn-primary">Editar</button>
-        </div>
+        <a href="listagem.html" class="btn btn-outline-primary mt-3">← Voltar para lista</a>
       </div>
 
       <!-- Modo Edição -->
@@ -163,9 +167,9 @@
         <div class="mb-3">
           <label for="editSexo" class="form-label">Sexo</label>
           <select class="form-select" id="editSexo">
-            <option value="masculino">Masculino</option>
-            <option value="feminino">Feminino</option>
-    
+            <option value="Masculino">Masculino</option>
+            <option value="Feminino">Feminino</option>
+            <option value="Outro">Outro</option>
           </select>
         </div>
         <div class="d-flex justify-content-between mt-3">
@@ -196,11 +200,16 @@
     const fotoView = document.getElementById('foto');
 
     // Função para alternar entre modos de visualização e edição
-    function toggleEditMode() {
-      viewMode.classList.toggle('view-mode');
-      viewMode.classList.toggle('edit-mode');
-      editMode.classList.toggle('edit-mode');
-      editMode.classList.toggle('view-mode');
+    function toggleEditMode(isEditing) {
+      if (isEditing) {
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+        editBtn.style.display = 'none';
+      } else {
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+        editBtn.style.display = 'block';
+      }
     }
 
     // Carregar dados do membro
@@ -248,7 +257,7 @@
           document.getElementById("editTelefone").value = membroData.telefone || '';
           document.getElementById("editSexo").value = membroData.sexo || 'Masculino';
 
-          // Preencher o campo de função com as opções específicas
+          // Preencher o campo de função
           const funcoes = ["Pastor", "Missionário(a)", "Diácono", "Obreiro(a)", "Membro"];
           const funcaoSelect = document.getElementById("editFuncao");
           const funcaoAtual = membroData.funcao || "";
@@ -271,8 +280,8 @@
     }
 
     // Event Listeners
-    editBtn.addEventListener('click', toggleEditMode);
-    cancelEditBtn.addEventListener('click', toggleEditMode);
+    editBtn.addEventListener('click', () => toggleEditMode(true));
+    cancelEditBtn.addEventListener('click', () => toggleEditMode(false));
 
     // Upload de nova foto
     fotoInput.addEventListener('change', (e) => {
@@ -364,13 +373,16 @@
           fotoView.style.display = "none";
         }
         
-        toggleEditMode();
+        toggleEditMode(false);
         alert("Dados atualizados com sucesso!");
       } catch (error) {
         console.error("Erro ao atualizar membro:", error);
         alert("Erro ao atualizar membro. Por favor, tente novamente.");
       }
     });
+
+    // Inicializar visualização
+    toggleEditMode(false);
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
