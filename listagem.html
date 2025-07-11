@@ -81,17 +81,26 @@ body.autorizado .conteudo-restrito {
 </div>
 
 <script type="module">
-  // Importações corretas do Firebase Auth
-  import { auth } from './firebase-config.js';
+  import { auth, db } from './firebase-config.js';
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  // Função para verificar se é admin
+  // Verifica se é admin no Realtime Database
   async function checkAdmin(user) {
     try {
       if (!user) return false;
-      const token = await user.getIdTokenResult(true); // Força refresh do token
-      console.log("Claims do usuário:", token.claims); // Debug
-      return !!token.claims.admin;
+      
+      // Busca os dados do usuário no Realtime Database
+      const userRef = ref(db, `users/${user.uid}`);
+      const snapshot = await get(userRef);
+      
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        console.log("Dados do usuário:", userData);
+        return userData.isAdmin === true;
+      }
+      
+      return false;
     } catch (error) {
       console.error("Erro na verificação:", error);
       return false;
@@ -118,11 +127,7 @@ body.autorizado .conteudo-restrito {
 
   // Quando a página carrega
   document.addEventListener('DOMContentLoaded', () => {
-    console.log("Iniciando verificação de autenticação...");
-    
-    // Observa mudanças no estado de autenticação
     onAuthStateChanged(auth, async (user) => {
-      console.log("Estado de autenticação alterado:", user);
       const isAdmin = await checkAdmin(user);
       toggleContent(isAdmin);
     });
