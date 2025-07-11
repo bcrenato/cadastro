@@ -81,14 +81,51 @@ body.autorizado .conteudo-restrito {
 </div>
 
 <script type="module">
+  // Importações corretas do Firebase Auth
   import { auth } from './firebase-config.js';
-  
-  onAuthStateChanged(auth, async (user) => {
-    console.log("Usuário:", user);
-    if (user) {
-      const token = await user.getIdTokenResult();
-      console.log("Claims do token:", token.claims);
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+  // Função para verificar se é admin
+  async function checkAdmin(user) {
+    try {
+      if (!user) return false;
+      const token = await user.getIdTokenResult(true); // Força refresh do token
+      console.log("Claims do usuário:", token.claims); // Debug
+      return !!token.claims.admin;
+    } catch (error) {
+      console.error("Erro na verificação:", error);
+      return false;
     }
+  }
+
+  // Controla a exibição do conteúdo
+  function toggleContent(isAdmin) {
+    const authMsg = document.getElementById('nao-autorizado');
+    const content = document.querySelectorAll('.conteudo-restrito');
+    
+    if (isAdmin) {
+      console.log("Acesso concedido: usuário é admin");
+      authMsg.style.display = 'none';
+      content.forEach(el => el.style.display = 'block');
+      document.body.classList.add('autorizado');
+    } else {
+      console.log("Acesso negado: usuário não é admin");
+      authMsg.style.display = 'block';
+      content.forEach(el => el.style.display = 'none');
+      document.body.classList.remove('autorizado');
+    }
+  }
+
+  // Quando a página carrega
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log("Iniciando verificação de autenticação...");
+    
+    // Observa mudanças no estado de autenticação
+    onAuthStateChanged(auth, async (user) => {
+      console.log("Estado de autenticação alterado:", user);
+      const isAdmin = await checkAdmin(user);
+      toggleContent(isAdmin);
+    });
   });
 </script>
   
