@@ -81,37 +81,46 @@ body.autorizado .conteudo-restrito {
 </div>
 
 <script type="module">
-  import { app } from './firebase-config.js';
+  // Importa do seu firebase-config.js existente
+  import { db } from './firebase-config.js';
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  // Mostra conteúdo para admin, mensagem para não-admin
-  function handleAuthState(isAdmin) {
-    if (isAdmin) {
+  // Função para controlar a exibição
+  function toggleContent(show) {
+    const authMsg = document.getElementById('nao-autorizado');
+    const content = document.querySelectorAll('.conteudo-restrito');
+    
+    if (show) {
+      authMsg.style.display = 'none';
+      content.forEach(el => el.style.display = 'block');
       document.body.classList.add('autorizado');
-      document.getElementById('nao-autorizado').style.display = 'none';
-      document.querySelectorAll('.conteudo-restrito').forEach(el => el.style.display = 'block');
     } else {
+      authMsg.style.display = 'block';
+      content.forEach(el => el.style.display = 'none');
       document.body.classList.remove('autorizado');
-      document.getElementById('nao-autorizado').style.display = 'block';
-      document.querySelectorAll('.conteudo-restrito').forEach(el => el.style.display = 'none');
     }
   }
 
+  // Verificação de admin
+  async function checkAdmin(user) {
+    try {
+      if (!user) return false;
+      const token = await user.getIdTokenResult();
+      return !!token.claims.admin;
+    } catch (error) {
+      console.error("Erro na verificação:", error);
+      return false;
+    }
+  }
+
+  // Quando a página carrega
   document.addEventListener('DOMContentLoaded', () => {
-    const auth = getAuth(app);
+    // Assumindo que seu firebase-config.js já inicializa o Firebase
+    const auth = getAuth();
     
     onAuthStateChanged(auth, async (user) => {
-      try {
-        if (user) {
-          const token = await user.getIdTokenResult();
-          handleAuthState(!!token.claims.admin);
-        } else {
-          handleAuthState(false);
-        }
-      } catch (error) {
-        console.error("Erro na verificação:", error);
-        handleAuthState(false);
-      }
+      const isAdmin = await checkAdmin(user);
+      toggleContent(isAdmin);
     });
   });
 </script>
