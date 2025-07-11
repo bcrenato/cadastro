@@ -81,44 +81,14 @@ body.autorizado .conteudo-restrito {
 </div>
 
 <script type="module">
-  // Importa do seu firebase-config.js existente
   import { auth } from './firebase-config.js';
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
-  // Função para verificar se é admin
-  async function checkAdmin(user) {
-    try {
-      if (!user) return false;
+  
+  onAuthStateChanged(auth, async (user) => {
+    console.log("Usuário:", user);
+    if (user) {
       const token = await user.getIdTokenResult();
-      return !!token.claims.admin;
-    } catch (error) {
-      console.error("Erro na verificação:", error);
-      return false;
+      console.log("Claims do token:", token.claims);
     }
-  }
-
-  // Controla a exibição do conteúdo
-  function showContent(isAdmin) {
-    const authMsg = document.getElementById('nao-autorizado');
-    const content = document.querySelectorAll('.conteudo-restrito');
-    
-    if (isAdmin) {
-      authMsg.style.display = 'none';
-      content.forEach(el => el.style.display = 'block');
-      document.body.classList.add('autorizado');
-    } else {
-      authMsg.style.display = 'block';
-      content.forEach(el => el.style.display = 'none');
-      document.body.classList.remove('autorizado');
-    }
-  }
-
-  // Quando a página carrega
-  document.addEventListener('DOMContentLoaded', () => {
-    onAuthStateChanged(auth, async (user) => {
-      const isAdmin = await checkAdmin(user);
-      showContent(isAdmin);
-    });
   });
 </script>
   
