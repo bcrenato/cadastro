@@ -110,11 +110,8 @@
 
       <!-- Modo Edição -->
       <form id="editMode" class="edit-mode">
-        <div class="foto-container">
+       <div class="foto-container">
           <img id="fotoPreview" alt="Preview da foto" />
-          <label for="fotoInput" class="foto-upload-btn">
-            <i class="bi bi-camera"></i>
-          </label>
           <input type="file" id="fotoInput" accept="image/*" class="d-none">
           <input type="hidden" id="editFotoURL">
         </div>
@@ -192,48 +189,51 @@
     let currentFotoURL = '';
 
     // Elementos do DOM
-    const viewMode = document.getElementById('viewMode');
-    const editMode = document.getElementById('editMode');
-    const editBtn = document.getElementById('editBtn');
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-    const fotoInput = document.getElementById('fotoInput');
-    const fotoPreview = document.getElementById('fotoPreview');
-    const editFotoURL = document.getElementById('editFotoURL');
-    const fotoView = document.getElementById('foto');
+const fotoContainer = document.querySelector('.foto-container');
+const fotoInput = document.getElementById('fotoInput');
+const fotoPreview = document.getElementById('fotoPreview');
+const editFotoURL = document.getElementById('editFotoURL');
 
-    // Upload direto da imagem
-    fotoInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+// Configurar clique no container da foto
+fotoContainer.addEventListener('click', (e) => {
+  // Evita que o evento seja disparado múltiplas vezes
+  e.stopPropagation();
+  fotoInput.click();
+});
 
-      // Mostrar preview imediato
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        fotoPreview.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
+// Upload direto da imagem
+fotoInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-      try {
-        // Upload para Cloudinary
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", "igreja_preset");
+  // Mostrar preview imediato
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    fotoPreview.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
 
-        const response = await fetch("https://api.cloudinary.com/v1_1/bcrenato/image/upload", {
-          method: "POST",
-          body: formData
-        });
+  try {
+    // Upload para Cloudinary
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "igreja_preset");
 
-        if (!response.ok) throw new Error("Erro no upload");
-        
-        const data = await response.json();
-        editFotoURL.value = data.secure_url;
-        
-      } catch (error) {
-        console.error("Upload error:", error);
-        alert("Erro ao enviar foto. Tente novamente.");
-      }
+    const response = await fetch("https://api.cloudinary.com/v1_1/bcrenato/image/upload", {
+      method: "POST",
+      body: formData
     });
+
+    if (!response.ok) throw new Error("Erro no upload");
+    
+    const data = await response.json();
+    editFotoURL.value = data.secure_url;
+    
+  } catch (error) {
+    console.error("Upload error:", error);
+    alert("Erro ao enviar foto. Tente novamente.");
+  }
+});
 
     // Para habilitar câmera diretamente em dispositivos móveis
     document.querySelector('.foto-upload-btn').addEventListener('click', () => {
