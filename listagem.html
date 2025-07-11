@@ -167,6 +167,12 @@ body.autorizado .conteudo-restrito {
     <button id="btnExcluir" class="btn btn-danger d-none">Excluir Selecionados</button>
   </div>
 
+  <!-- Campo de pesquisa adicionado aqui -->
+  <div class="mb-3">
+    <label for="campoPesquisa" class="form-label">Pesquisar:</label>
+    <input type="text" id="campoPesquisa" class="form-control" placeholder="Digite o nome ou sobrenome...">
+  </div>
+
   <!-- Mensagem de sucesso -->
   <div id="mensagemPDF"></div>
 
@@ -182,15 +188,17 @@ const btnSelecionar = document.getElementById("btnSelecionar");
 const btnExcluir = document.getElementById("btnExcluir");
 let modoSelecao = false;
 const membrosRef = ref(db, "membros");
+let todosMembros = [];
 
 function carregarMembros(data) {
   lista.innerHTML = "";
   if (!data) {
     lista.innerHTML = "<p class='text-center'>Nenhum membro cadastrado.</p>";
+    todosMembros = [];
     return;
   }
 
-  const membrosArray = Object.entries(data).map(([id, m]) => {
+  todosMembros = Object.entries(data).map(([id, m]) => {
     const funcao = (m.funcao || "").toLowerCase();
     let ordemFuncao = 6;
     if (funcao === "pastor") ordemFuncao = 1;
@@ -206,14 +214,26 @@ function carregarMembros(data) {
     };
   });
 
-  // ordena por ordem da função e depois por nome
-  membrosArray.sort((a, b) => {
+  filtrarMembros();
+}
+
+function filtrarMembros() {
+  const termoPesquisa = document.getElementById('campoPesquisa').value.toLowerCase();
+  
+  const membrosFiltrados = termoPesquisa 
+    ? todosMembros.filter(membro => 
+        (membro.nome && membro.nome.toLowerCase().includes(termoPesquisa)) ||
+        (membro.sobrenome && membro.sobrenome.toLowerCase().includes(termoPesquisa)))
+    : todosMembros;
+
+  membrosFiltrados.sort((a, b) => {
     const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
     if (ordemFuncao !== 0) return ordemFuncao;
     return (a.nome || "").localeCompare(b.nome || "");
   });
 
-  for (const membro of membrosArray) {
+  lista.innerHTML = "";
+  for (const membro of membrosFiltrados) {
     const item = document.createElement("div");
     item.className = "list-group-item membro-item";
 
@@ -255,6 +275,8 @@ btnExcluir.addEventListener("click", () => {
     remove(ref(db, `membros/${id}`));
   });
 });
+
+document.getElementById('campoPesquisa').addEventListener('input', filtrarMembros);
 
 onValue(membrosRef, (snapshot) => {
   const data = snapshot.val();
