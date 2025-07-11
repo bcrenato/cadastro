@@ -82,26 +82,10 @@ body.autorizado .conteudo-restrito {
 
 <script type="module">
   // Importa do seu firebase-config.js existente
-  import { db } from './firebase-config.js';
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { auth } from './firebase-config.js';
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-  // Função para controlar a exibição
-  function toggleContent(show) {
-    const authMsg = document.getElementById('nao-autorizado');
-    const content = document.querySelectorAll('.conteudo-restrito');
-    
-    if (show) {
-      authMsg.style.display = 'none';
-      content.forEach(el => el.style.display = 'block');
-      document.body.classList.add('autorizado');
-    } else {
-      authMsg.style.display = 'block';
-      content.forEach(el => el.style.display = 'none');
-      document.body.classList.remove('autorizado');
-    }
-  }
-
-  // Verificação de admin
+  // Função para verificar se é admin
   async function checkAdmin(user) {
     try {
       if (!user) return false;
@@ -113,14 +97,27 @@ body.autorizado .conteudo-restrito {
     }
   }
 
+  // Controla a exibição do conteúdo
+  function showContent(isAdmin) {
+    const authMsg = document.getElementById('nao-autorizado');
+    const content = document.querySelectorAll('.conteudo-restrito');
+    
+    if (isAdmin) {
+      authMsg.style.display = 'none';
+      content.forEach(el => el.style.display = 'block');
+      document.body.classList.add('autorizado');
+    } else {
+      authMsg.style.display = 'block';
+      content.forEach(el => el.style.display = 'none');
+      document.body.classList.remove('autorizado');
+    }
+  }
+
   // Quando a página carrega
   document.addEventListener('DOMContentLoaded', () => {
-    // Assumindo que seu firebase-config.js já inicializa o Firebase
-    const auth = getAuth();
-    
     onAuthStateChanged(auth, async (user) => {
       const isAdmin = await checkAdmin(user);
-      toggleContent(isAdmin);
+      showContent(isAdmin);
     });
   });
 </script>
