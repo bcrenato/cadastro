@@ -12,27 +12,86 @@ body {
   padding-top: 70px;
   background-color: #f8f9fa;
 }
-.navbar { background-color: #4CAF50; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.navbar-brand, .nav-link { color: white !important; }
-.navbar-brand:hover, .nav-link:hover { color: #e0e0e0 !important; }
+.navbar { 
+  background-color: #4CAF50; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+}
+.navbar-brand, .nav-link { 
+  color: white !important; 
+}
+.navbar-brand:hover, .nav-link:hover { 
+  color: #e0e0e0 !important; 
+}
 .card {
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   margin-bottom: 20px;
   border: none;
 }
-.card-header { background-color: #4CAF50; color: white; border-radius: 10px 10px 0 0 !important; }
-#preview { font-size: 14px; background-color: #f8f9fa; border-radius: 5px; }
-.progress { height: 25px; border-radius: 5px; }
-.progress-bar { background-color: #4CAF50; }
-.btn-primary { background-color: #4CAF50; border-color: #4CAF50; }
-.btn-primary:hover { background-color: #3e8e41; border-color: #3e8e41; }
-.btn-danger { background-color: #f44336; border-color: #f44336; }
+.card-header { 
+  background-color: #4CAF50; 
+  color: white; 
+  border-radius: 10px 10px 0 0 !important; 
+}
+#preview { 
+  font-size: 14px; 
+  background-color: #f8f9fa; 
+  border-radius: 5px; 
+}
+.progress { 
+  height: 25px; 
+  border-radius: 5px; 
+}
+.progress-bar { 
+  background-color: #4CAF50; 
+}
+.btn-primary { 
+  background-color: #4CAF50; 
+  border-color: #4CAF50; 
+}
+.btn-primary:hover { 
+  background-color: #3e8e41; 
+  border-color: #3e8e41; 
+}
+.btn-danger { 
+  background-color: #f44336; 
+  border-color: #f44336; 
+}
+
+/* Estilos para mensagem de não autorizado */
+#nao-autorizado {
+  margin-top: 100px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  display: none;
+}
+
+/* Oculta conteúdo restrito por padrão */
+.conteudo-restrito {
+  display: none;
+}
+
+body.autorizado .conteudo-restrito {
+  display: block;
+}
 </style>
 </head>
 
 <body>
 
+<!-- Mensagem de não autorizado (igual à listagem.html) -->
+<div id="nao-autorizado">
+  <div class="alert alert-danger text-center">
+    <h4><i class="fas fa-exclamation-triangle me-2"></i>Acesso Restrito</h4>
+    <p class="mb-4">Você não tem permissão para acessar esta área administrativa.</p>
+    <a href="index.html" class="btn btn-primary">
+      <i class="fas fa-arrow-left me-2"></i>Voltar à página inicial
+    </a>
+  </div>
+</div>
+
+<!-- 🔹 Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
   <div class="container">
     <a class="navbar-brand" href="#"><i class="fas fa-database me-2"></i>Backup Firebase</a>
@@ -49,7 +108,7 @@ body {
   </div>
 </nav>
 
-<div class="container py-5 adminContent conteudo-restrito">
+<div class="container py-5 conteudo-restrito">
   <h1 class="mb-4 text-center"><i class="fas fa-cloud me-2"></i>Backup & Restauração</h1>
 
   <div class="card">
@@ -89,13 +148,6 @@ body {
   <div class="text-center mt-2" id="progress-label"></div>
 </div>
 
-<div id="accessDenied" style="display:none; text-align:center; margin-top:100px;">
-  <i class="fas fa-exclamation-triangle" style="font-size:48px;color:#f39c12;"></i>
-  <h2>Acesso Restrito</h2>
-  <p>Somente Administradores</p>
-  <button id="goBackBtn" class="btn btn-primary mt-3">Voltar</button>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script type="module">
@@ -127,7 +179,6 @@ async function checkAdmin(user) {
     
     if (snapshot.exists()) {
       const userData = snapshot.val();
-      console.log("Dados do usuário:", userData);
       return userData.isAdmin === true;
     }
     
@@ -140,17 +191,15 @@ async function checkAdmin(user) {
 
 // Controla a exibição do conteúdo
 function toggleContent(isAdmin) {
-  const authMsg = document.getElementById('accessDenied');
-  const content = document.querySelector('.adminContent');
+  const authMsg = document.getElementById('nao-autorizado');
+  const content = document.querySelectorAll('.conteudo-restrito');
   
   if (isAdmin) {
-    console.log("Acesso concedido: usuário é admin");
+    document.body.classList.add('autorizado');
     authMsg.style.display = 'none';
-    content.style.display = 'block';
   } else {
-    console.log("Acesso negado: usuário não é admin");
+    document.body.classList.remove('autorizado');
     authMsg.style.display = 'block';
-    content.style.display = 'none';
   }
 }
 
@@ -167,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Funções de backup e restauração (código original)
+// Funções de backup e restauração
 document.getElementById('backup-db').addEventListener('click', async () => {
   resetProgress();
   setProgress(10, "Iniciando backup...");
@@ -239,14 +288,6 @@ function setProgress(percent, text) {
   label.textContent = text;
 }
 function resetProgress() { setProgress(0, ""); }
-
-document.getElementById('goBackBtn').addEventListener('click', () => {
-  if (document.referrer) {
-    window.history.back();
-  } else {
-    window.location.href = 'index.html';
-  }
-});
 </script>
 
 </body>
