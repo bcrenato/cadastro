@@ -415,29 +415,40 @@
 // EXPORTAR PDF
 const exportPdfBtn = document.getElementById('exportPdfBtn');
 
+// Função para carregar imagens com CORS
+const loadImageWithCORS = (url) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous'; // Isso é crucial para imagens de outros domínios
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Erro ao carregar imagem'));
+    img.src = url + (url.includes('?') ? '&' : '?') + 'timestamp=' + new Date().getTime(); // Evita cache
+  });
+};
+
 // Função para otimizar imagens com qualidade reduzida
 const optimizeImage = async (imageUrl, maxWidth, quality = 0.7) => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const scale = maxWidth / img.width;
-      canvas.width = maxWidth;
-      canvas.height = img.height * scale;
-      
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
-      // Aqui aplicamos a compressão diretamente no canvas
-      resolve(canvas.toDataURL('image/jpeg', quality));
-    };
-    img.src = imageUrl;
-  });
+  try {
+    const img = await loadImageWithCORS(imageUrl);
+    
+    const canvas = document.createElement('canvas');
+    const scale = maxWidth / img.width;
+    canvas.width = maxWidth;
+    canvas.height = img.height * scale;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    
+    return canvas.toDataURL('image/jpeg', quality);
+  } catch (error) {
+    console.error('Erro ao otimizar imagem:', error);
+    // Fallback: retorna a URL original se a otimização falhar
+    return imageUrl;
+  }
 };
 
 exportPdfBtn.addEventListener('click', async () => {
     const { jsPDF } = window.jspdf;
-    // Crie o documento sem tentar usar setImageQuality
     const doc = new jsPDF();
     
     // Configurações
@@ -453,46 +464,42 @@ exportPdfBtn.addEventListener('click', async () => {
     // Função para tratar campos vazios
     const getFieldValue = (value) => value && value.trim() !== '' ? value : 'Não Informado';
 
-    // Carregar e otimizar a logo
-    const optimizedLogo = await optimizeImage('logo.png', 150);
-    const logoImg = new Image();
-    logoImg.src = optimizedLogo;
-    
-    await new Promise((resolve) => {
-        logoImg.onload = resolve;
-    });
+    try {
+      // Carregar e otimizar a logo
+      let optimizedLogo;
+      try {
+        optimizedLogo = await optimizeImage('logo.png', 150);
+      } catch (e) {
+        // Fallback para logo local se houver erro de CORS
+        optimizedLogo = 'logo.png';
+      }
 
-    // Calcular dimensões proporcionais da logo
-    const logoOriginalWidth = logoImg.width;
-    const logoOriginalHeight = logoImg.height;
-    const logoAspectRatio = logoOriginalWidth / logoOriginalHeight;
-    
-    // Definir altura desejada e calcular largura proporcional
-    const logoDisplayHeight = 15;
-    const logoDisplayWidth = logoDisplayHeight * logoAspectRatio;
+      // Resto do seu código original com pequenos ajustes...
+      const logoImg = new Image();
+      logoImg.src = optimizedLogo;
+      
+      await new Promise((resolve) => {
+          logoImg.onload = resolve;
+          logoImg.onerror = resolve; // Continua mesmo se a logo não carregar
+      });
 
-    // Centralizar a logo
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const logoX = (pageWidth - logoDisplayWidth) / 2;
+      // Calcular dimensões proporcionais da logo
+      const logoDisplayHeight = 15;
+      const logoDisplayWidth = logoImg.width ? (logoDisplayHeight * (logoImg.width / logoImg.height)) : 40;
 
-    // Adicionar logo otimizada
-    doc.addImage(optimizedLogo, 'JPEG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
-    
-    // Para a foto do membro (com qualidade mais baixa - 0.6)
-    if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
-        const optimizedPhoto = await optimizeImage(currentFotoURL, 300, 0.6);
-        doc.addImage(optimizedPhoto, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
-    } else {
-        doc.rect(marginLeft, verticalPosition, photoWidth, photoHeight);
-        doc.setFontSize(10);
-        doc.text('Foto 3x4', marginLeft + 5, verticalPosition + photoHeight/2);
-    }
+      // Centralizar a logo
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const logoX = (pageWidth - logoDisplayWidth) / 2;
 
-    // Adicionar texto "Familias Vivendo..." (fonte tamanho 13)
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Familias Vivendo na Graça e Unção do Espirito', pageWidth / 2, verticalPosition, { align: 'center' });
-    verticalPosition += 20; // Espaço após o texto
+      // Adicionar logo
+      doc.addImage(optimizedLogo, 'JPEG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
+      verticalPosition += logoDisplayHeight + 5;
+
+      // Adicionar texto "Familias Vivendo..."
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Familias Vivendo na Graça e Unção do Espirito', pageWidth / 2, verticalPosition, { align: 'center' });
+      verticalPosition += 20; // Espaço após o texto
   
     // Título centralizado
     doc.setFontSize(16);
@@ -502,14 +509,18 @@ exportPdfBtn.addEventListener('click', async () => {
     
     // Seção Foto + Dados Pessoais
     if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
-        // Otimizar foto do membro
-        const optimizedPhoto = await optimizeImage(currentFotoURL, 300, 0.6);
-        doc.addImage(optimizedPhoto, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
-    } else {
-        doc.rect(marginLeft, verticalPosition, photoWidth, photoHeight);
-        doc.setFontSize(10);
-        doc.text('Foto 3x4', marginLeft + 5, verticalPosition + photoHeight/2);
-    }
+          try {
+              const optimizedPhoto = await optimizeImage(currentFotoURL, 300, 0.6);
+              doc.addImage(optimizedPhoto, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
+          } catch (e) {
+              // Fallback: adiciona a foto sem otimização se houver erro de CORS
+              doc.addImage(currentFotoURL, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
+          }
+      } else {
+          doc.rect(marginLeft, verticalPosition, photoWidth, photoHeight);
+          doc.setFontSize(10);
+          doc.text('Foto 3x4', marginLeft + 5, verticalPosition + photoHeight/2);
+      }
     
     // Nome Completo
     doc.setFontSize(12);
