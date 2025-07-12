@@ -426,19 +426,23 @@ exportPdfBtn.addEventListener('click', () => {
     const photoHeight = 40;
     const textIndent = marginLeft + photoWidth + 10;
     let verticalPosition = marginTop;
-    const lineHeight = 7;
+    const lineHeight = 8; // Aumentado para mais espaçamento
+    const sectionSpacing = 12; // Espaço entre seções
     
+    // Função para tratar campos vazios
+    const getFieldValue = (value) => value && value.trim() !== '' ? value : 'Não Informado';
+
     // Logo centralizada
     doc.addImage('logo.png', 'PNG', 85, verticalPosition, 40, 20);
-    verticalPosition += 25;
+    verticalPosition += 30; // Mais espaço após logo
     
     // Título centralizado
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.text('Ficha Cadastro', 105, verticalPosition, { align: 'center' });
-    verticalPosition += 15;
+    verticalPosition += 20; // Mais espaço após título
     
-    // Linha com foto e dados básicos
+    // Seção Foto + Dados Pessoais
     if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
         doc.addImage(currentFotoURL, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
     } else {
@@ -452,74 +456,75 @@ exportPdfBtn.addEventListener('click', () => {
     doc.setFont('helvetica', 'bold');
     doc.text('Nome Completo:', textIndent, verticalPosition + 5);
     doc.setFont('helvetica', 'normal');
-    doc.text(membroData.nome || '_________________________', textIndent, verticalPosition + 5 + lineHeight);
+    doc.text(getFieldValue(membroData.nome), textIndent, verticalPosition + 5 + lineHeight);
     
     // Sexo e Data de Nascimento
     doc.setFont('helvetica', 'bold');
     doc.text('Sexo:', textIndent, verticalPosition + 5 + lineHeight*2);
     doc.text('Data Nascimento:', textIndent + 30, verticalPosition + 5 + lineHeight*2);
     doc.setFont('helvetica', 'normal');
-    doc.text(membroData.sexo || '______', textIndent + 15, verticalPosition + 5 + lineHeight*3);
-    doc.text(formatDateForPDF(membroData.nascimento) || '______', textIndent + 65, verticalPosition + 5 + lineHeight*3);
+    doc.text(getFieldValue(membroData.sexo), textIndent + 15, verticalPosition + 5 + lineHeight*3);
+    doc.text(getFieldValue(formatDateForPDF(membroData.nascimento)), textIndent + 65, verticalPosition + 5 + lineHeight*3);
     
-    verticalPosition += photoHeight + 15;
+    verticalPosition += photoHeight + sectionSpacing;
     
-    // Primeira linha - Endereço, Bairro, Cidade
+    // Definição das colunas
     const col1 = marginLeft;
     const col2 = marginLeft + 60;
     const col3 = marginLeft + 110;
     
-    // Títulos
+    // Seção Endereço
     doc.setFont('helvetica', 'bold');
     doc.text('Endereço:', col1, verticalPosition);
     doc.text('Bairro:', col2, verticalPosition);
     doc.text('Cidade:', col3, verticalPosition);
     
-    // Valores
     doc.setFont('helvetica', 'normal');
-    doc.text(membroData.endereco || '_________________', col1, verticalPosition + lineHeight);
-    doc.text(membroData.bairro || '_________________', col2, verticalPosition + lineHeight);
-    doc.text(membroData.cidade || '_________________', col3, verticalPosition + lineHeight);
+    doc.text(getFieldValue(membroData.endereco), col1, verticalPosition + lineHeight);
+    doc.text(getFieldValue(membroData.bairro), col2, verticalPosition + lineHeight);
+    doc.text(getFieldValue(membroData.cidade), col3, verticalPosition + lineHeight);
     
-    verticalPosition += lineHeight*2;
+    verticalPosition += lineHeight*2 + sectionSpacing/2;
     
-    // Segunda linha - Estado, CEP
+    // Seção Estado/CEP
     doc.setFont('helvetica', 'bold');
     doc.text('Estado:', col1, verticalPosition);
     doc.text('CEP:', col2, verticalPosition);
     
     doc.setFont('helvetica', 'normal');
-    doc.text(membroData.estado || '______', col1, verticalPosition + lineHeight);
-    doc.text(membroData.cep || '__________', col2, verticalPosition + lineHeight);
+    doc.text(getFieldValue(membroData.estado), col1, verticalPosition + lineHeight);
+    doc.text(getFieldValue(membroData.cep), col2, verticalPosition + lineHeight);
     
-    verticalPosition += lineHeight*2;
+    verticalPosition += lineHeight*2 + sectionSpacing;
     
-    // Terceira linha - Telefone, Batismo
+    // Seção Contato/Batismo
     doc.setFont('helvetica', 'bold');
     doc.text('Telefone:', col1, verticalPosition);
     doc.text('Data Batismo:', col2, verticalPosition);
     
     doc.setFont('helvetica', 'normal');
-    doc.text(membroData.telefone || '_________________', col1, verticalPosition + lineHeight);
-    doc.text(formatDateForPDF(membroData.batismo) || '__________', col2, verticalPosition + lineHeight);
+    doc.text(getFieldValue(membroData.telefone), col1, verticalPosition + lineHeight);
+    doc.text(getFieldValue(formatDateForPDF(membroData.batismo)), col2, verticalPosition + lineHeight);
     
-    verticalPosition += lineHeight*2;
+    verticalPosition += lineHeight*2 + sectionSpacing;
     
-    // Função
+    // Seção Função
     doc.setFont('helvetica', 'bold');
     doc.text('Função:', col1, verticalPosition);
     doc.setFont('helvetica', 'normal');
-    doc.text(membroData.funcao || '_________________________', col1, verticalPosition + lineHeight);
+    doc.text(getFieldValue(membroData.funcao), col1, verticalPosition + lineHeight);
     
-    verticalPosition += lineHeight*3;
+    verticalPosition += lineHeight*2 + sectionSpacing;
     
-    // Linha divisória
+    // Rodapé estilizado
+    doc.setDrawColor(200, 200, 200); // Cinza claro
     doc.line(marginLeft, verticalPosition, 190, verticalPosition);
     
-    // Rodapé
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100); // Cinza escuro
     const today = new Date();
     const formattedDate = `Criado em: ${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()} às ${today.getHours()}:${today.getMinutes().toString().padStart(2, '0')}hs`;
-    doc.text(formattedDate, marginLeft, verticalPosition + 10);
+    doc.text(formattedDate, marginLeft, verticalPosition + 8);
     
     doc.save(`ficha_${membroData.nome || 'membro'}.pdf`);
 });
