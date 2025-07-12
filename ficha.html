@@ -421,8 +421,6 @@ exportPdfBtn.addEventListener('click', () => {
     
     // Configurações
     const marginLeft = 15;
-    const marginRight = 15;
-  
     const marginTop = 20;
     const photoWidth = 30;
     const photoHeight = 40;
@@ -519,15 +517,23 @@ exportPdfBtn.addEventListener('click', () => {
     
     verticalPosition += lineHeight*2 + sectionSpacing;
     
-    // Rodapé estilizado
+   // Rodapé estilizado alinhado à direita
     doc.setDrawColor(200, 200, 200); // Cinza claro
-    doc.line(marginLeft, verticalPosition, 190, verticalPosition); // doc.line(marginLeft, verticalPosition, 190, verticalPosition);
+    doc.line(marginLeft, verticalPosition, 190, verticalPosition);
     
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100); // Cinza escuro
     const today = new Date();
     const formattedDate = `Criado em: ${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()} às ${today.getHours()}:${today.getMinutes().toString().padStart(2, '0')}hs`;
-    doc.text(formattedDate, marginRight, verticalPosition + 8); //    doc.text(formattedDate, marginLeft, verticalPosition + 8);
+    
+    // Calcular a posição X para alinhar à direita
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const textWidth = doc.getStringUnitWidth(formattedDate) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+    const rightMargin = 15; // Margem direita desejada
+    const xPosition = pageWidth - textWidth - rightMargin;
+    
+    // Adicionar texto alinhado à direita
+    doc.text(formattedDate, xPosition, verticalPosition + 8);
     
     doc.save(`ficha_${membroData.nome || 'membro'}.pdf`);
 });
