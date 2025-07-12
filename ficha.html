@@ -427,7 +427,7 @@ exportPdfBtn.addEventListener('click', () => {
     const textIndent = marginLeft + photoWidth + 10;
     let verticalPosition = marginTop;
     const lineHeight = 8; // Aumentado para mais espaçamento
-    const sectionSpacing = 9; // Espaço entre seções
+    const sectionSpacing = 8; // Espaço entre seções
     
     // Função para tratar campos vazios
     const getFieldValue = (value) => value && value.trim() !== '' ? value : 'Não Informado';
@@ -471,8 +471,8 @@ exportPdfBtn.addEventListener('click', () => {
     
     // Definição das colunas
     const col1 = marginLeft;
-    const col2 = marginLeft + 60;
-    const col3 = marginLeft + 110;
+    const col2 = marginLeft + 70;
+    const col3 = marginLeft + 120;
     
     // Seção Endereço
     doc.setFont('helvetica', 'bold');
@@ -485,7 +485,7 @@ exportPdfBtn.addEventListener('click', () => {
     doc.text(getFieldValue(membroData.bairro), col2, verticalPosition + lineHeight);
     doc.text(getFieldValue(membroData.cidade), col3, verticalPosition + lineHeight);
     
-    verticalPosition += lineHeight*2 + sectionSpacing/2;
+    verticalPosition += lineHeight*2 + sectionSpacing; // verticalPosition += lineHeight*2 + sectionSpacing/2;
     
     // Seção Estado/CEP
     doc.setFont('helvetica', 'bold');
