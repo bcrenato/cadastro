@@ -447,7 +447,7 @@ exportPdfBtn.addEventListener('click', async () => {
     const logoAspectRatio = logoOriginalWidth / logoOriginalHeight;
     
     // Definir altura desejada e calcular largura proporcional
-    const logoDisplayHeight = 20;
+    const logoDisplayHeight = 10;
     const logoDisplayWidth = logoDisplayHeight * logoAspectRatio;
 
     // Centralizar a logo
@@ -456,7 +456,14 @@ exportPdfBtn.addEventListener('click', async () => {
 
     // Adicionar logo com proporções originais
     doc.addImage(logoImg, 'PNG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
-    verticalPosition += logoDisplayHeight + 10; // Espaço após logo
+    verticalPosition += logoDisplayHeight + 5; // Espaço após logo
+
+    // Adicionar texto "Familias Vivendo..." (fonte tamanho 13)
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Familias Vivendo na Graça e Unção do Espirito', pageWidth / 2, verticalPosition, { align: 'center' });
+    verticalPosition += 10; // Espaço após o texto
+  
     
     // Título centralizado
     doc.setFontSize(16);
