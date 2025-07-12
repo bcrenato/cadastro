@@ -519,13 +519,13 @@ exportPdfBtn.addEventListener('click', () => {
     
     // Rodapé estilizado
     doc.setDrawColor(200, 200, 200); // Cinza claro
-    doc.line(marginLeft, verticalPosition, 190, verticalPosition);
+    doc.line(marginLeft, verticalPosition, 190, verticalPosition); // doc.line(marginLeft, verticalPosition, 190, verticalPosition);
     
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100); // Cinza escuro
     const today = new Date();
     const formattedDate = `Criado em: ${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()} às ${today.getHours()}:${today.getMinutes().toString().padStart(2, '0')}hs`;
-    doc.text(formattedDate, marginLeft, verticalPosition + 8);
+    doc.text(formattedDate, marginRight, verticalPosition + 8); //    doc.text(formattedDate, marginLeft, verticalPosition + 8);
     
     doc.save(`ficha_${membroData.nome || 'membro'}.pdf`);
 });
