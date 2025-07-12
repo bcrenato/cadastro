@@ -457,6 +457,7 @@ exportPdfBtn.addEventListener('click', () => {
     doc.text('Nome Completo:', textIndent, verticalPosition + 5);
     doc.setFont('helvetica', 'normal');
     doc.text(getFieldValue(membroData.nome), textIndent, verticalPosition + 5 + lineHeight);
+   verticalPosition += lineHeight*2 + sectionSpacing;
     
     // Sexo e Data de Nascimento
     doc.setFont('helvetica', 'bold');
@@ -464,7 +465,7 @@ exportPdfBtn.addEventListener('click', () => {
     doc.text('Data Nascimento:', textIndent + 30, verticalPosition + 5 + lineHeight*2);
     doc.setFont('helvetica', 'normal');
     doc.text(getFieldValue(membroData.sexo), textIndent, verticalPosition + 5 + lineHeight*3);
-    doc.text(getFieldValue(formatDateForPDF(membroData.nascimento)), textIndent + 65, verticalPosition + 5 + lineHeight*3);
+    doc.text(getFieldValue(formatDateForPDF(membroData.nascimento)), textIndent + 30, verticalPosition + 5 + lineHeight*3);
     
     verticalPosition += photoHeight + sectionSpacing;
     
