@@ -411,199 +411,156 @@
 
 
  // EXPORTAR PDF
-// EXPORTAR PDF
 const exportPdfBtn = document.getElementById('exportPdfBtn');
 
-// Função para carregar imagens com CORS
-const loadImageWithCORS = (url) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Erro ao carregar imagem'));
-    img.src = url + (url.includes('?') ? '&' : '?' + 'timestamp=' + new Date().getTime();
-  });
-};
-
-// Função para otimizar imagens
-const optimizeImage = async (imageUrl, maxWidth, quality = 0.7) => {
-  try {
-    const img = await loadImageWithCORS(imageUrl);
-    
-    const canvas = document.createElement('canvas');
-    const scale = maxWidth / img.width;
-    canvas.width = maxWidth;
-    canvas.height = img.height * scale;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    
-    return canvas.toDataURL('image/jpeg', quality);
-  } catch (error) {
-    console.error('Erro ao otimizar imagem:', error);
-    return imageUrl; // Fallback para URL original
-  }
-};
-
 exportPdfBtn.addEventListener('click', async () => {
-    try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        // Configurações
-        const marginLeft = 15;
-        const marginTop = 20;
-        const photoWidth = 30;
-        const photoHeight = 40;
-        const textIndent = marginLeft + photoWidth + 10;
-        let verticalPosition = marginTop;
-        const lineHeight = 8;
-        const sectionSpacing = 7;
-        
-        // Função para tratar campos vazios
-        const getFieldValue = (value) => value && value.trim() !== '' ? value : 'Não Informado';
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Configurações
+    const marginLeft = 15;
+    const marginTop = 20;
+    const photoWidth = 30;
+    const photoHeight = 40;
+    const textIndent = marginLeft + photoWidth + 10;
+    let verticalPosition = marginTop;
+    const lineHeight = 8;
+    const sectionSpacing = 7;
+    
+    // Função para tratar campos vazios
+    const getFieldValue = (value) => value && value.trim() !== '' ? value : 'Não Informado';
 
-        // Carregar e otimizar a logo
-        let optimizedLogo;
-        try {
-            optimizedLogo = await optimizeImage('logo.png', 150);
-        } catch (e) {
-            optimizedLogo = 'logo.png';
-        }
+    // Carregar a logo para obter suas dimensões originais
+    const logoImg = new Image();
+    logoImg.src = 'logo.png';
+    
+    // Esperar a logo carregar (usando Promise)
+    await new Promise((resolve) => {
+        logoImg.onload = resolve;
+    });
 
-        const logoImg = new Image();
-        logoImg.src = optimizedLogo;
-        
-        await new Promise((resolve) => {
-            logoImg.onload = resolve;
-            logoImg.onerror = resolve;
-        });
+    // Calcular dimensões proporcionais da logo
+    const logoOriginalWidth = logoImg.width;
+    const logoOriginalHeight = logoImg.height;
+    const logoAspectRatio = logoOriginalWidth / logoOriginalHeight;
+    
+    // Definir altura desejada e calcular largura proporcional
+    const logoDisplayHeight = 15;
+    const logoDisplayWidth = logoDisplayHeight * logoAspectRatio;
 
-        // Calcular dimensões proporcionais
-        const logoDisplayHeight = 15;
-        const logoDisplayWidth = logoImg.width ? (logoDisplayHeight * (logoImg.width / logoImg.height)) : 40;
+    // Centralizar a logo
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const logoX = (pageWidth - logoDisplayWidth) / 2;
 
-        // Centralizar a logo
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const logoX = (pageWidth - logoDisplayWidth) / 2;
+    // Adicionar logo com proporções originais
+    doc.addImage(logoImg, 'PNG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
+    verticalPosition += logoDisplayHeight + 5; // Espaço após logo
 
-        // Adicionar logo
-        doc.addImage(optimizedLogo, 'JPEG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
-        verticalPosition += logoDisplayHeight + 5;
-
-        // Texto "Familias Vivendo..."
-        doc.setFontSize(13);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Familias Vivendo na Graça e Unção do Espirito', pageWidth / 2, verticalPosition, { align: 'center' });
-        verticalPosition += 20;
-
-        // Título centralizado
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Ficha Cadastro', pageWidth / 2, verticalPosition, { align: 'center' });
-        verticalPosition += 10;
-
-        // Seção Foto + Dados Pessoais
-        if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
-            try {
-                const optimizedPhoto = await optimizeImage(currentFotoURL, 300, 0.6);
-                doc.addImage(optimizedPhoto, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
-            } catch (e) {
-                doc.addImage(currentFotoURL, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
-            }
-        } else {
-            doc.rect(marginLeft, verticalPosition, photoWidth, photoHeight);
-            doc.setFontSize(10);
-            doc.text('Foto 3x4', marginLeft + 5, verticalPosition + photoHeight/2);
-        }
-        
-        // Nome Completo
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Nome Completo:', textIndent, verticalPosition + 5);
-        doc.setFont('helvetica', 'normal');
-        doc.text(getFieldValue(membroData.nome), textIndent, verticalPosition + 5 + lineHeight);
-        verticalPosition += sectionSpacing;
-        
-        // Sexo e Data de Nascimento
-        doc.setFont('helvetica', 'bold');
-        doc.text('Sexo:', textIndent, verticalPosition + 5 + lineHeight*2);
-        doc.text('Data Nascimento:', textIndent + 50, verticalPosition + 5 + lineHeight*2);
-        doc.setFont('helvetica', 'normal');
-        doc.text(getFieldValue(membroData.sexo), textIndent, verticalPosition + 5 + lineHeight*3);
-        doc.text(getFieldValue(formatDateForPDF(membroData.nascimento)), textIndent + 50, verticalPosition + 5 + lineHeight*3);
-        
-        verticalPosition += photoHeight + sectionSpacing;
-        
-        // Definição das colunas
-        const col1 = marginLeft;
-        const col2 = marginLeft + 80;
-        const col3 = marginLeft + 130;
-        
-        // Seção Endereço
-        doc.setFont('helvetica', 'bold');
-        doc.text('Endereço:', col1, verticalPosition);
-        doc.text('Bairro:', col2, verticalPosition);
-        doc.text('Cidade:', col3, verticalPosition);
-        
-        doc.setFont('helvetica', 'normal');
-        doc.text(getFieldValue(membroData.endereco), col1, verticalPosition + lineHeight);
-        doc.text(getFieldValue(membroData.bairro), col2, verticalPosition + lineHeight);
-        doc.text(getFieldValue(membroData.cidade), col3, verticalPosition + lineHeight);
-        
-        verticalPosition += lineHeight*2 + sectionSpacing;
-        
-        // Seção Estado/CEP
-        doc.setFont('helvetica', 'bold');
-        doc.text('Estado:', col1, verticalPosition);
-        doc.text('CEP:', col2, verticalPosition);
-        
-        doc.setFont('helvetica', 'normal');
-        doc.text(getFieldValue(membroData.estado), col1, verticalPosition + lineHeight);
-        doc.text(getFieldValue(membroData.cep), col2, verticalPosition + lineHeight);
-        
-        verticalPosition += lineHeight*2 + sectionSpacing;
-        
-        // Seção Contato/Batismo
-        doc.setFont('helvetica', 'bold');
-        doc.text('Telefone:', col1, verticalPosition);
-        doc.text('Data Batismo:', col2, verticalPosition);
-        
-        doc.setFont('helvetica', 'normal');
-        doc.text(getFieldValue(membroData.telefone), col1, verticalPosition + lineHeight);
-        doc.text(getFieldValue(formatDateForPDF(membroData.batismo)), col2, verticalPosition + lineHeight);
-        
-        verticalPosition += lineHeight*2 + sectionSpacing;
-        
-        // Seção Função
-        doc.setFont('helvetica', 'bold');
-        doc.text('Função:', col1, verticalPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(getFieldValue(membroData.funcao), col1, verticalPosition + lineHeight);
-        
-        verticalPosition += lineHeight*2 + sectionSpacing;
-        
-        // Rodapé estilizado alinhado à direita
-        doc.setDrawColor(200, 200, 200);
-        doc.line(marginLeft, verticalPosition, pageWidth - marginLeft, verticalPosition);
-        
+    // Adicionar texto "Familias Vivendo..." (fonte tamanho 13)
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Familias Vivendo na Graça e Unção do Espirito', pageWidth / 2, verticalPosition, { align: 'center' });
+    verticalPosition += 20; // Espaço após o texto
+  
+    
+    // Título centralizado
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Ficha Cadastro', pageWidth / 2, verticalPosition, { align: 'center' });
+    verticalPosition += 10; // Espaço após o texto
+    
+    // Seção Foto + Dados Pessoais
+    if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
+        doc.addImage(currentFotoURL, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
+    } else {
+        doc.rect(marginLeft, verticalPosition, photoWidth, photoHeight);
         doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        const today = new Date();
-        const formattedDate = `Criado em: ${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()} às ${today.getHours()}:${today.getMinutes().toString().padStart(2, '0')}hs`;
-        
-        const textWidth = doc.getStringUnitWidth(formattedDate) * doc.internal.getFontSize() / doc.internal.scaleFactor;
-        const rightMargin = 15;
-        const xPosition = pageWidth - textWidth - rightMargin;
-        
-        doc.text(formattedDate, xPosition, verticalPosition + 8);
-        
-        doc.save(`ficha_${membroData.nome || 'membro'}.pdf`);
-
-    } catch (error) {
-        console.error('Erro ao gerar PDF:', error);
-        alert('Erro ao gerar PDF. Por favor, tente novamente.');
+        doc.text('Foto 3x4', marginLeft + 5, verticalPosition + photoHeight/2);
     }
+    
+    // Nome Completo
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Nome Completo:', textIndent, verticalPosition + 5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(getFieldValue(membroData.nome), textIndent, verticalPosition + 5 + lineHeight);
+    verticalPosition += sectionSpacing;
+    
+    // Sexo e Data de Nascimento
+    doc.setFont('helvetica', 'bold');
+    doc.text('Sexo:', textIndent, verticalPosition + 5 + lineHeight*2);
+    doc.text('Data Nascimento:', textIndent + 50, verticalPosition + 5 + lineHeight*2);
+    doc.setFont('helvetica', 'normal');
+    doc.text(getFieldValue(membroData.sexo), textIndent, verticalPosition + 5 + lineHeight*3);
+    doc.text(getFieldValue(formatDateForPDF(membroData.nascimento)), textIndent + 50, verticalPosition + 5 + lineHeight*3);
+    
+    verticalPosition += photoHeight + sectionSpacing;
+    
+    // Definição das colunas
+    const col1 = marginLeft;
+    const col2 = marginLeft + 80;
+    const col3 = marginLeft + 130;
+    
+    // Seção Endereço
+    doc.setFont('helvetica', 'bold');
+    doc.text('Endereço:', col1, verticalPosition);
+    doc.text('Bairro:', col2, verticalPosition);
+    doc.text('Cidade:', col3, verticalPosition);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(getFieldValue(membroData.endereco), col1, verticalPosition + lineHeight);
+    doc.text(getFieldValue(membroData.bairro), col2, verticalPosition + lineHeight);
+    doc.text(getFieldValue(membroData.cidade), col3, verticalPosition + lineHeight);
+    
+    verticalPosition += lineHeight*2 + sectionSpacing;
+    
+    // Seção Estado/CEP
+    doc.setFont('helvetica', 'bold');
+    doc.text('Estado:', col1, verticalPosition);
+    doc.text('CEP:', col2, verticalPosition);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(getFieldValue(membroData.estado), col1, verticalPosition + lineHeight);
+    doc.text(getFieldValue(membroData.cep), col2, verticalPosition + lineHeight);
+    
+    verticalPosition += lineHeight*2 + sectionSpacing;
+    
+    // Seção Contato/Batismo
+    doc.setFont('helvetica', 'bold');
+    doc.text('Telefone:', col1, verticalPosition);
+    doc.text('Data Batismo:', col2, verticalPosition);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(getFieldValue(membroData.telefone), col1, verticalPosition + lineHeight);
+    doc.text(getFieldValue(formatDateForPDF(membroData.batismo)), col2, verticalPosition + lineHeight);
+    
+    verticalPosition += lineHeight*2 + sectionSpacing;
+    
+    // Seção Função
+    doc.setFont('helvetica', 'bold');
+    doc.text('Função:', col1, verticalPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(getFieldValue(membroData.funcao), col1, verticalPosition + lineHeight);
+    
+    verticalPosition += lineHeight*2 + sectionSpacing;
+    
+    // Rodapé estilizado alinhado à direita
+    doc.setDrawColor(200, 200, 200);
+    doc.line(marginLeft, verticalPosition, pageWidth - marginLeft, verticalPosition);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    const today = new Date();
+    const formattedDate = `Criado em: ${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()} às ${today.getHours()}:${today.getMinutes().toString().padStart(2, '0')}hs`;
+    
+    // Calcular posição para alinhar à direita
+    const textWidth = doc.getStringUnitWidth(formattedDate) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+    const rightMargin = 15;
+    const xPosition = pageWidth - textWidth - rightMargin;
+    
+    doc.text(formattedDate, xPosition, verticalPosition + 8);
+    
+    doc.save(`ficha_${membroData.nome || 'membro'}.pdf`);
 });
 
 function formatDateForPDF(dateString) {
