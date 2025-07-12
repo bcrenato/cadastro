@@ -414,7 +414,8 @@
 const exportPdfBtn = document.getElementById('exportPdfBtn');
 
 // Função para redimensionar/comprimir uma imagem
-async function resizeImage(imageUrl, maxWidth, maxHeight, quality = 0.7) {
+// 🔷 Função para redimensionar e otimizar imagem
+async function resizeImage(imageUrl, maxWidth, maxHeight, quality = 0.7, type = 'image/jpeg') {
     return new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = "Anonymous";
@@ -436,11 +437,17 @@ async function resizeImage(imageUrl, maxWidth, maxHeight, quality = 0.7) {
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', quality));
+
+            if (type === 'image/png') {
+                resolve(canvas.toDataURL('image/png')); // mantém transparência
+            } else {
+                resolve(canvas.toDataURL('image/jpeg', quality)); // comprime
+            }
         };
         img.src = imageUrl;
     });
 }
+
 
 exportPdfBtn.addEventListener('click', async () => {
     const { jsPDF } = window.jspdf;
@@ -459,15 +466,14 @@ exportPdfBtn.addEventListener('click', async () => {
 
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // ✅ Logo otimizada
+    // ✅ Logo otimizada como PNG
     let logoOptimizada = '';
     try {
-        logoOptimizada = await resizeImage('logo.png', 300, 300);
+        logoOptimizada = await resizeImage('logo.png', 300, 300, 1.0, 'image/png');
     } catch (e) {
         console.error("Erro ao carregar logo", e);
     }
 
-    // Adiciona logo centralizada
     if (logoOptimizada) {
         const logoImg = new Image();
         logoImg.src = logoOptimizada;
@@ -481,7 +487,7 @@ exportPdfBtn.addEventListener('click', async () => {
         const logoDisplayWidth = logoDisplayHeight * logoAspectRatio;
         const logoX = (pageWidth - logoDisplayWidth) / 2;
 
-        doc.addImage(logoOptimizada, 'JPEG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
+        doc.addImage(logoOptimizada, 'PNG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
         verticalPosition += logoDisplayHeight + 5;
     }
 
@@ -495,7 +501,7 @@ exportPdfBtn.addEventListener('click', async () => {
     doc.text('Ficha Cadastro', pageWidth / 2, verticalPosition, { align: 'center' });
     verticalPosition += 10;
 
-    // ✅ Foto do membro otimizada
+    // ✅ Foto do membro otimizada como JPEG
     let fotoOptimizada = '';
     if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
         try {
@@ -588,6 +594,7 @@ exportPdfBtn.addEventListener('click', async () => {
 
     doc.save(`ficha_${membroData.nome || 'membro'}.pdf`);
 });
+
 
 
 function formatDateForPDF(dateString) {
