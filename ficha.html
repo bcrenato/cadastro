@@ -238,6 +238,28 @@
     }
   });
 
+
+// ===== NOVO EVENTO PARA ESCOLHA DE CÂMERA/GALERIA =====
+  document.querySelector('.foto-upload-btn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      const option = await new Promise((resolve) => {
+        const choice = confirm("Escolha uma opção:\n\n1. OK → Tirar foto\n2. Cancelar → Selecionar da galeria");
+        resolve(choice ? "camera" : "gallery");
+      });
+      if (option === "camera") {
+        fotoInput.setAttribute('capture', 'environment');
+      } else {
+        fotoInput.removeAttribute('capture');
+      }
+    }
+    fotoInput.click();
+  });
+
+    
+
   // Função para alternar entre modos
   function toggleEditMode(isEditing) {
     if (isEditing) {
