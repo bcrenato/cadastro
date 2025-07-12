@@ -415,7 +415,7 @@
 // EXPORTAR PDF
 const exportPdfBtn = document.getElementById('exportPdfBtn');
 
-// Função para otimizar imagens
+// Função para otimizar imagens com qualidade reduzida
 const optimizeImage = async (imageUrl, maxWidth, quality = 0.7) => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -428,6 +428,7 @@ const optimizeImage = async (imageUrl, maxWidth, quality = 0.7) => {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       
+      // Aqui aplicamos a compressão diretamente no canvas
       resolve(canvas.toDataURL('image/jpeg', quality));
     };
     img.src = imageUrl;
@@ -435,15 +436,9 @@ const optimizeImage = async (imageUrl, maxWidth, quality = 0.7) => {
 };
 
 exportPdfBtn.addEventListener('click', async () => {
-    // Criar PDF com compressão ativada
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-      unit: 'mm',
-      compress: true,
-      filters: ['ASCIIHexDecode', 'CCITTFaxDecode', 'RunLengthDecode']
-    });
-    
-    doc.setImageQuality(0.7); // Configurar qualidade média para imagens
+    // Crie o documento sem tentar usar setImageQuality
+    const doc = new jsPDF();
     
     // Configurações
     const marginLeft = 15;
@@ -482,7 +477,16 @@ exportPdfBtn.addEventListener('click', async () => {
 
     // Adicionar logo otimizada
     doc.addImage(optimizedLogo, 'JPEG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
-    verticalPosition += logoDisplayHeight + 5; // Espaço após logo
+    
+    // Para a foto do membro (com qualidade mais baixa - 0.6)
+    if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
+        const optimizedPhoto = await optimizeImage(currentFotoURL, 300, 0.6);
+        doc.addImage(optimizedPhoto, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
+    } else {
+        doc.rect(marginLeft, verticalPosition, photoWidth, photoHeight);
+        doc.setFontSize(10);
+        doc.text('Foto 3x4', marginLeft + 5, verticalPosition + photoHeight/2);
+    }
 
     // Adicionar texto "Familias Vivendo..." (fonte tamanho 13)
     doc.setFontSize(13);
