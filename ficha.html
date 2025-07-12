@@ -127,230 +127,205 @@
     import { db } from './firebase-config.js';
     import { ref, get, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    // Função auxiliar para verificar elementos
-    function getElementOrThrow(id) {
-      const element = document.getElementById(id);
-      if (!element) {
-        throw new Error(`Elemento com ID ${id} não encontrado`);
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    let membroData = {};
+    let currentFotoURL = '';
+
+    // Elementos do DOM
+    const viewMode = document.getElementById('viewMode');
+    const editMode = document.getElementById('editMode');
+    const editBtn = document.getElementById('editBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const fotoInput = document.getElementById('fotoInput');
+    const fotoPreview = document.getElementById('fotoPreview');
+    const editFotoURL = document.getElementById('editFotoURL');
+    const fotoView = document.getElementById('foto');
+
+    // Upload direto da imagem
+    fotoInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Mostrar preview imediato
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        fotoPreview.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      try {
+        // Upload para Cloudinary
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "igreja_preset");
+
+        const response = await fetch("https://api.cloudinary.com/v1_1/bcrenato/image/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) throw new Error("Erro no upload");
+        
+        const data = await response.json();
+        editFotoURL.value = data.secure_url;
+        
+      } catch (error) {
+        console.error("Upload error:", error);
+        alert("Erro ao enviar foto. Tente novamente.");
       }
-      return element;
+    });
+
+    // Para habilitar câmera diretamente em dispositivos móveis
+    document.querySelector('.foto-upload-btn').addEventListener('click', () => {
+      fotoInput.setAttribute('capture', 'environment');
+      fotoInput.click();
+    });
+
+    // Função para alternar entre modos
+    function toggleEditMode(isEditing) {
+      if (isEditing) {
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+        editBtn.style.display = 'none';
+      } else {
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+        editBtn.style.display = 'block';
+      }
     }
 
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get('id');
-      let membroData = {};
-      let currentFotoURL = '';
+    // Carregar dados do membro
+    if (!id) {
+      document.querySelector('.card').innerHTML = '<p class="text-danger">Membro não encontrado.</p>';
+    } else {
+      const membroRef = ref(db, `membros/${id}`);
 
-      // Elementos do DOM com verificação
-      const viewMode = getElementOrThrow('viewMode');
-      const editMode = getElementOrThrow('editMode');
-      const editBtn = getElementOrThrow('editBtn');
-      const cancelEditBtn = getElementOrThrow('cancelEditBtn');
-      const fotoInput = getElementOrThrow('fotoInput');
-      const fotoPreview = getElementOrThrow('fotoPreview');
-      const editFotoURL = getElementOrThrow('editFotoURL');
-      const fotoView = getElementOrThrow('foto');
-      const fotoContainer = document.querySelector('.foto-container');
+      get(membroRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          membroData = snapshot.val();
+          currentFotoURL = membroData.fotoURL || '';
 
-      if (!fotoContainer) {
-        throw new Error('Container da foto não encontrado');
-      }
+          // Preencher modo visualização
+          document.getElementById("nome").textContent = membroData.nome || '';
+          document.getElementById("cep").textContent = membroData.cep || '';
+          document.getElementById("endereco").textContent = membroData.endereco || '';
+          document.getElementById("bairro").textContent = membroData.bairro || '';
+          document.getElementById("cidade").textContent = membroData.cidade || '';
+          document.getElementById("estado").textContent = membroData.estado || '';
+          document.getElementById("batismo").textContent = membroData.batismo || '';
+          document.getElementById("nascimento").textContent = membroData.nascimento || '';
+          document.getElementById("funcao").textContent = membroData.funcao || '';
+          document.getElementById("telefone").textContent = membroData.telefone || '';
+          document.getElementById("sexo").textContent = membroData.sexo || '';
 
-      // Criar e configurar o botão de upload
-      const uploadButton = document.createElement('button');
-      uploadButton.innerHTML = '<i class="bi bi-camera"></i>';
-      uploadButton.className = 'foto-upload-btn';
-      uploadButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        fotoInput.click();
-      });
-      fotoContainer.appendChild(uploadButton);
-
-      // Upload direto da imagem
-      fotoInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        // Mostrar preview imediato
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          fotoPreview.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-
-        try {
-          // Upload para Cloudinary
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("upload_preset", "igreja_preset");
-
-          const response = await fetch("https://api.cloudinary.com/v1_1/bcrenato/image/upload", {
-            method: "POST",
-            body: formData
-          });
-
-          if (!response.ok) throw new Error("Erro no upload");
-          
-          const data = await response.json();
-          editFotoURL.value = data.secure_url;
-          
-        } catch (error) {
-          console.error("Upload error:", error);
-          alert("Erro ao enviar foto. Tente novamente.");
-        }
-      });
-
-      // Função para alternar entre modos
-      function toggleEditMode(isEditing) {
-        if (isEditing) {
-          viewMode.style.display = 'none';
-          editMode.style.display = 'block';
-          editBtn.style.display = 'none';
-        } else {
-          viewMode.style.display = 'block';
-          editMode.style.display = 'none';
-          editBtn.style.display = 'block';
-        }
-      }
-
-      // Carregar dados do membro
-      if (!id) {
-        document.querySelector('.card').innerHTML = '<p class="text-danger">Membro não encontrado.</p>';
-      } else {
-        const membroRef = ref(db, `membros/${id}`);
-
-        get(membroRef).then((snapshot) => {
-          if (snapshot.exists()) {
-            membroData = snapshot.val();
-            currentFotoURL = membroData.fotoURL || '';
-
-            // Preencher modo visualização
-            getElementOrThrow('nome').textContent = membroData.nome || '';
-            getElementOrThrow('cep').textContent = membroData.cep || '';
-            getElementOrThrow('endereco').textContent = membroData.endereco || '';
-            getElementOrThrow('bairro').textContent = membroData.bairro || '';
-            getElementOrThrow('cidade').textContent = membroData.cidade || '';
-            getElementOrThrow('estado').textContent = membroData.estado || '';
-            getElementOrThrow('batismo').textContent = membroData.batismo || '';
-            getElementOrThrow('nascimento').textContent = membroData.nascimento || '';
-            getElementOrThrow('funcao').textContent = membroData.funcao || '';
-            getElementOrThrow('telefone').textContent = membroData.telefone || '';
-            getElementOrThrow('sexo').textContent = membroData.sexo || '';
-
-            if (membroData.fotoURL && membroData.fotoURL !== 'sem-foto.png') {
-              fotoView.src = membroData.fotoURL;
-              fotoView.style.display = "block";
-              fotoPreview.src = membroData.fotoURL;
-            } else {
-              fotoView.style.display = "none";
-              fotoPreview.src = "https://via.placeholder.com/150?text=Sem+Foto";
-            }
-
-            // Preencher formulário de edição
-            getElementOrThrow('editNome').value = membroData.nome || '';
-            getElementOrThrow('editCep').value = membroData.cep || '';
-            getElementOrThrow('editEndereco').value = membroData.endereco || '';
-            getElementOrThrow('editBairro').value = membroData.bairro || '';
-            getElementOrThrow('editCidade').value = membroData.cidade || '';
-            getElementOrThrow('editEstado').value = membroData.estado || '';
-            getElementOrThrow('editBatismo').value = membroData.batismo || '';
-            getElementOrThrow('editNascimento').value = membroData.nascimento || '';
-            getElementOrThrow('editTelefone').value = membroData.telefone || '';
-            getElementOrThrow('editSexo').value = membroData.sexo || 'masculino';
-            editFotoURL.value = membroData.fotoURL || '';
-
-            // Preencher o campo de função
-            const funcoes = ["Pastor", "Missionário(a)", "Diácono", "Obreiro(a)", "Membro"];
-            const funcaoSelect = getElementOrThrow('editFuncao');
-            const funcaoAtual = membroData.funcao || "";
-
-            if (funcaoAtual && !funcoes.includes(funcaoAtual)) {
-              const option = document.createElement("option");
-              option.value = funcaoAtual;
-              option.textContent = funcaoAtual;
-              option.selected = true;
-              funcaoSelect.appendChild(option);
-            }
-
-            funcaoSelect.value = funcaoAtual || "Membro";
-          } else {
-            document.querySelector('.card').innerHTML = '<p class="text-danger">Membro não encontrado.</p>';
-          }
-        }).catch((error) => {
-          console.error("Erro ao buscar membro:", error);
-        });
-      }
-
-      // Event Listeners
-      editBtn.addEventListener('click', () => toggleEditMode(true));
-      cancelEditBtn.addEventListener('click', () => toggleEditMode(false));
-
-      // Envio do formulário de edição
-      getElementOrThrow('editMode').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Obter a nova URL da foto (se foi alterada)
-        const novaFotoURL = editFotoURL.value || currentFotoURL;
-
-        // Atualizar dados no banco de dados
-        const updatedData = {
-          nome: getElementOrThrow('editNome').value,
-          cep: getElementOrThrow('editCep').value,
-          endereco: getElementOrThrow('editEndereco').value,
-          bairro: getElementOrThrow('editBairro').value,
-          cidade: getElementOrThrow('editCidade').value,
-          estado: getElementOrThrow('editEstado').value,
-          batismo: getElementOrThrow('editBatismo').value,
-          nascimento: getElementOrThrow('editNascimento').value,
-          funcao: getElementOrThrow('editFuncao').value,
-          telefone: getElementOrThrow('editTelefone').value,
-          sexo: getElementOrThrow('editSexo').value,
-          fotoURL: novaFotoURL
-        };
-
-        try {
-          await update(ref(db, `membros/${id}`), updatedData);
-          
-          // Atualizar a visualização
-          membroData = updatedData;
-          currentFotoURL = novaFotoURL;
-          
-          getElementOrThrow('nome').textContent = updatedData.nome;
-          getElementOrThrow('cep').textContent = updatedData.cep;
-          getElementOrThrow('endereco').textContent = updatedData.endereco;
-          getElementOrThrow('bairro').textContent = updatedData.bairro;
-          getElementOrThrow('cidade').textContent = updatedData.cidade;
-          getElementOrThrow('estado').textContent = updatedData.estado;
-          getElementOrThrow('batismo').textContent = updatedData.batismo;
-          getElementOrThrow('nascimento').textContent = updatedData.nascimento;
-          getElementOrThrow('funcao').textContent = updatedData.funcao;
-          getElementOrThrow('telefone').textContent = updatedData.telefone;
-          getElementOrThrow('sexo').textContent = updatedData.sexo;
-          
-          if (novaFotoURL && novaFotoURL !== 'sem-foto.png') {
-            fotoView.src = novaFotoURL;
+          if (membroData.fotoURL && membroData.fotoURL !== 'sem-foto.png') {
+            fotoView.src = membroData.fotoURL;
             fotoView.style.display = "block";
+            fotoPreview.src = membroData.fotoURL;
           } else {
             fotoView.style.display = "none";
+            fotoPreview.src = "https://via.placeholder.com/150?text=Sem+Foto";
           }
-          
-          toggleEditMode(false);
-          alert("Dados atualizados com sucesso!");
-        } catch (error) {
-          console.error("Erro ao atualizar membro:", error);
-          alert("Erro ao atualizar membro. Por favor, tente novamente.");
+
+          // Preencher formulário de edição
+          document.getElementById("editNome").value = membroData.nome || '';
+          document.getElementById("editCep").value = membroData.cep || '';
+          document.getElementById("editEndereco").value = membroData.endereco || '';
+          document.getElementById("editBairro").value = membroData.bairro || '';
+          document.getElementById("editCidade").value = membroData.cidade || '';
+          document.getElementById("editEstado").value = membroData.estado || '';
+          document.getElementById("editBatismo").value = membroData.batismo || '';
+          document.getElementById("editNascimento").value = membroData.nascimento || '';
+          document.getElementById("editTelefone").value = membroData.telefone || '';
+          document.getElementById("editSexo").value = membroData.sexo || 'masculino';
+          editFotoURL.value = membroData.fotoURL || '';
+
+          // Preencher o campo de função
+          const funcoes = ["Pastor", "Missionário(a)", "Diácono", "Obreiro(a)", "Membro"];
+          const funcaoSelect = document.getElementById("editFuncao");
+          const funcaoAtual = membroData.funcao || "";
+
+          if (funcaoAtual && !funcoes.includes(funcaoAtual)) {
+            const option = document.createElement("option");
+            option.value = funcaoAtual;
+            option.textContent = funcaoAtual;
+            option.selected = true;
+            funcaoSelect.appendChild(option);
+          }
+
+          funcaoSelect.value = funcaoAtual || "Membro";
+        } else {
+          document.querySelector('.card').innerHTML = '<p class="text-danger">Membro não encontrado.</p>';
         }
+      }).catch((error) => {
+        console.error("Erro ao buscar membro:", error);
       });
-
-      // Inicializar visualização
-      toggleEditMode(false);
-
-    } catch (error) {
-      console.error("Erro na inicialização:", error);
-      alert("Ocorreu um erro ao carregar a página. Por favor, recarregue.");
     }
+
+    // Event Listeners
+    editBtn.addEventListener('click', () => toggleEditMode(true));
+    cancelEditBtn.addEventListener('click', () => toggleEditMode(false));
+
+    // Envio do formulário de edição
+    editMode.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Obter a nova URL da foto (se foi alterada)
+      const novaFotoURL = editFotoURL.value || currentFotoURL;
+
+      // Atualizar dados no banco de dados
+      const updatedData = {
+        nome: document.getElementById("editNome").value,
+        cep: document.getElementById("editCep").value,
+        endereco: document.getElementById("editEndereco").value,
+        bairro: document.getElementById("editBairro").value,
+        cidade: document.getElementById("editCidade").value,
+        estado: document.getElementById("editEstado").value,
+        batismo: document.getElementById("editBatismo").value,
+        nascimento: document.getElementById("editNascimento").value,
+        funcao: document.getElementById("editFuncao").value,
+        telefone: document.getElementById("editTelefone").value,
+        sexo: document.getElementById("editSexo").value,
+        fotoURL: novaFotoURL
+      };
+
+      try {
+        await update(ref(db, `membros/${id}`), updatedData);
+        
+        // Atualizar a visualização
+        membroData = updatedData;
+        currentFotoURL = novaFotoURL;
+        
+        document.getElementById("nome").textContent = updatedData.nome;
+        document.getElementById("cep").textContent = updatedData.cep;
+        document.getElementById("endereco").textContent = updatedData.endereco;
+        document.getElementById("bairro").textContent = updatedData.bairro;
+        document.getElementById("cidade").textContent = updatedData.cidade;
+        document.getElementById("estado").textContent = updatedData.estado;
+        document.getElementById("batismo").textContent = updatedData.batismo;
+        document.getElementById("nascimento").textContent = updatedData.nascimento;
+        document.getElementById("funcao").textContent = updatedData.funcao;
+        document.getElementById("telefone").textContent = updatedData.telefone;
+        document.getElementById("sexo").textContent = updatedData.sexo;
+        
+        if (novaFotoURL && novaFotoURL !== 'sem-foto.png') {
+          fotoView.src = novaFotoURL;
+          fotoView.style.display = "block";
+        } else {
+          fotoView.style.display = "none";
+        }
+        
+        toggleEditMode(false);
+        alert("Dados atualizados com sucesso!");
+      } catch (error) {
+        console.error("Erro ao atualizar membro:", error);
+        alert("Erro ao atualizar membro. Por favor, tente novamente.");
+      }
+    });
+
+    // Inicializar visualização
+    toggleEditMode(false);
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
