@@ -519,7 +519,7 @@ exportPdfBtn.addEventListener('click', () => {
     
    // Rodapé estilizado alinhado à direita
     doc.setDrawColor(200, 200, 200); // Cinza claro
-    doc.line(marginLeft, verticalPosition, 190, verticalPosition);
+    doc.line(xPosition - 10, verticalPosition, pageWidth - rightMargin, verticalPosition);
     
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100); // Cinza escuro
