@@ -12,20 +12,7 @@
 </head>
 <body>
 
- <!-- Script de autenticação (adicione no início do <body>) -->
-<script type="module">
-  import { checkAuth } from './auth.js';
-  import { isUserAdmin } from './users.js'; // Adicione esta importação
-  
-  document.addEventListener('DOMContentLoaded', async () => {
-    const user = await checkAuth();
-    
-    // Mostrar menu admin se o usuário for administrador
-    if (user && await isUserAdmin()) {
-      document.getElementById('adminMenuItem').style.display = 'block';
-    }
-  });
-</script>
+ 
 
   <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
   <div class="container">
