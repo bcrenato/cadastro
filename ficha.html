@@ -447,7 +447,7 @@ exportPdfBtn.addEventListener('click', async () => {
     const logoAspectRatio = logoOriginalWidth / logoOriginalHeight;
     
     // Definir altura desejada e calcular largura proporcional
-    const logoDisplayHeight = 10;
+    const logoDisplayHeight = 15;
     const logoDisplayWidth = logoDisplayHeight * logoAspectRatio;
 
     // Centralizar a logo
@@ -462,14 +462,14 @@ exportPdfBtn.addEventListener('click', async () => {
     doc.setFontSize(13);
     doc.setFont('helvetica', 'normal');
     doc.text('Familias Vivendo na Graça e Unção do Espirito', pageWidth / 2, verticalPosition, { align: 'center' });
-    verticalPosition += 10; // Espaço após o texto
+    verticalPosition += 15; // Espaço após o texto
   
     
     // Título centralizado
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.text('Ficha Cadastro', pageWidth / 2, verticalPosition, { align: 'center' });
-    verticalPosition += 15;
+    verticalPosition += 10; // Espaço após o texto
     
     // Seção Foto + Dados Pessoais
     if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
