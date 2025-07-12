@@ -412,69 +412,135 @@
 
     
 // Adicione após a definição dos outros elementos DOM
+// Adicione este código ao seu script principal (dentro do <script type="module">)
+
 const exportPdfBtn = document.getElementById('exportPdfBtn');
 
 // Função para exportar PDF
 exportPdfBtn.addEventListener('click', () => {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  
-  // Adicionar logo (substitua pela sua logo)
-  doc.addImage('logo.png', 'PNG', 15, 10, 30, 15);
-  
-  // Título
-  doc.setFontSize(18);
-  doc.text('Familias Vivendo', 50, 20);
-  doc.setFontSize(16);
-  doc.text('Ficha Cadastro', 80, 30);
-  
-  // Foto (se existir)
-  if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
-    try {
-      doc.addImage(currentFotoURL, 'JPEG', 160, 40, 30, 30);
-    } catch (e) {
-      console.error("Erro ao adicionar foto:", e);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Configurações de estilo
+    const marginLeft = 15;
+    let verticalPosition = 30;
+    const lineHeight = 7;
+    const labelWidth = 45;
+    const valueIndent = marginLeft + labelWidth;
+    
+    // Adicionar logo
+    // NOTA: Você precisará substituir 'logo.png' pelo caminho real da sua logo
+    doc.addImage('logo.png', 'PNG', marginLeft, 10, 30, 15);
+    
+    // Título da organização
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Familias Vivendo', marginLeft + 35, 20);
+    
+    // Título do documento
+    doc.setFontSize(16);
+    doc.text('Ficha Cadastro', marginLeft + 80, 30);
+    
+    // Foto 3x4 (se existir)
+    if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
+        try {
+            doc.addImage(currentFotoURL, 'JPEG', 160, verticalPosition - 5, 30, 30);
+            doc.setFontSize(10);
+            doc.text('Foto 3x4', 160, verticalPosition + 30);
+        } catch (e) {
+            console.error("Erro ao adicionar foto:", e);
+        }
     }
-  }
-  
-  // Dados do membro
-  doc.setFontSize(12);
-  doc.text(`Nome Completo: ${membroData.nome || ''}`, 15, 50);
-  doc.text(`Sexo: ${membroData.sexo || ''}`, 15, 60);
-  doc.text(`Data de Nascimento: ${formatDateForPDF(membroData.nascimento)}`, 60, 60);
-  
-  doc.text(`Endereço: ${membroData.endereco || ''}`, 15, 70);
-  doc.text(`Estado: ${membroData.estado || ''}`, 15, 80);
-  doc.text(`CEP: ${membroData.cep || ''}`, 60, 80);
-  
-  doc.text(`Telefone: ${membroData.telefone || ''}`, 15, 90);
-  doc.text(`Data de Batismo: ${formatDateForPDF(membroData.batismo)}`, 15, 100);
-  doc.text(`Função: ${membroData.funcao || ''}`, 15, 110);
-  
-  doc.text(`Bairro: ${membroData.bairro || ''}`, 15, 120);
-  doc.text(`Cidade: ${membroData.cidade || ''}`, 60, 120);
-  
-  doc.text(`CEP: ${membroData.cep || ''}`, 15, 130);
-  
-  // Rodapé
-  const today = new Date();
-  doc.text(`Criado em: ${today.toLocaleDateString()} às ${today.getHours()}:${today.getMinutes()}hs`, 15, 150);
-  
-  // Salvar o PDF
-  doc.save(`ficha_${membroData.nome || 'membro'}.pdf`);
+    
+    // Configuração de fonte para os campos
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    
+    // Nome Completo
+    doc.setFont('helvetica', 'bold');
+    doc.text('Nome Completo:', marginLeft, verticalPosition += 20);
+    doc.setFont('helvetica', 'normal');
+    doc.text(membroData.nome || '_________________________', valueIndent, verticalPosition);
+    
+    // Sexo e Data de Nascimento
+    doc.setFont('helvetica', 'bold');
+    doc.text('Sexo', marginLeft, verticalPosition += lineHeight * 2);
+    doc.text('Data de Nascimento:', marginLeft + 30, verticalPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(membroData.sexo || '______', marginLeft + 12, verticalPosition);
+    doc.text(formatDateForPDF(membroData.nascimento) || '______', marginLeft + 60, verticalPosition);
+    
+    // Endereço
+    doc.setFont('helvetica', 'bold');
+    doc.text('Endereço:', marginLeft, verticalPosition += lineHeight * 2);
+    doc.setFont('helvetica', 'normal');
+    doc.text(membroData.endereco || '_________________________', valueIndent, verticalPosition);
+    
+    // Estado
+    doc.setFont('helvetica', 'bold');
+    doc.text('Estado', marginLeft, verticalPosition += lineHeight * 2);
+    doc.setFont('helvetica', 'normal');
+    doc.text(membroData.estado || '_________________________', valueIndent, verticalPosition);
+    
+    // Telefone
+    doc.setFont('helvetica', 'bold');
+    doc.text('Telefone:', marginLeft, verticalPosition += lineHeight * 2);
+    doc.setFont('helvetica', 'normal');
+    doc.text(membroData.telefone || '_________________________', valueIndent, verticalPosition);
+    
+    // Data de Batismo
+    doc.setFont('helvetica', 'bold');
+    doc.text('Data de Batismo:', marginLeft, verticalPosition += lineHeight * 2);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formatDateForPDF(membroData.batismo) || '_________________________', valueIndent, verticalPosition);
+    
+    // Função
+    doc.setFont('helvetica', 'bold');
+    doc.text('Função:', marginLeft, verticalPosition += lineHeight * 2);
+    doc.setFont('helvetica', 'normal');
+    doc.text(membroData.funcao || '_________________________', valueIndent, verticalPosition);
+    
+    // Bairro
+    doc.setFont('helvetica', 'bold');
+    doc.text('Bairro', marginLeft, verticalPosition += lineHeight * 2);
+    doc.setFont('helvetica', 'normal');
+    doc.text(membroData.bairro || '_________________________', valueIndent, verticalPosition);
+    
+    // CEP
+    doc.setFont('helvetica', 'bold');
+    doc.text('CEP', marginLeft, verticalPosition += lineHeight * 2);
+    doc.setFont('helvetica', 'normal');
+    doc.text(membroData.cep || '_________________________', valueIndent, verticalPosition);
+    
+    // Cidade
+    doc.setFont('helvetica', 'bold');
+    doc.text('Cidade', marginLeft, verticalPosition += lineHeight * 2);
+    doc.setFont('helvetica', 'normal');
+    doc.text(membroData.cidade || '_________________________', valueIndent, verticalPosition);
+    
+    // Linha divisória
+    doc.line(marginLeft, verticalPosition + 10, 190, verticalPosition + 10);
+    
+    // Rodapé com data de criação
+    const today = new Date();
+    const formattedDate = `Criado em: ${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()} às ${today.getHours()}:${today.getMinutes().toString().padStart(2, '0')}hs`;
+    doc.text(formattedDate, marginLeft, verticalPosition + 20);
+    
+    // Salvar o PDF
+    doc.save(`ficha_${membroData.nome || 'membro'}.pdf`);
 });
 
 // Função auxiliar para formatar datas
 function formatDateForPDF(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return dateString; // Se não for uma data válida, retorna o original
-  
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear();
-  
-  return `${day}/${month}/${year}`;
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
 }
 
 
