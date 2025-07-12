@@ -469,7 +469,7 @@ exportPdfBtn.addEventListener('click', async () => {
     // ✅ Logo otimizada como PNG
     let logoOptimizada = '';
     try {
-        logoOptimizada = await resizeImage('logo.png', 300, 300, 1.0, 'image/png');
+        logoOptimizada = await resizeImage('logo.png', 1000, 1000, 1.0, 'image/png');
     } catch (e) {
         console.error("Erro ao carregar logo", e);
     }
