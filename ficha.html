@@ -415,7 +415,7 @@
 // EXPORTAR PDF
 const exportPdfBtn = document.getElementById('exportPdfBtn');
 
-exportPdfBtn.addEventListener('click', () => {
+exportPdfBtn.addEventListener('click', async () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
@@ -426,21 +426,43 @@ exportPdfBtn.addEventListener('click', () => {
     const photoHeight = 40;
     const textIndent = marginLeft + photoWidth + 10;
     let verticalPosition = marginTop;
-    const lineHeight = 8; // Aumentado para mais espaçamento
-    const sectionSpacing = 7; // Espaço entre seções
+    const lineHeight = 8;
+    const sectionSpacing = 7;
     
     // Função para tratar campos vazios
     const getFieldValue = (value) => value && value.trim() !== '' ? value : 'Não Informado';
 
-    // Logo centralizada
-    doc.addImage('logo.png', 'PNG', 85, verticalPosition, 40, 20);
-    verticalPosition += 30; // Mais espaço após logo
+    // Carregar a logo para obter suas dimensões originais
+    const logoImg = new Image();
+    logoImg.src = 'logo.png';
+    
+    // Esperar a logo carregar (usando Promise)
+    await new Promise((resolve) => {
+        logoImg.onload = resolve;
+    });
+
+    // Calcular dimensões proporcionais da logo
+    const logoOriginalWidth = logoImg.width;
+    const logoOriginalHeight = logoImg.height;
+    const logoAspectRatio = logoOriginalWidth / logoOriginalHeight;
+    
+    // Definir altura desejada e calcular largura proporcional
+    const logoDisplayHeight = 20;
+    const logoDisplayWidth = logoDisplayHeight * logoAspectRatio;
+
+    // Centralizar a logo
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const logoX = (pageWidth - logoDisplayWidth) / 2;
+
+    // Adicionar logo com proporções originais
+    doc.addImage(logoImg, 'PNG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
+    verticalPosition += logoDisplayHeight + 10; // Espaço após logo
     
     // Título centralizado
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('Ficha Cadastro', 105, verticalPosition, { align: 'center' });
-    verticalPosition += 15; // Mais espaço após título
+    doc.text('Ficha Cadastro', pageWidth / 2, verticalPosition, { align: 'center' });
+    verticalPosition += 15;
     
     // Seção Foto + Dados Pessoais
     if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
@@ -457,7 +479,7 @@ exportPdfBtn.addEventListener('click', () => {
     doc.text('Nome Completo:', textIndent, verticalPosition + 5);
     doc.setFont('helvetica', 'normal');
     doc.text(getFieldValue(membroData.nome), textIndent, verticalPosition + 5 + lineHeight);
-   verticalPosition +=  sectionSpacing;
+    verticalPosition += sectionSpacing;
     
     // Sexo e Data de Nascimento
     doc.setFont('helvetica', 'bold');
@@ -485,7 +507,7 @@ exportPdfBtn.addEventListener('click', () => {
     doc.text(getFieldValue(membroData.bairro), col2, verticalPosition + lineHeight);
     doc.text(getFieldValue(membroData.cidade), col3, verticalPosition + lineHeight);
     
-    verticalPosition += lineHeight*2 + sectionSpacing; // verticalPosition += lineHeight*2 + sectionSpacing/2;
+    verticalPosition += lineHeight*2 + sectionSpacing;
     
     // Seção Estado/CEP
     doc.setFont('helvetica', 'bold');
@@ -517,22 +539,20 @@ exportPdfBtn.addEventListener('click', () => {
     
     verticalPosition += lineHeight*2 + sectionSpacing;
     
-   // Rodapé estilizado alinhado à direita
-    doc.setDrawColor(200, 200, 200); // Cinza claro
-    doc.line(xPosition - 10, verticalPosition, pageWidth - rightMargin, verticalPosition);
+    // Rodapé estilizado alinhado à direita
+    doc.setDrawColor(200, 200, 200);
+    doc.line(marginLeft, verticalPosition, pageWidth - marginLeft, verticalPosition);
     
     doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100); // Cinza escuro
+    doc.setTextColor(100, 100, 100);
     const today = new Date();
     const formattedDate = `Criado em: ${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()} às ${today.getHours()}:${today.getMinutes().toString().padStart(2, '0')}hs`;
     
-    // Calcular a posição X para alinhar à direita
-    const pageWidth = doc.internal.pageSize.getWidth();
+    // Calcular posição para alinhar à direita
     const textWidth = doc.getStringUnitWidth(formattedDate) * doc.internal.getFontSize() / doc.internal.scaleFactor;
-    const rightMargin = 15; // Margem direita desejada
+    const rightMargin = 15;
     const xPosition = pageWidth - textWidth - rightMargin;
     
-    // Adicionar texto alinhado à direita
     doc.text(formattedDate, xPosition, verticalPosition + 8);
     
     doc.save(`ficha_${membroData.nome || 'membro'}.pdf`);
