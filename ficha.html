@@ -463,7 +463,7 @@ exportPdfBtn.addEventListener('click', () => {
     doc.text('Sexo:', textIndent, verticalPosition + 5 + lineHeight*2);
     doc.text('Data Nascimento:', textIndent + 30, verticalPosition + 5 + lineHeight*2);
     doc.setFont('helvetica', 'normal');
-    doc.text(getFieldValue(membroData.sexo), textIndent + 15, verticalPosition + 5 + lineHeight*3);
+    doc.text(getFieldValue(membroData.sexo), textIndent, verticalPosition + 5 + lineHeight*3);
     doc.text(getFieldValue(formatDateForPDF(membroData.nascimento)), textIndent + 65, verticalPosition + 5 + lineHeight*3);
     
     verticalPosition += photoHeight + sectionSpacing;
