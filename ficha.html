@@ -415,9 +415,35 @@
 // EXPORTAR PDF
 const exportPdfBtn = document.getElementById('exportPdfBtn');
 
+// Função para otimizar imagens
+const optimizeImage = async (imageUrl, maxWidth, quality = 0.7) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const scale = maxWidth / img.width;
+      canvas.width = maxWidth;
+      canvas.height = img.height * scale;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = imageUrl;
+  });
+};
+
 exportPdfBtn.addEventListener('click', async () => {
+    // Criar PDF com compressão ativada
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      unit: 'mm',
+      compress: true,
+      filters: ['ASCIIHexDecode', 'CCITTFaxDecode', 'RunLengthDecode']
+    });
+    
+    doc.setImageQuality(0.7); // Configurar qualidade média para imagens
     
     // Configurações
     const marginLeft = 15;
@@ -432,11 +458,11 @@ exportPdfBtn.addEventListener('click', async () => {
     // Função para tratar campos vazios
     const getFieldValue = (value) => value && value.trim() !== '' ? value : 'Não Informado';
 
-    // Carregar a logo para obter suas dimensões originais
+    // Carregar e otimizar a logo
+    const optimizedLogo = await optimizeImage('logo.png', 150);
     const logoImg = new Image();
-    logoImg.src = 'logo.png';
+    logoImg.src = optimizedLogo;
     
-    // Esperar a logo carregar (usando Promise)
     await new Promise((resolve) => {
         logoImg.onload = resolve;
     });
@@ -454,8 +480,8 @@ exportPdfBtn.addEventListener('click', async () => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const logoX = (pageWidth - logoDisplayWidth) / 2;
 
-    // Adicionar logo com proporções originais
-    doc.addImage(logoImg, 'PNG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
+    // Adicionar logo otimizada
+    doc.addImage(optimizedLogo, 'JPEG', logoX, verticalPosition, logoDisplayWidth, logoDisplayHeight);
     verticalPosition += logoDisplayHeight + 5; // Espaço após logo
 
     // Adicionar texto "Familias Vivendo..." (fonte tamanho 13)
@@ -464,7 +490,6 @@ exportPdfBtn.addEventListener('click', async () => {
     doc.text('Familias Vivendo na Graça e Unção do Espirito', pageWidth / 2, verticalPosition, { align: 'center' });
     verticalPosition += 20; // Espaço após o texto
   
-    
     // Título centralizado
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
@@ -473,7 +498,9 @@ exportPdfBtn.addEventListener('click', async () => {
     
     // Seção Foto + Dados Pessoais
     if (currentFotoURL && currentFotoURL !== 'sem-foto.png') {
-        doc.addImage(currentFotoURL, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
+        // Otimizar foto do membro
+        const optimizedPhoto = await optimizeImage(currentFotoURL, 300, 0.6);
+        doc.addImage(optimizedPhoto, 'JPEG', marginLeft, verticalPosition, photoWidth, photoHeight);
     } else {
         doc.rect(marginLeft, verticalPosition, photoWidth, photoHeight);
         doc.setFontSize(10);
@@ -562,7 +589,10 @@ exportPdfBtn.addEventListener('click', async () => {
     
     doc.text(formattedDate, xPosition, verticalPosition + 8);
     
-    doc.save(`ficha_${membroData.nome || 'membro'}.pdf`);
+    // Salvar com compressão adicional
+    doc.save(`ficha_${membroData.nome || 'membro'}.pdf`, {
+      compression: true
+    });
 });
 
 function formatDateForPDF(dateString) {
