@@ -1,39 +1,26 @@
-(function () {
-    const timeoutMillis = 5 * 60 * 1000;            // 5 minutos total
-    const warningMillis = timeoutMillis - 30 * 1000;  // avisa 30s antes
-    let warningTimeoutId;
-    let logoutTimeoutId;
+// js/session-timeout.js
+import { auth } from '../firebase-config.js';
 
-    function resetTimers() {
-        clearTimeout(warningTimeoutId);
-        clearTimeout(logoutTimeoutId);
+const timeoutMillis = 5 * 60 * 1000;
+let logoutTimeoutId;
 
-        warningTimeoutId = setTimeout(showWarning, warningMillis);
-        logoutTimeoutId = setTimeout(logout, timeoutMillis);
-    }
+function resetTimer() {
+    clearTimeout(logoutTimeoutId);
+    logoutTimeoutId = setTimeout(logout, timeoutMillis);
+}
 
-    function showWarning() {
-        const stay = confirm("Sua sessão vai expirar em 30 segundos por inatividade. Deseja continuar?");
-        if (stay) {
-            resetTimers();
-        }
-    }
-
-    function logout() {
-        console.log("Sessão expirada por inatividade.");
-        firebase.auth().signOut().then(() => {
-            alert("Você foi desconectado por inatividade.");
-            window.location.href = "login.html"; // ajuste para sua página de login
-        }).catch((error) => {
-            console.error("Erro ao deslogar:", error);
-            window.location.href = "login.html";
-        });
-    }
-
-    // escuta eventos de atividade do usuário
-    ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
-        document.addEventListener(evt, resetTimers, false);
+function logout() {
+    console.log("Sessão expirada por inatividade.");
+    auth.signOut().then(() => {
+        window.location.href = "login.html";
+    }).catch((error) => {
+        console.error("Erro ao deslogar:", error);
+        window.location.href = "login.html";
     });
+}
 
-    resetTimers();
-})();
+['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetTimer, false);
+});
+
+resetTimer();
