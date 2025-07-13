@@ -256,19 +256,17 @@ navItems.forEach(item => {
 });
 </script>
 
-<!-- SDK do Firebase App -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<!-- Firebase App -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 
-<!-- SDK do Auth -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+<!-- Firebase Auth -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-<!-- Seu firebase-config.js -->
+<!-- Seu Firebase Config (na raiz) -->
 <script src="firebase-config.js"></script>
 
 <!-- Session Timeout -->
-<script type="module">
-  import "/js/session-timeout.js";
-</script>
+<script src="js/session-timeout.js"></script>
 
 </body>
 </html>
