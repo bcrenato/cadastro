@@ -30,22 +30,31 @@ export async function registerUser(username, password, fullName, isAdmin = false
   const email = `${username}@igreja.local`;
 
   try {
-    // cria o usuário no Auth (com secondaryAuth)
+    // cria o usuário no Auth (secondary para não derrubar a sessão do admin)
     const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    const user = userCredential.user;
+    const uid = user.uid;
 
-    const uid = userCredential.user.uid;
+    console.log("Usuário autenticado no secondaryAuth:", uid);
 
-    // agora o usuário está autenticado, podemos gravar no /users/$uid
+    // força o secondaryAuth a atualizar o estado local para garantir o idToken válido
+    await user.reload();
+
+    console.log("Após reload, uid:", secondaryAuth.currentUser?.uid);
+
+    // agora grava no /users/$uid
     await set(ref(db, `users/${uid}`), {
       username,
       fullName,
       isAdmin,
-      isEnabled: false, // aguarda habilitação
+      isEnabled: false, // aguardando habilitação
       createdAt: new Date().toISOString()
     });
 
-    // faz signOut do secondaryAuth para deslogar o novo usuário
+    // desloga o secondaryAuth para não interferir na sessão do admin
     await secondaryAuth.signOut();
+
+    console.log("Usuário cadastrado e deslogado do secondaryAuth:", uid);
 
     return uid;
   } catch (error) {
