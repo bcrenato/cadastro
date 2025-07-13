@@ -3,12 +3,10 @@ import { ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0
 import { deleteUser as deleteAuthUser, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 // Inicializa um segundo app para não derrubar a sessão do admin
 const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 const secondaryAuth = getAuth(secondaryApp);
-const secondaryDb = getDatabase(secondaryApp); // ✅ Database do secondary
 
 export async function deleteUser(userId) {
   try {
@@ -32,28 +30,29 @@ export async function registerUser(username, password, fullName, isAdmin = false
   const email = `${username}@igreja.local`;
 
   try {
-    // cria o usuário no Auth (secondary para não derrubar a sessão do admin)
     const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
     const user = userCredential.user;
     const uid = user.uid;
 
     console.log("Usuário autenticado no secondaryAuth:", uid);
 
-    // força o secondaryAuth a atualizar o estado local para garantir o idToken válido
     await user.reload();
 
-    console.log("Após reload, uid:", secondaryAuth.currentUser?.uid);
+    const token = await user.getIdToken();
+    console.log("ID Token:", token);
 
-    // agora grava no /users/$uid usando o secondaryDb
+    // 🔷 só agora inicializa secondaryDb com a sessão ativa
+    const { getDatabase, ref, set } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js");
+    const secondaryDb = getDatabase(secondaryApp);
+
     await set(ref(secondaryDb, `users/${uid}`), {
       username,
       fullName,
       isAdmin,
-      isEnabled: false, // aguardando habilitação
+      isEnabled: false,
       createdAt: new Date().toISOString()
     });
 
-    // desloga o secondaryAuth para não interferir na sessão do admin
     await secondaryAuth.signOut();
 
     console.log("Usuário cadastrado e deslogado do secondaryAuth:", uid);
