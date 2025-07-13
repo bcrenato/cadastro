@@ -39,23 +39,47 @@ body { font-family: Arial, sans-serif; background: #f8f9fa; display: flex; justi
 
 <script type="module">
 import { registerUser } from './users.js';
+import { db } from './firebase-config.js';
+import { ref, get } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 
 document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
 e.preventDefault();
-const fullName = document.getElementById('fullName').value;
-const username = document.getElementById('username').value;
-const password = document.getElementById('password').value;
+const fullName = document.getElementById('fullName').value.trim();
+const username = document.getElementById('username').value.trim();
+const password = document.getElementById('password').value.trim();
 const msg = document.getElementById('mensagem');
 const voltar = document.getElementById('voltar');
+msg.textContent = '';
+msg.className = '';
+voltar.classList.add('d-none');
+
 try {
-await registerUser(username, password, fullName, false);
-msg.textContent = "✅ Cadastro realizado! Aguarde habilitação do administrador.";
-msg.className = "text-success";
-document.getElementById('cadastroForm').reset();
-voltar.classList.remove('d-none');
+  // Verifica no Realtime Database se já existe username
+  const snapshot = await get(ref(db, 'users'));
+  let jaExiste = false;
+  snapshot.forEach(child => {
+    if (child.val().username?.toLowerCase() === username.toLowerCase()) {
+      jaExiste = true;
+    }
+  });
+  if (jaExiste) {
+    msg.textContent = '❌ Este nome de usuário já está cadastrado. Escolha outro.';
+    msg.className = 'text-danger';
+    return;
+  }
+
+  await registerUser(username, password, fullName, false);
+  msg.textContent = "✅ Cadastro realizado! Aguarde habilitação do administrador.";
+  msg.className = "text-success";
+  document.getElementById('cadastroForm').reset();
+  voltar.classList.remove('d-none');
 } catch (err) {
-msg.textContent = err.message;
-msg.className = "text-danger";
+  if (err.message.includes('auth/email-already-in-use')) {
+    msg.textContent = '❌ Este nome de usuário já está em uso. Escolha outro.';
+  } else {
+    msg.textContent = err.message;
+  }
+  msg.className = "text-danger";
 }
 });
 </script>
