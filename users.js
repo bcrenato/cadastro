@@ -1,10 +1,10 @@
-
 import { db, auth, firebaseConfig } from './firebase-config.js';
 import { ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { deleteUser as deleteAuthUser, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
+// Inicializa um segundo app para não derrubar a sessão do admin
 const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 const secondaryAuth = getAuth(secondaryApp);
 
@@ -28,20 +28,28 @@ export async function deleteUser(userId) {
 
 export async function registerUser(username, password, fullName, isAdmin = false) {
   const email = `${username}@igreja.local`;
+
   try {
+    // cria o usuário no Auth (com secondaryAuth)
     const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
 
-    await set(ref(db, `users/${userCredential.user.uid}`), {
+    const uid = userCredential.user.uid;
+
+    // agora o usuário está autenticado, podemos gravar no /users/$uid
+    await set(ref(db, `users/${uid}`), {
       username,
       fullName,
       isAdmin,
-      isEnabled: false,
+      isEnabled: false, // aguarda habilitação
       createdAt: new Date().toISOString()
     });
 
+    // faz signOut do secondaryAuth para deslogar o novo usuário
     await secondaryAuth.signOut();
-    return userCredential.user;
+
+    return uid;
   } catch (error) {
+    console.error(error);
     throw new Error(`Erro ao registrar: ${error.message}`);
   }
 }
