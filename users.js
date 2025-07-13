@@ -3,10 +3,12 @@ import { ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0
 import { deleteUser as deleteAuthUser, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 // Inicializa um segundo app para não derrubar a sessão do admin
 const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 const secondaryAuth = getAuth(secondaryApp);
+const secondaryDb = getDatabase(secondaryApp); // ✅ Database do secondary
 
 export async function deleteUser(userId) {
   try {
@@ -42,8 +44,8 @@ export async function registerUser(username, password, fullName, isAdmin = false
 
     console.log("Após reload, uid:", secondaryAuth.currentUser?.uid);
 
-    // agora grava no /users/$uid
-    await set(ref(db, `users/${uid}`), {
+    // agora grava no /users/$uid usando o secondaryDb
+    await set(ref(secondaryDb, `users/${uid}`), {
       username,
       fullName,
       isAdmin,
