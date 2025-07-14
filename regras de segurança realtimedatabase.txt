@@ -6,9 +6,18 @@
         ".read": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('isAdmin').val() == true)",
         ".write": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('isAdmin').val() == true)",
         ".validate": "newData.hasChildren(['username', 'fullName', 'isAdmin']) &&
-                     newData.child('username').isString() &&
-                     newData.child('fullName').isString() &&
-                     newData.child('isAdmin').isBoolean()"
+                      newData.child('username').isString() &&
+                      newData.child('fullName').isString() &&
+                      newData.child('isAdmin').isBoolean()"
+      }
+    },
+    "pending_users": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('isAdmin').val() == true",
+      ".write": "true",  
+      "$id": {
+        ".validate": "newData.hasChildren(['username', 'fullName']) &&
+                      newData.child('username').isString() &&
+                      newData.child('fullName').isString()"
       }
     },
     "membros": {
@@ -22,11 +31,11 @@
       ".read": "auth != null",
       ".write": "auth != null"
     },
-     "relogio": {
-       "horarios": {
-         ".read": "auth != null",
-         ".write": "auth != null"
-  }
+    "relogio": {
+      "horarios": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
     }
   }
 }
