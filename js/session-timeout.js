@@ -1,7 +1,7 @@
 // js/session-timeout.js
 import { auth } from '../firebase-config.js';
 
-const timeoutMillis = 5 * 60 * 1000;
+const timeoutMillis = 1 * 60 * 1000;
 let logoutTimeoutId;
 
 function resetTimer() {
