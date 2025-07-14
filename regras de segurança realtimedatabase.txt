@@ -17,6 +17,16 @@
       "$membroId": {
         ".validate": "newData.hasChildren(['nome', 'cep', 'endereco', 'fotoURL'])"
       }
+    },
+    "presencas_culto": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+     "relogio": {
+       "horarios": {
+         ".read": "auth != null",
+         ".write": "auth != null"
+  }
     }
   }
 }
