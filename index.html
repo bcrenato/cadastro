@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-/* estilos originais inalterados */
 :root {
     --primary: #2e7d32;
     --secondary: #1b5e20;
@@ -23,7 +22,6 @@ body {
     overflow-x: hidden;
 }
 .dashboard { display: flex; min-height: 100vh; flex-direction: column; }
-/* Sidebar Styles */
 .sidebar {
     width: 100%;
     background-color: var(--primary);
@@ -69,7 +67,6 @@ body {
     min-width: 25px;
     text-align: center;
 }
-/* Main Content */
 .main-content { flex: 1; padding: 20px; margin-top: 20px; }
 .header {
     display: flex; justify-content: space-between; align-items: center;
@@ -102,14 +99,12 @@ body {
     }
     .header { margin-bottom: 30px; }
     .user-info { margin-top: 0; }
-
-    /* Adicione estas regras para ajustar a logo no desktop */
     .logo img {
-        height: 40px; /* Tamanho reduzido (era 50px no mobile) */
+        height: 40px;
     }
     .logo h2 {
-        font-size: 0.8rem; /* Texto um pouco menor */
-        margin-top: 8px; /* Espaçamento ajustado */
+        font-size: 0.8rem;
+        margin-top: 8px;
     }
 }
 </style>
@@ -196,6 +191,7 @@ body {
     </div>
 </div>
 
+<!-- Seu código principal -->
 <script type="module">
 import { checkAuth } from './auth.js';
 import { isUserAdmin } from './users.js';
@@ -256,12 +252,8 @@ navItems.forEach(item => {
 });
 </script>
 
-
-
-<!-- logoff apos inatividade -->
+<!-- Logoff após inatividade -->
 <script type="module" src="js/session-timeout.js"></script>
-
-
 
 </body>
 </html>
