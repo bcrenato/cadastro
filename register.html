@@ -24,10 +24,6 @@ body { padding-top: 70px; background-color: #f8f9fa; }
 <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-home"></i> Início</a></li>
 <li class="nav-item"><a class="nav-link active" href="register.html"><i class="fas fa-users-cog"></i> Usuários</a></li>
 </ul>
-<div class="d-flex align-items-center">
-<span id="currentUserDisplay" class="navbar-text text-warning me-3"></span>
-<button id="logoutBtn" class="btn btn-sm btn-outline-light">Sair</button>
-</div>
 </div>
 </div>
 </nav>
@@ -64,12 +60,32 @@ body { padding-top: 70px; background-color: #f8f9fa; }
 <ul id="pendingList" class="list-group"></ul>
 </div></div></div></div>
 
+<div class="modal fade" id="passwordModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header bg-warning">
+<h5 class="modal-title"><i class="fas fa-key me-2"></i> Alterar Senha</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<form id="passwordForm">
+<input type="hidden" id="userId">
+<div class="mb-3"><label for="newPassword" class="form-label">Nova Senha</label><input type="password" id="newPassword" class="form-control" required></div>
+<div class="mb-3"><label for="confirmPassword" class="form-label">Confirmar Senha</label><input type="password" id="confirmPassword" class="form-control" required></div>
+</form>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+<button type="button" id="savePasswordBtn" class="btn btn-primary">Salvar</button>
+</div>
+</div></div></div>
+
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 
 <script type="module">
 import { db, auth } from './firebase-config.js';
 import { ref, get, set, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import { registerUser, getAllUsers, deleteUser, toggleUserEnabled, createUserInDB } from './users.js';
+import { registerUser, getAllUsers, deleteUser, toggleUserEnabled } from './users.js';
 import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 const usersList = document.getElementById('usersList');
@@ -91,6 +107,7 @@ row.innerHTML = `
 <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
 <td><input type="checkbox" class="enable-user" data-id="${user.id}" ${user.isEnabled ? 'checked' : ''}></td>
 <td>
+<button class="btn btn-warning btn-sm change-password" data-id="${user.id}"><i class="fas fa-key"></i></button>
 <button class="btn btn-danger btn-sm delete-user" data-id="${user.id}"><i class="fas fa-trash"></i></button>
 </td>`;
 usersList.appendChild(row);
@@ -108,6 +125,12 @@ await deleteUser(btn.dataset.id);
 showToast('Usuário excluído');
 loadUsers();
 }
+});
+});
+document.querySelectorAll('.change-password').forEach(btn => {
+btn.addEventListener('click', () => {
+document.getElementById('userId').value = btn.dataset.id;
+new bootstrap.Modal(document.getElementById('passwordModal')).show();
 });
 });
 }
@@ -133,8 +156,7 @@ pendingList.appendChild(li);
 
 window.aprovar = async (key, username, fullName) => {
 const email = `${username}@igreja.local`;
-const password = '123456'; // ou gere dinamicamente
-
+const password = '123456';
 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 const uid = userCredential.user.uid;
 
@@ -166,6 +188,23 @@ document.getElementById('isAdmin').checked
 showToast('Usuário cadastrado');
 registerForm.reset();
 loadUsers();
+});
+
+document.getElementById('savePasswordBtn').addEventListener('click', async () => {
+const userId = document.getElementById('userId').value;
+const newPassword = document.getElementById('newPassword').value;
+const confirmPassword = document.getElementById('confirmPassword').value;
+
+if (newPassword !== confirmPassword) {
+showToast('❌ Senhas não coincidem', 'danger');
+return;
+}
+
+await set(ref(db, `users/${userId}/passwordReset`), newPassword);
+
+showToast('Senha salva para reset (admin deve aplicar no Auth)');
+document.getElementById('passwordForm').reset();
+bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
 });
 
 function showToast(message, type='success') {
