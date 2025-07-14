@@ -21,6 +21,10 @@
           <label for="username" class="form-label">Nome de Usuário</label>
           <input type="text" id="username" class="form-control" required>
         </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Senha</label>
+          <input type="password" id="password" class="form-control" required minlength="6">
+        </div>
         <button type="submit" class="btn btn-success w-100">Cadastrar</button>
       </form>
       <div id="mensagem" class="mt-3 text-center"></div>
@@ -37,12 +41,14 @@ document.getElementById('cadastroForm').addEventListener('submit', async (e) => 
 
   const fullName = document.getElementById('fullName').value.trim();
   const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
 
   const newRef = push(ref(db, 'pending_users'));
 
   await set(newRef, {
     username,
     fullName,
+    password,
     isAdmin: false,
     isEnabled: false,
     awaitingAuth: true,
