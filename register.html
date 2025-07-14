@@ -155,8 +155,12 @@ pendingList.appendChild(li);
 }
 
 window.aprovar = async (key, username, fullName) => {
+const snap = await get(ref(db, `pending_users/${key}`));
+const u = snap.val();
+
 const email = `${username}@igreja.local`;
-const password = '123456';
+const password = u.password;
+
 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 const uid = userCredential.user.uid;
 
