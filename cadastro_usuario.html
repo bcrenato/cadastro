@@ -21,60 +21,37 @@
           <label for="username" class="form-label">Nome de Usuário</label>
           <input type="text" id="username" class="form-control" required>
         </div>
-        <div class="mb-3">
-          <label for="password" class="form-label">Senha</label>
-          <input type="password" id="password" class="form-control" required minlength="6">
-        </div>
         <button type="submit" class="btn btn-success w-100">Cadastrar</button>
       </form>
       <div id="mensagem" class="mt-3 text-center"></div>
-      <div id="voltar" class="mt-3 text-center d-none">
-        <a href="login.html" class="btn btn-primary">Voltar ao Login</a>
-      </div>
     </div>
   </div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { firebaseConfig } from './firebase-config.js';
-
-const secondaryApp = initializeApp(firebaseConfig, "Secondary");
-const secondaryAuth = getAuth(secondaryApp);
+import { db } from './firebase-config.js';
+import { ref, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const fullName = document.getElementById('fullName').value.trim();
   const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value.trim();
 
-  const msg = document.getElementById('mensagem');
-  const voltar = document.getElementById('voltar');
-  msg.textContent = '';
-  msg.className = '';
-  voltar.classList.add('d-none');
+  const newRef = push(ref(db, 'pending_users'));
 
-  const email = `${username}@igreja.local`;
+  await set(newRef, {
+    username,
+    fullName,
+    isAdmin: false,
+    isEnabled: false,
+    awaitingAuth: true,
+    createdAt: new Date().toISOString()
+  });
 
-  try {
-    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-    await updateProfile(userCredential.user, { displayName: fullName });
-    await signOut(secondaryAuth);
-
-    msg.textContent = "✅ Cadastro realizado! Aguarde habilitação do administrador.";
-    msg.className = "text-success";
-    document.getElementById('cadastroForm').reset();
-    voltar.classList.remove('d-none');
-  } catch (err) {
-    if (err.message.includes('auth/email-already-in-use')) {
-      msg.textContent = '❌ Nome de usuário já em uso. Escolha outro.';
-    } else {
-      msg.textContent = `❌ ${err.message}`;
-    }
-    msg.className = "text-danger";
-  }
+  document.getElementById('mensagem').textContent =
+    "✅ Cadastro enviado! Aguarde aprovação do administrador.";
+  document.getElementById('cadastroForm').reset();
 });
 </script>
 
