@@ -38,8 +38,6 @@
 .membro-detalhes {
   line-height: 1.6;
 }
-
-/* Restrição */
 #nao-autorizado {
   margin-top: 100px;
   max-width: 600px;
@@ -57,7 +55,7 @@ body.autorizado .conteudo-restrito {
 </head>
 <body>
 
-<!-- 🔷 MENSAGEM ACESSO RESTRITO -->
+<!-- MENSAGEM ACESSO RESTRITO -->
 <div id="nao-autorizado">
   <div class="alert alert-danger text-center">
     <h4><i class="fas fa-exclamation-triangle me-2"></i>Acesso Restrito</h4>
@@ -68,7 +66,7 @@ body.autorizado .conteudo-restrito {
   </div>
 </div>
 
-<!-- 🔹 Navbar -->
+<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
   <div class="container">
     <a class="navbar-brand" href="#"><i class="fas fa-birthday-cake me-2"></i>Aniversariantes</a>  
@@ -113,12 +111,21 @@ body.autorizado .conteudo-restrito {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<script type="module">
+
+
+
+  <script type="module">
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { ref, get, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-/* === RESTRIÇÃO === */
+const mesSelect = document.getElementById("mes");
+const listaDiv = document.getElementById("lista-aniversariantes");
+const exportarBtn = document.getElementById("btn-exportar");
+
+const mesesNomes = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
 async function checkAdmin(user) {
   if (!user) return false;
   const userRef = ref(db, `users/${user.uid}`);
@@ -148,14 +155,6 @@ onAuthStateChanged(auth, async (user) => {
   const isAdmin = await checkAdmin(user);
   toggleContent(isAdmin);
 });
-
-/* === DADOS === */
-const mesSelect = document.getElementById("mes");
-const listaDiv = document.getElementById("lista-aniversariantes");
-const exportarBtn = document.getElementById("btn-exportar");
-
-const mesesNomes = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
 mesSelect.addEventListener("change", () => {
   const mesSelecionado = parseInt(mesSelect.value);
@@ -213,9 +212,86 @@ mesSelect.addEventListener("change", () => {
         </div>`;
       listaDiv.appendChild(item);
     });
-
   }, { onlyOnce: true });
 });
+
+exportarBtn.addEventListener("click", async () => {
+  const mesSelecionado = parseInt(mesSelect.value);
+  if (!mesSelecionado) return alert("Selecione um mês para exportar.");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  const logoCanvas = await loadImage("./logo.png", true);
+  if (logoCanvas) {
+    const logoWidth = 80;
+    const logoHeight = (logoCanvas.height * logoWidth) / logoCanvas.width;
+    const logoX = (210 - logoWidth) / 2;
+    doc.addImage(logoCanvas, "PNG", logoX, 10, logoWidth, logoHeight);
+  }
+
+  const snapshot = await get(ref(db, "membros"));
+  const data = snapshot.val();
+
+  const aniversariantes = [];
+  for (const id in data) {
+    const membro = data[id];
+    if (membro.nascimento) {
+      const [ano, mesStr, diaStr] = membro.nascimento.split("-");
+      if (parseInt(mesStr) === mesSelecionado) {
+        aniversariantes.push({
+          nome: membro.nome,
+          dia: parseInt(diaStr),
+          fotoURL: membro.fotoURL || ""
+        });
+      }
+    }
+  }
+
+  aniversariantes.sort((a, b) => a.dia - b.dia);
+
+  let y = 60;
+
+  for (const membro of aniversariantes) {
+    if (y > 280) {
+      doc.addPage();
+      y = 20;
+    }
+    if (membro.fotoURL) {
+      const fotoCanvas = await loadImage(membro.fotoURL, false);
+      if (fotoCanvas) {
+        doc.addImage(fotoCanvas, "JPEG", 15, y, 20, 20);
+      }
+    }
+    doc.text(`${membro.dia.toString().padStart(2, '0')}/${mesSelecionado.toString().padStart(2, '0')}`, 40, y + 10);
+    doc.text(membro.nome, 60, y + 10);
+    y += 25;
+  }
+
+  const dataHora = new Date().toLocaleString('pt-BR');
+  doc.setFontSize(9);
+  doc.text(`Gerado em ${dataHora}`, 105, 290, { align: "center" });
+
+  doc.save(`Aniversariantes_${mesesNomes[mesSelecionado]}.pdf`);
+});
+
+async function loadImage(url, isLogo) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ratio = (isLogo ? 800 : 400) / Math.max(img.width, img.height);
+      canvas.width = img.width * ratio;
+      canvas.height = img.height * ratio;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas);
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
 </script>
 
 </body>
