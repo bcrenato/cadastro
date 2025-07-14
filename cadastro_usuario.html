@@ -3,84 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro - Sistema Igreja</title>
+<title>Cadastro de Usuário</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-<style>
-body { font-family: Arial, sans-serif; background: #f8f9fa; display: flex; justify-content: center; align-items: center; height: 100vh; }
-.card { max-width: 400px; width: 100%; }
-</style>
 </head>
-<body>
-<div class="card shadow p-4">
-<h3 class="text-center mb-3">Cadastro</h3>
-<form id="cadastroForm">
-<div class="mb-3">
-<label>Nome completo</label>
-<input type="text" id="fullName" class="form-control" required>
-</div>
-<div class="mb-3">
-<label>Nome de usuário</label>
-<input type="text" id="username" class="form-control" required>
-</div>
-<div class="mb-3">
-<label>Senha</label>
-<input type="password" id="password" class="form-control" required minlength="6">
-</div>
-<button type="submit" class="btn btn-success w-100">Cadastrar</button>
-</form>
+<body class="bg-light">
 
-<div id="mensagem" class="mt-3 text-center"></div>
-
-<div id="voltar" class="mt-3 text-center d-none">
-<a href="login.html" class="btn btn-primary">Voltar ao login</a>
-</div>
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-body">
+      <h3 class="text-center">Cadastro de Usuário</h3>
+      <form id="cadastroForm">
+        <div class="mb-3">
+          <label for="fullName" class="form-label">Nome Completo</label>
+          <input type="text" id="fullName" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label for="username" class="form-label">Nome de Usuário</label>
+          <input type="text" id="username" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Senha</label>
+          <input type="password" id="password" class="form-control" required minlength="6">
+        </div>
+        <button type="submit" class="btn btn-success w-100">Cadastrar</button>
+      </form>
+      <div id="mensagem" class="mt-3 text-center"></div>
+      <div id="voltar" class="mt-3 text-center d-none">
+        <a href="login.html" class="btn btn-primary">Voltar ao Login</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script type="module">
-import { registerUser } from './users.js';
-import { db } from './firebase-config.js';
-import { ref, get } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { firebaseConfig } from './firebase-config.js';
+
+const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+const secondaryAuth = getAuth(secondaryApp);
 
 document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
-e.preventDefault();
-const fullName = document.getElementById('fullName').value.trim();
-const username = document.getElementById('username').value.trim();
-const password = document.getElementById('password').value.trim();
-const msg = document.getElementById('mensagem');
-const voltar = document.getElementById('voltar');
-msg.textContent = '';
-msg.className = '';
-voltar.classList.add('d-none');
+  e.preventDefault();
 
-try {
-  // Verifica no Realtime Database se já existe username
-  const snapshot = await get(ref(db, 'users'));
-  let jaExiste = false;
-  snapshot.forEach(child => {
-    if (child.val().username?.toLowerCase() === username.toLowerCase()) {
-      jaExiste = true;
+  const fullName = document.getElementById('fullName').value.trim();
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+
+  const msg = document.getElementById('mensagem');
+  const voltar = document.getElementById('voltar');
+  msg.textContent = '';
+  msg.className = '';
+  voltar.classList.add('d-none');
+
+  const email = `${username}@igreja.local`;
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    await updateProfile(userCredential.user, { displayName: fullName });
+    await signOut(secondaryAuth);
+
+    msg.textContent = "✅ Cadastro realizado! Aguarde habilitação do administrador.";
+    msg.className = "text-success";
+    document.getElementById('cadastroForm').reset();
+    voltar.classList.remove('d-none');
+  } catch (err) {
+    if (err.message.includes('auth/email-already-in-use')) {
+      msg.textContent = '❌ Nome de usuário já em uso. Escolha outro.';
+    } else {
+      msg.textContent = `❌ ${err.message}`;
     }
-  });
-  if (jaExiste) {
-    msg.textContent = '❌ Este nome de usuário já está cadastrado. Escolha outro.';
-    msg.className = 'text-danger';
-    return;
+    msg.className = "text-danger";
   }
-
-  await registerUser(username, password, fullName, false);
-  msg.textContent = "✅ Cadastro realizado! Aguarde habilitação do administrador.";
-  msg.className = "text-success";
-  document.getElementById('cadastroForm').reset();
-  voltar.classList.remove('d-none');
-} catch (err) {
-  if (err.message.includes('auth/email-already-in-use')) {
-    msg.textContent = '❌ Este nome de usuário já está em uso. Escolha outro.';
-  } else {
-    msg.textContent = err.message;
-  }
-  msg.className = "text-danger";
-}
 });
 </script>
 
