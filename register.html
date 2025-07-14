@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gerenciar Usuários - Sistema Igreja</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <style>
 body { padding-top: 70px; background-color: #f8f9fa; }
 .navbar { background-color: #4CAF50; }
@@ -18,11 +17,11 @@ body { padding-top: 70px; background-color: #f8f9fa; }
 
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
 <div class="container">
-<a class="navbar-brand" href="index.html"><i class="fas fa-user-shield me-2"></i> Gerenciar Usuários</a>
+<a class="navbar-brand" href="index.html">Gerenciar Usuários</a>
 <div class="collapse navbar-collapse">
 <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-home"></i> Início</a></li>
-<li class="nav-item"><a class="nav-link active" href="register.html"><i class="fas fa-users-cog"></i> Usuários</a></li>
+<li class="nav-item"><a class="nav-link" href="index.html">Início</a></li>
+<li class="nav-item"><a class="nav-link active" href="register.html">Usuários</a></li>
 </ul>
 </div>
 </div>
@@ -32,19 +31,19 @@ body { padding-top: 70px; background-color: #f8f9fa; }
 <div class="row">
 <div class="col-lg-6 mb-4">
 <div class="card admin-card shadow">
-<div class="card-header bg-white"><h3 class="text-center mb-0"><i class="fas fa-users text-primary me-2"></i> Usuários Cadastrados no DB</h3></div>
+<div class="card-header bg-white"><h3 class="text-center mb-0">Usuários no DB</h3></div>
 <div class="card-body">
 <div class="table-responsive">
 <table class="table table-hover">
-<thead><tr><th>Nome</th><th>Usuário</th><th>Tipo</th><th>Habilitado</th><th>Ações</th></tr></thead>
+<thead><tr><th>Nome</th><th>Usuário</th><th>Admin</th><th>Habilitado</th></tr></thead>
 <tbody id="usersList"></tbody>
 </table></div></div></div></div>
 
 <div class="col-lg-6">
 <div class="card admin-card shadow">
-<div class="card-header bg-white"><h3 class="text-center mb-0"><i class="fas fa-user-clock text-primary me-2"></i> Usuários do Auth ainda não no DB</h3></div>
+<div class="card-header bg-white"><h3 class="text-center mb-0">Pendentes de Aprovação</h3></div>
 <div class="card-body">
-<ul id="authUsers" class="list-group"></ul>
+<ul id="pendingList" class="list-group"></ul>
 </div></div></div></div></div>
 
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
@@ -52,16 +51,17 @@ body { padding-top: 70px; background-color: #f8f9fa; }
 <script type="module">
 import { db, auth } from './firebase-config.js';
 import { ref, get, set, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import { getAllUsers, deleteUser, toggleUserEnabled, createUserInDB } from './users.js';
+import { getAllUsers, toggleUserEnabled, deleteUser } from './users.js';
+import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 const usersList = document.getElementById('usersList');
+const pendingList = document.getElementById('pendingList');
 
-// lista os usuários já no DB
 async function loadUsers() {
 const users = await getAllUsers();
 usersList.innerHTML = '';
 if (!users.length) {
-usersList.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum usuário cadastrado</td></tr>';
+usersList.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum usuário cadastrado</td></tr>';
 return;
 }
 users.forEach(user => {
@@ -69,11 +69,8 @@ const row = document.createElement('tr');
 row.innerHTML = `
 <td>${user.fullName}</td>
 <td>${user.username}</td>
-<td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
-<td><input type="checkbox" class="enable-user" data-id="${user.id}" ${user.isEnabled ? 'checked' : ''}></td>
-<td>
-<button class="btn btn-danger btn-sm delete-user" data-id="${user.id}"><i class="fas fa-trash"></i></button>
-</td>`;
+<td>${user.isAdmin ? 'Sim' : 'Não'}</td>
+<td><input type="checkbox" class="enable-user" data-id="${user.id}" ${user.isEnabled ? 'checked' : ''}></td>`;
 usersList.appendChild(row);
 });
 document.querySelectorAll('.enable-user').forEach(cb => {
@@ -82,16 +79,51 @@ await toggleUserEnabled(cb.dataset.id, cb.checked);
 showToast(`Usuário ${cb.checked ? 'habilitado' : 'desabilitado'}`);
 });
 });
-document.querySelectorAll('.delete-user').forEach(btn => {
-btn.addEventListener('click', async () => {
-if (confirm('Excluir este usuário?')) {
-await deleteUser(btn.dataset.id);
-showToast('Usuário excluído');
+}
+
+async function loadPending() {
+const snap = await get(ref(db, 'pending_users'));
+pendingList.innerHTML = '';
+if (!snap.exists()) {
+pendingList.innerHTML = '<li class="list-group-item">Nenhum usuário pendente</li>';
+return;
+}
+
+snap.forEach(child => {
+const u = child.val();
+const key = child.key;
+const li = document.createElement('li');
+li.className = 'list-group-item d-flex justify-content-between align-items-center';
+li.innerHTML = `
+<span>${u.fullName} (${u.username})</span>
+<button class="btn btn-primary btn-sm" onclick="aprovar('${key}','${u.username}','${u.fullName}')">Aprovar</button>`;
+pendingList.appendChild(li);
+});
+}
+
+window.aprovar = async (key, username, fullName) => {
+const email = `${username}@igreja.local`;
+const password = '123456'; // ou gere dinamicamente
+
+const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+const uid = userCredential.user.uid;
+
+await updateProfile(userCredential.user, { displayName: fullName });
+
+await set(ref(db, `users/${uid}`), {
+username,
+fullName,
+isAdmin: false,
+isEnabled: true,
+createdAt: new Date().toISOString()
+});
+
+await remove(ref(db, `pending_users/${key}`));
+
+showToast(`✅ Usuário ${fullName} aprovado e criado no Auth/DB!`);
 loadUsers();
-}
-});
-});
-}
+loadPending();
+};
 
 function showToast(message, type='success') {
 const toast = document.createElement('div');
@@ -101,38 +133,9 @@ document.getElementById('toastContainer').appendChild(toast);
 setTimeout(() => { toast.remove(); }, 3000);
 }
 
-// 🔷 Lista fake para simular usuários do Auth ainda não no DB
-const authUsers = [
-  { uid: 'uid1', username: 'joao', displayName: 'João da Silva' },
-  { uid: 'uid2', username: 'maria', displayName: 'Maria Souza' }
-];
-
-function listarUsuariosAuth() {
-  const ul = document.getElementById('authUsers');
-  ul.innerHTML = '';
-
-  authUsers.forEach(u => {
-    const li = document.createElement('li');
-    li.className = 'list-group-item d-flex justify-content-between align-items-center';
-    li.innerHTML = `
-      <span>${u.displayName} (${u.username})</span>
-      <button class="btn btn-primary btn-sm" onclick="criarNoDB('${u.uid}','${u.username}','${u.displayName}')">
-        Criar no DB
-      </button>
-    `;
-    ul.appendChild(li);
-  });
-}
-
-window.criarNoDB = async (uid, username, fullName) => {
-  await createUserInDB(uid, username, fullName, false);
-  showToast(`Usuário ${fullName} criado no DB!`);
-  loadUsers();
-};
-
 document.addEventListener('DOMContentLoaded', () => {
-  loadUsers();
-  listarUsuariosAuth();
+loadUsers();
+loadPending();
 });
 </script>
 
