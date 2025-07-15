@@ -15,7 +15,7 @@ function logout() {
         window.location.href = "login.html";
     }).catch((error) => {
         console.error("Erro ao deslogar:", error);
-        window.location.href = "login.html";
+        window.location.href = '/cadastro/login.html';
     });
 }
 
