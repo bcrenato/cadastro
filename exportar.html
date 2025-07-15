@@ -163,6 +163,12 @@ body.autorizado .conteudo-restrito {
             <i class="fas fa-list me-1"></i> Lista de Membros
           </a>
         </li>
+        <!-- Botão Exportar -->
+        <li class="nav-item">
+          <a class="nav-link" href="exportar.html">
+            <i class="fas fa-file-export me-1"></i> Exportar Dados
+          </a>
+        </li>
       </ul>
     </div>
   </div> 
@@ -250,12 +256,19 @@ body.autorizado .conteudo-restrito {
   </div>
 </div>
 
-<!-- Scripts principais -->
+<!-- FileSaver.js como script global -->
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+<!-- SheetJS (para exportação Excel) -->
+<script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+
+<!-- Script principal -->
 <script type="module">
+// Referência global para FileSaver
+const { saveAs } = window;
+
 import { db } from './firebase-config.js';
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import { saveAs } from 'https://cdn.jsdelivr.net/npm/file-saver@3.0.0/+esm';
-import { read, utils, writeFile } from 'https://cdn.sheetjs.com/xlsx-0.19.3/package/xlsx.mjs';
 
 // Elementos da interface
 const btnExportar = document.getElementById('btnExportar');
@@ -479,10 +492,11 @@ function exportToCSV(data) {
 function exportToExcel(data) {
   if (data.length === 0) return;
   
-  const ws = utils.json_to_sheet(data);
-  const wb = utils.book_new();
-  utils.book_append_sheet(wb, ws, "Membros");
-  writeFile(wb, `membros_${new Date().toISOString().slice(0,10)}.xlsx`);
+  // Usando SheetJS (XLSX) carregado globalmente
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Membros");
+  XLSX.writeFile(wb, `membros_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 function exportToJSON(data) {
