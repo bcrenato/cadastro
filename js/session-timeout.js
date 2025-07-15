@@ -12,10 +12,10 @@ function resetTimer() {
 function logout() {
     console.log("Sessão expirada por inatividade.");
     auth.signOut().then(() => {
-        window.location.href = "login.html";
+        window.location.href = "/cadastro/login.html";
     }).catch((error) => {
         console.error("Erro ao deslogar:", error);
-        window.location.href = '/cadastro/login.html';
+        window.location.href = "/cadastro/login.html";
     });
 }
 
