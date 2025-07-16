@@ -417,8 +417,15 @@ btnExportarPDF.addEventListener("click", async () => {
       else contagens.membro++; // todos os outros
     });
 
-    // adicionar resumo no final do PDF
-    const finalY = doc.lastAutoTable.finalY + 10;
+    // adicionar resumo no final do PDF, com quebra de página se necessário
+    let finalY = doc.lastAutoTable.finalY + 10;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const resumoAltura = 7 * 4 + 10; // altura aproximada do bloco do resumo
+
+    if (finalY + resumoAltura > pageHeight - 15) {
+      doc.addPage();
+      finalY = 20; // novo topo na página seguinte
+    }
 
     doc.setFontSize(12);
     doc.text("Ministério:", 10, finalY);
@@ -470,6 +477,7 @@ function mostrarMensagemPDF(mensagem) {
   `;
 }
 </script>
+
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
