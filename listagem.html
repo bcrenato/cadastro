@@ -288,7 +288,7 @@ onValue(membrosRef, (snapshot) => {
   
 
   
-  <script>
+ <script>
 const btnExportarPDF = document.getElementById("btnExportarPDF");
 
 btnExportarPDF.addEventListener("click", async () => {
@@ -370,8 +370,27 @@ btnExportarPDF.addEventListener("click", async () => {
 
       const enderecoCompleto = partesEndereco.join(", ");
 
+      // calcular idade e faixa etária
+      let idade = "-";
+      let faixa = "Não informado";
+      if (m.nascimento) {
+        const nasc = new Date(m.nascimento);
+        const hoje = new Date();
+        idade = hoje.getFullYear() - nasc.getFullYear();
+        const mDiff = hoje.getMonth() - nasc.getMonth();
+        if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < nasc.getDate())) {
+          idade--;
+        }
+
+        if (idade <= 11) faixa = "Criança";
+        else if (idade <= 17) faixa = "Adolescente";
+        else if (idade <= 29) faixa = "Jovem";
+        else faixa = "Adulto";
+      }
+
       return [
         m.nomeFormatado,
+        faixa,
         m.nascimento ? formatDate(m.nascimento) : "Não informado",
         m.sexoFormatado,
         m.telefone || "Não informado",
@@ -382,15 +401,16 @@ btnExportarPDF.addEventListener("click", async () => {
     });
 
     doc.autoTable({
-      head: [["NOME", "NASCIM", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
+      head: [["NOME", "FAIXA ETÁRIA", "NASCIM", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
       body: membrosArray,
       startY: startY,
       margin: { top: 10, bottom: 15 },
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [0, 128, 0], textColor: [255, 255, 255], fontSize: 10, fontStyle: 'bold' },
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [0, 128, 0], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold' },
       columnStyles: {
-        0: { cellWidth: 60 },  // Nome
-        6: { cellWidth: 80 }   // Endereço
+        0: { cellWidth: 45 },  // Nome
+        1: { cellWidth: 25 },  // Faixa
+        7: { cellWidth: 80 }   // Endereço
       },
       didDrawPage: function(data) {
         doc.setFontSize(8);
@@ -410,7 +430,7 @@ btnExportarPDF.addEventListener("click", async () => {
     };
 
     membrosArray.forEach(row => {
-      const funcao = row[4].toLowerCase(); // coluna FUNÇÃO
+      const funcao = row[5].toLowerCase(); // agora FUNÇÃO está na posição 5
       if (funcao.includes("pastor")) contagens.pastor++;
       else if (funcao.includes("missionario")) contagens.missionario++;
       else if (funcao.includes("diácono") || funcao.includes("diacono")) contagens.diacono++;
@@ -477,6 +497,7 @@ function mostrarMensagemPDF(mensagem) {
   `;
 }
 </script>
+
 
 
 
