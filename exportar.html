@@ -204,45 +204,41 @@ body.autorizado .conteudo-restrito {
     </div>
     
     <div class="col-md-6">
-      <div class="card mb-4">
-        <div class="card-header bg-warning text-dark">
-          <i class="fas fa-file-import me-2"></i>Importar Dados
-        </div>
-        <div class="card-body">
-          <div class="mb-3">
-            <label class="form-label">Formato:</label>
-            <select id="formato-importacao" class="form-select">
-              <option value="csv">CSV</option>
-              <option value="xlsx">Excel (XLSX)</option>
-              <option value="json">JSON (Backup completo)</option>
-            </select>
-          </div>
-          
-          <div id="import-area" class="mb-3">
-            <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
-            <p>Arraste e solte seu arquivo aqui ou clique para selecionar</p>
-            <input type="file" id="arquivo-importacao" class="d-none" accept=".csv,.json,.xlsx,.xls">
-          </div>
-          
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="sobrescrever-dados">
-            <label class="form-check-label" for="sobrescrever-dados">
-              Sobrescrever dados existentes?
-            </label>
-          </div>
-          
-          <button id="btnImportar" class="btn btn-primary" disabled>
-            <i class="fas fa-upload me-2"></i>Importar Dados
-          </button>
-          
-          <div class="progress mt-3 d-none" id="progress-bar">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                 role="progressbar" style="width: 0%">0%</div>
-          </div>
-        </div>
+  <div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+      <i class="fas fa-file-import me-2"></i>Importar Dados
+    </div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label">Formato:</label>
+        <select id="formato-importacao" class="form-select">
+          <option value="csv">CSV</option>
+          <option value="xlsx">Excel (XLSX)</option>
+          <option value="json">JSON</option>
+        </select>
       </div>
+      
+      <!-- Área de importação atualizada -->
+      <div id="import-area" class="mb-3 p-4 border-2 border-dashed rounded text-center">
+        <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+        <p class="mb-2">Arraste e solte seu arquivo aqui</p>
+        <p class="small text-muted">ou clique para selecionar</p>
+        <input type="file" id="arquivo-importacao" class="d-none" accept=".xlsx,.csv,.json">
+      </div>
+      
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="sobrescrever-dados">
+        <label class="form-check-label" for="sobrescrever-dados">
+          Sobrescrever dados existentes?
+        </label>
+      </div>
+      
+      <button id="btnImportar" class="btn btn-primary" disabled>
+        <i class="fas fa-upload me-2"></i>Importar Dados
+      </button>
     </div>
   </div>
+</div>
   
   <!-- Tabela de pré-visualização -->
   <div class="card">
@@ -296,6 +292,45 @@ const ordemCampos = [
 // Variável global para dados importados
 let dadosImportacao = null;
 
+
+// ============== CONFIGURAÇÃO DA ÁREA DE IMPORTAÇÃO ==============
+const importArea = document.getElementById('import-area');
+const fileInput = document.getElementById('arquivo-importacao');
+
+// 1. Ao clicar na área
+importArea.addEventListener('click', () => {
+  fileInput.click();
+});
+
+// 2. Ao selecionar arquivo
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length > 0) {
+    const fileName = fileInput.files[0].name;
+    showMessage(`Arquivo selecionado: ${fileName}`, 'info');
+    handleFileSelection(); // Sua função existente de processamento
+  }
+});
+
+// 3. Efeitos visuais (opcional)
+importArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  importArea.classList.add('bg-light');
+});
+
+importArea.addEventListener('dragleave', () => {
+  importArea.classList.remove('bg-light');
+});
+
+importArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  importArea.classList.remove('bg-light');
+  fileInput.files = e.dataTransfer.files;
+  if (fileInput.files.length) {
+    fileInput.dispatchEvent(new Event('change'));
+  }
+});
+  
+  
 // ====================== FUNÇÕES ESSENCIAIS ======================
 
 // Função para mostrar mensagens (corrigida)
