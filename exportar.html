@@ -118,6 +118,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+function formatDateDMY(dateString) {
+  if (!dateString) return "";
+  const parts = dateString.split("-");
+  if (parts.length !== 3) return dateString;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
 // EXPORTAR
 document.getElementById("btnExportarExcel").addEventListener("click", async () => {
   const membrosRef = ref(db, "membros");
@@ -129,11 +136,11 @@ document.getElementById("btnExportarExcel").addEventListener("click", async () =
 
   const data = Object.values(snapshot.val()).map(m => ({
     nome: m.nome || "",
-    nascimento: m.nascimento || "",
+    nascimento: formatDateDMY(m.nascimento),
     sexo: m.sexo || "",
     telefone: m.telefone || "",
     funcao: m.funcao || "",
-    batismo: m.batismo || "",
+    batismo: formatDateDMY(m.batismo),
     endereco: m.endereco || "",
     bairro: m.bairro || "",
     cidade: m.cidade || "",
@@ -154,7 +161,7 @@ document.getElementById("btnExportarExcel").addEventListener("click", async () =
   mostrarMensagem("✅ Exportação concluída!");
 });
 
-// IMPORTAR com substituição total
+// IMPORTAR com substituição total (mantendo datas no formato aaaa-mm-dd)
 document.getElementById("inputImportarExcel").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -169,7 +176,7 @@ document.getElementById("inputImportarExcel").addEventListener("change", async (
 
     const membrosRef = ref(db, "membros");
 
-    // 🔥 REMOVE TODOS OS MEMBROS ANTES DE IMPORTAR
+    // Apaga todos os membros antes de importar
     await set(membrosRef, null);
 
     let count = 0;
@@ -177,11 +184,11 @@ document.getElementById("inputImportarExcel").addEventListener("change", async (
     for (const [index, m] of json.entries()) {
       const novoMembro = {
         nome: m.nome || "",
-        nascimento: m.nascimento || "",
+        nascimento: m.nascimento || "", // Importa sem alteração (espera aaaa-mm-dd)
         sexo: m.sexo || "",
         telefone: m.telefone || "",
         funcao: m.funcao || "",
-        batismo: m.batismo || "",
+        batismo: m.batismo || "",       // Importa sem alteração (espera aaaa-mm-dd)
         endereco: m.endereco || "",
         bairro: m.bairro || "",
         cidade: m.cidade || "",
