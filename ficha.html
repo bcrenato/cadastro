@@ -659,6 +659,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const editCepInput = document.getElementById('editCep');
   if (editCepInput) {
     IMask(editCepInput, { mask: '00000-000' });
+
+    editCepInput.addEventListener('input', () => {
+      const cep = editCepInput.value.replace(/\D/g, '');
+      if (cep.length === 8) {
+        buscarCEP();
+      }
+    });
   }
 
   // Máscara do telefone
@@ -679,7 +686,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Função global para buscar o CEP
 function buscarCEP(
   cepId = 'editCep',
   enderecoId = 'editEndereco',
@@ -695,38 +701,41 @@ function buscarCEP(
   const cidade = document.getElementById(cidadeId);
   const estado = document.getElementById(estadoId);
 
-  if (cep.length === 8) {
-    fetch(`https://viacep.com.br/ws/${cep}/json/`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.erro) {
-          endereco.value = 'CEP não encontrado';
-          bairro.value = '';
-          cidade.value = '';
-          estado.value = '';
-        } else {
-          const ruaComNumero = `${data.logradouro}, Nº`;
-          endereco.value = ruaComNumero;
-          bairro.value = data.bairro || '';
-          cidade.value = data.localidade || '';
-          estado.value = data.uf || '';
-        }
-      })
-      .catch(error => {
-        console.error('Erro ao buscar o CEP:', error);
-        endereco.value = 'Erro ao buscar';
-        bairro.value = '';
-        cidade.value = '';
-        estado.value = '';
-      });
-  } else {
+  if (cep.length !== 8) {
+    // limpa apenas os campos se o CEP ficar inválido novamente
     endereco.value = '';
     bairro.value = '';
     cidade.value = '';
     estado.value = '';
+    return;
   }
+
+  fetch(`https://viacep.com.br/ws/${cep}/json/`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.erro) {
+        endereco.value = 'CEP não encontrado';
+        bairro.value = '';
+        cidade.value = '';
+        estado.value = '';
+      } else {
+        const ruaComNumero = `${data.logradouro || ''}, Nº`;
+        endereco.value = ruaComNumero;
+        bairro.value = data.bairro || '';
+        cidade.value = data.localidade || '';
+        estado.value = data.uf || '';
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao buscar o CEP:', error);
+      endereco.value = 'Erro ao buscar';
+      bairro.value = '';
+      cidade.value = '';
+      estado.value = '';
+    });
 }
 </script>
+
 
 
 </body>
