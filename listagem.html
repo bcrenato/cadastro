@@ -284,7 +284,11 @@ onValue(membrosRef, (snapshot) => {
 });
 </script>
 
-<script>
+
+  
+
+  
+  <script>
 const btnExportarPDF = document.getElementById("btnExportarPDF");
 
 btnExportarPDF.addEventListener("click", async () => {
@@ -329,32 +333,33 @@ btnExportarPDF.addEventListener("click", async () => {
       return;
     }
 
-    const membrosArray = Object.values(snapshot.val())
-    .map(m => {
-      const funcao = (m.funcao || "").toLowerCase();
-      let ordemFuncao = 6;
-      if (funcao === "pastor") ordemFuncao = 1;
-      else if (funcao === "missionario" || funcao === "missionario(a)") ordemFuncao = 2;
-      else if (funcao === "diacono") ordemFuncao = 3;
-      else if (funcao === "obreiro" || funcao === "obreiro(a)") ordemFuncao = 4;
-      else if (funcao === "membro") ordemFuncao = 5;
+    const membrosArrayRaw = Object.values(snapshot.val())
+      .map(m => {
+        const funcao = (m.funcao || "").toLowerCase();
+        let ordemFuncao = 6;
+        if (funcao === "pastor") ordemFuncao = 1;
+        else if (funcao === "missionario" || funcao === "missionario(a)") ordemFuncao = 2;
+        else if (funcao === "diacono") ordemFuncao = 3;
+        else if (funcao === "obreiro" || funcao === "obreiro(a)") ordemFuncao = 4;
+        else if (funcao === "membro") ordemFuncao = 5;
 
-      return {
-        ...m,
-        ordemFuncao,
-        sexoFormatado: m.sexo === "M" || (m.sexo || "").toLowerCase() === "masculino" ? "Masculino" :
-                       m.sexo === "F" || (m.sexo || "").toLowerCase() === "feminino" ? "Feminino" :
-                       "Não informado",
-        nomeFormatado: m.nome ? m.nome.toUpperCase() : "Não informado",
-        funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "Não informado"
-      };
-    })
-    .sort((a, b) => {
-      const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
-      if (ordemFuncao !== 0) return ordemFuncao;
-      return a.nome?.localeCompare(b.nome);
-    })
-    .map(m => {
+        return {
+          ...m,
+          ordemFuncao,
+          sexoFormatado: m.sexo === "M" || (m.sexo || "").toLowerCase() === "masculino" ? "Masculino" :
+                         m.sexo === "F" || (m.sexo || "").toLowerCase() === "feminino" ? "Feminino" :
+                         "Não informado",
+          nomeFormatado: m.nome ? m.nome.toUpperCase() : "Não informado",
+          funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "Não informado"
+        };
+      })
+      .sort((a, b) => {
+        const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
+        if (ordemFuncao !== 0) return ordemFuncao;
+        return a.nome?.localeCompare(b.nome);
+      });
+
+    const membrosArray = membrosArrayRaw.map(m => {
       const partesEndereco = [
         m.endereco,
         m.numero && `Nº${m.numero}`,
@@ -395,6 +400,44 @@ btnExportarPDF.addEventListener("click", async () => {
       }
     });
 
+    // calcular contagens
+    const contagens = {
+      pastor: 0,
+      missionario: 0,
+      diacono: 0,
+      membro: 0,
+      total: membrosArray.length
+    };
+
+    membrosArray.forEach(row => {
+      const funcao = row[4].toLowerCase(); // coluna FUNÇÃO
+      if (funcao.includes("pastor")) contagens.pastor++;
+      else if (funcao.includes("missionario")) contagens.missionario++;
+      else if (funcao.includes("diácono") || funcao.includes("diacono")) contagens.diacono++;
+      else contagens.membro++; // todos os outros
+    });
+
+    // adicionar resumo no final do PDF
+    const finalY = doc.lastAutoTable.finalY + 10;
+
+    doc.setFontSize(12);
+    doc.text("Ministério:", 10, finalY);
+
+    let y = finalY + 7;
+    doc.text(`Pastor - ${contagens.pastor.toString().padStart(2, "0")}`, 15, y);
+
+    y += 7;
+    doc.text(`Missionário - ${contagens.missionario.toString().padStart(2, "0")}`, 15, y);
+
+    y += 7;
+    doc.text(`Diácono - ${contagens.diacono.toString().padStart(2, "0")}`, 15, y);
+
+    y += 7;
+    doc.text(`Membros - ${contagens.membro.toString().padStart(2, "0")}`, 15, y);
+
+    y += 10;
+    doc.text(`Total igreja: ${contagens.total}`, 10, y);
+
     doc.save("Lista_Membros.pdf");
     mostrarMensagemPDF("✅ PDF gerado com sucesso!");
 
@@ -427,6 +470,7 @@ function mostrarMensagemPDF(mensagem) {
   `;
 }
 </script>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
