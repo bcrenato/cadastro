@@ -400,6 +400,7 @@ btnExportarPDF.addEventListener("click", async () => {
       ];
     });
 
+    // TABELA PRINCIPAL
     doc.autoTable({
       head: [["NOME", "FAIXA ETÁRIA", "NASCIM", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
       body: membrosArray,
@@ -420,50 +421,67 @@ btnExportarPDF.addEventListener("click", async () => {
       }
     });
 
-    // calcular contagens
-    const contagens = {
-      pastor: 0,
-      missionario: 0,
-      diacono: 0,
-      membro: 0,
+    // RESUMO PROFISSIONAL
+    const resumo = {
+      funcoes: { Pastor: 0, Missionário: 0, Diácono: 0, Membro: 0 },
+      sexos: { Masculino: 0, Feminino: 0, "Não informado": 0 },
+      faixas: { Criança: 0, Adolescente: 0, Jovem: 0, Adulto: 0 },
       total: membrosArray.length
     };
 
     membrosArray.forEach(row => {
-      const funcao = row[5].toLowerCase(); // agora FUNÇÃO está na posição 5
-      if (funcao.includes("pastor")) contagens.pastor++;
-      else if (funcao.includes("missionario")) contagens.missionario++;
-      else if (funcao.includes("diácono") || funcao.includes("diacono")) contagens.diacono++;
-      else contagens.membro++; // todos os outros
+      const funcao = row[5].toLowerCase();
+      const sexo = row[3];
+      const faixa = row[1];
+
+      if (funcao.includes("pastor")) resumo.funcoes.Pastor++;
+      else if (funcao.includes("missionario")) resumo.funcoes.Missionário++;
+      else if (funcao.includes("diácono") || funcao.includes("diacono")) resumo.funcoes.Diácono++;
+      else resumo.funcoes.Membro++;
+
+      if (sexo in resumo.sexos) resumo.sexos[sexo]++;
+      else resumo.sexos["Não informado"]++;
+
+      if (faixa in resumo.faixas) resumo.faixas[faixa]++;
     });
 
-    // adicionar resumo no final do PDF, com quebra de página se necessário
     let finalY = doc.lastAutoTable.finalY + 10;
     const pageHeight = doc.internal.pageSize.getHeight();
-    const resumoAltura = 7 * 4 + 10; // altura aproximada do bloco do resumo
 
-    if (finalY + resumoAltura > pageHeight - 15) {
+    if (finalY + 80 > pageHeight - 15) {
       doc.addPage();
-      finalY = 20; // novo topo na página seguinte
+      finalY = 20;
     }
 
-    doc.setFontSize(12);
-    doc.text("Ministério:", 10, finalY);
+    const makeResumoTable = (title, dataObj) => {
+      const rows = Object.entries(dataObj).map(([k, v]) => [k, v]);
+      doc.autoTable({
+        head: [[title, "Quantidade"]],
+        body: rows,
+        startY: finalY,
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [22, 160, 133], textColor: 255, fontStyle: 'bold' },
+        margin: { left: 10, right: 10 },
+        tableWidth: 'auto'
+      });
+      finalY = doc.lastAutoTable.finalY + 5;
+    };
 
-    let y = finalY + 7;
-    doc.text(`Pastor - ${contagens.pastor.toString().padStart(2, "0")}`, 15, y);
+    makeResumoTable("Resumo por Função", resumo.funcoes);
+    makeResumoTable("Resumo por Sexo", resumo.sexos);
+    makeResumoTable("Resumo por Faixa Etária", resumo.faixas);
 
-    y += 7;
-    doc.text(`Missionário - ${contagens.missionario.toString().padStart(2, "0")}`, 15, y);
-
-    y += 7;
-    doc.text(`Diácono - ${contagens.diacono.toString().padStart(2, "0")}`, 15, y);
-
-    y += 7;
-    doc.text(`Membros - ${contagens.membro.toString().padStart(2, "0")}`, 15, y);
-
-    y += 10;
-    doc.text(`Total igreja: ${contagens.total}`, 10, y);
+    doc.autoTable({
+      head: [["TOTAL GERAL DE MEMBROS", resumo.total]],
+      body: [],
+      startY: finalY,
+      theme: 'plain',
+      styles: { fontSize: 12 },
+      headStyles: { fillColor: [39, 174, 96], textColor: 255, halign: 'center' },
+      margin: { left: 10, right: 10 },
+      tableWidth: 'auto'
+    });
 
     doc.save("Lista_Membros.pdf");
     mostrarMensagemPDF("✅ PDF gerado com sucesso!");
@@ -497,6 +515,7 @@ function mostrarMensagemPDF(mensagem) {
   `;
 }
 </script>
+
 
 
 
