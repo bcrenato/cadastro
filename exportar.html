@@ -154,7 +154,7 @@ document.getElementById("btnExportarExcel").addEventListener("click", async () =
   mostrarMensagem("✅ Exportação concluída!");
 });
 
-// IMPORTAR
+// IMPORTAR com substituição total
 document.getElementById("inputImportarExcel").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -166,6 +166,11 @@ document.getElementById("inputImportarExcel").addEventListener("change", async (
     const wsname = workbook.SheetNames[0];
     const ws = workbook.Sheets[wsname];
     const json = XLSX.utils.sheet_to_json(ws);
+
+    const membrosRef = ref(db, "membros");
+
+    // 🔥 REMOVE TODOS OS MEMBROS ANTES DE IMPORTAR
+    await set(membrosRef, null);
 
     let count = 0;
 
@@ -190,7 +195,7 @@ document.getElementById("inputImportarExcel").addEventListener("change", async (
       count++;
     }
 
-    mostrarMensagem(`✅ Importação concluída! ${count} registros salvos.`);
+    mostrarMensagem(`✅ Importação concluída! ${count} registros salvos (dados anteriores foram substituídos).`);
     e.target.value = "";
   };
 
