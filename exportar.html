@@ -84,11 +84,13 @@ body.autorizado .conteudo-restrito {
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+  
 <script type="module">
 
 import { db } from './firebase-config.js';
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import { saveAs } from 'https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.mjs';
 import { read, utils, writeFile } from 'https://cdn.sheetjs.com/xlsx-0.19.3/package/xlsx.mjs';
 
 const btnExportar = document.getElementById('btnExportar');
