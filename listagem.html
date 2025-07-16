@@ -423,27 +423,28 @@ btnExportarPDF.addEventListener("click", async () => {
 
     // RESUMO PROFISSIONAL
     const resumo = {
-      funcoes: { Pastor: 0, Missionário: 0, Diácono: 0, Membro: 0 },
-      sexos: { Masculino: 0, Feminino: 0, "Não informado": 0 },
-      faixas: { Criança: 0, Adolescente: 0, Jovem: 0, Adulto: 0 },
-      total: membrosArray.length
-    };
+  funcoes: { Pastor: 0, Missionário: 0, Diácono: 0, Membro: 0 },
+  sexos: { Masculino: 0, Feminino: 0 },
+  faixas: { Criança: 0, Adolescente: 0, Jovem: 0, Adulto: 0 },
+  total: membrosArray.length
+};
 
-    membrosArray.forEach(row => {
-      const funcao = row[5].toLowerCase();
-      const sexo = row[3];
-      const faixa = row[1];
+membrosArray.forEach(row => {
+  const funcao = row[5].toLowerCase();
+  const sexo = row[3];
+  const faixa = row[1];
 
-      if (funcao.includes("pastor")) resumo.funcoes.Pastor++;
-      else if (funcao.includes("missionario")) resumo.funcoes.Missionário++;
-      else if (funcao.includes("diácono") || funcao.includes("diacono")) resumo.funcoes.Diácono++;
-      else resumo.funcoes.Membro++;
+  if (funcao.includes("pastor")) resumo.funcoes.Pastor++;
+  else if (funcao.includes("missionario")) resumo.funcoes.Missionário++;
+  else if (funcao.includes("diácono") || funcao.includes("diacono")) resumo.funcoes.Diácono++;
+  else resumo.funcoes.Membro++;
 
-      if (sexo in resumo.sexos) resumo.sexos[sexo]++;
-      else resumo.sexos["Não informado"]++;
+  if (sexo === "Masculino") resumo.sexos.Masculino++;
+  else if (sexo === "Feminino") resumo.sexos.Feminino++;
 
-      if (faixa in resumo.faixas) resumo.faixas[faixa]++;
-    });
+  if (faixa in resumo.faixas) resumo.faixas[faixa]++;
+});
+
 
     let finalY = doc.lastAutoTable.finalY + 10;
     const pageHeight = doc.internal.pageSize.getHeight();
