@@ -266,6 +266,10 @@ body.autorizado .conteudo-restrito {
 
 
 
+
+  
+
+
  <!-- Script principal -->
 <script type="module">
 // Referência global para FileSaver
@@ -331,7 +335,38 @@ importArea.addEventListener('drop', (e) => {
   
   
 // ====================== FUNÇÕES ESSENCIAIS ======================
+function handleFileSelection() {
+  const file = fileInput.files[0];
+  if (!file) return;
 
+  const formato = document.getElementById('formato-importacao').value;
+  btnImportar.disabled = true;
+  previewTable.style.display = 'none';
+
+  if (formato === 'xlsx') {
+    parseXLSX(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        if (formato === 'csv') {
+          parseCSV(e.target.result);
+        } else if (formato === 'json') {
+          parseJSON(e.target.result);
+        }
+      } catch (error) {
+        showMessage(`Erro no processamento: ${error.message}`, 'danger');
+      }
+    };
+    reader.readAsText(file);
+  }
+}
+
+
+
+
+
+  
 // Função para mostrar mensagens (corrigida)
 function showMessage(text, type) {
   const alertDiv = document.createElement('div');
