@@ -84,171 +84,180 @@ body.autorizado .conteudo-restrito {
   </div>
 </div>
 
+<!-- FileSaver incluído corretamente -->
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
-  
 <script type="module">
+document.addEventListener("DOMContentLoaded", () => {
 
-import { db } from './firebase-config.js';
-import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import { read, utils, writeFile } from 'https://cdn.sheetjs.com/xlsx-0.19.3/package/xlsx.mjs';
+  const btnExportar = document.getElementById('btnExportar');
+  const btnImportar = document.getElementById('btnImportar');
+  const fileInput = document.getElementById('arquivo-importacao');
+  const previewTable = document.getElementById('preview-table');
+  const mensagens = document.getElementById('mensagens');
+  const progressBar = document.getElementById('progress-bar');
+  let dadosImportacao = null;
 
-const btnExportar = document.getElementById('btnExportar');
-const btnImportar = document.getElementById('btnImportar');
-const fileInput = document.getElementById('arquivo-importacao');
-const previewTable = document.getElementById('preview-table');
-const mensagens = document.getElementById('mensagens');
-const progressBar = document.getElementById('progress-bar');
-let dadosImportacao = null;
+  fileInput.addEventListener('change', handleFileSelection);
 
-fileInput.addEventListener('change', handleFileSelection);
+  function handleFileSelection() {
+    const file = fileInput.files[0];
+    if (!file) return;
 
-function handleFileSelection() {
-  const file = fileInput.files[0];
-  if (!file) return;
+    const formato = document.getElementById('formato-importacao').value;
+    btnImportar.disabled = true;
+    previewTable.style.display = 'none';
 
-  const formato = document.getElementById('formato-importacao').value;
-  btnImportar.disabled = true;
-  previewTable.style.display = 'none';
-
-  if (formato === 'csv' || formato === 'json') {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const data = e.target.result;
-      try {
-        if (formato === 'csv') parseCSV(data);
-        if (formato === 'json') parseJSON(data);
+    if (formato === 'csv' || formato === 'json') {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = e.target.result;
+        try {
+          if (formato === 'csv') parseCSV(data);
+          if (formato === 'json') parseJSON(data);
+          btnImportar.disabled = false;
+        } catch (err) {
+          showMessage(err.message, 'danger');
+        }
+      };
+      reader.readAsText(file);
+    } else if (formato === 'excel') {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        dadosImportacao = json;
+        const headers = Object.keys(json[0]);
+        showPreview(headers, json);
         btnImportar.disabled = false;
-      } catch (err) {
-        showMessage(err.message, 'danger');
-      }
-    };
-    reader.readAsText(file);
-  } else if (formato === 'excel') {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const data = new Uint8Array(e.target.result);
-      const workbook = read(data, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = utils.sheet_to_json(sheet);
-      dadosImportacao = json;
-      const headers = Object.keys(json[0]);
-      showPreview(headers, json);
-      btnImportar.disabled = false;
-    };
-    reader.readAsArrayBuffer(file);
+      };
+      reader.readAsArrayBuffer(file);
+    }
   }
-}
 
-function exportToExcel(data) {
-  if (data.length === 0) return;
+  function exportToExcel(data) {
+    if (data.length === 0) return;
 
-  const orderedData = data.map(membro => ({
-    nome: membro.nome || '',
-    nascimento: membro.nascimento || '',
-    sexo: membro.sexo || '',
-    telefone: membro.telefone || '',
-    funcao: membro.funcao || '',
-    batismo: membro.batismo || '',
-    endereco: membro.endereco || '',
-    bairro: membro.bairro || '',
-    cidade: membro.cidade || '',
-    estado: membro.estado || '',
-    cep: membro.cep || '',
-    fotoURL: membro.fotoURL || ''
-  }));
+    const orderedData = data.map(membro => ({
+      nome: membro.nome || '',
+      nascimento: membro.nascimento || '',
+      sexo: membro.sexo || '',
+      telefone: membro.telefone || '',
+      funcao: membro.funcao || '',
+      batismo: membro.batismo || '',
+      endereco: membro.endereco || '',
+      bairro: membro.bairro || '',
+      cidade: membro.cidade || '',
+      estado: membro.estado || '',
+      cep: membro.cep || '',
+      fotoURL: membro.fotoURL || ''
+    }));
 
-  const ws = utils.json_to_sheet(orderedData);
-  const wb = utils.book_new();
-  utils.book_append_sheet(wb, ws, "Membros");
-  writeFile(wb, `membros_${new Date().toISOString().slice(0,10)}.xlsx`);
-}
-
-async function importCSVData(data, sobrescrever) {
-  const membrosRef = ref(db, 'membros');
-  if (sobrescrever) await set(membrosRef, {});
-
-  const total = data.length;
-  let imported = 0;
-
-  for (const membro of data) {
-    if (!membro.fotoURL) membro.fotoURL = 'sem-foto.png';
-    const novoMembroRef = ref(db, `membros/${Date.now()}_${imported}`);
-    await set(novoMembroRef, membro);
-    imported++;
+    const ws = XLSX.utils.json_to_sheet(orderedData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Membros");
+    XLSX.writeFile(wb, `membros_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
-}
 
-async function importJSONData(data, sobrescrever) {
-  if (data.membros) {
-    for (const [key, membro] of Object.entries(data.membros)) {
+  async function importCSVData(data, sobrescrever) {
+    const membrosRef = firebase.database().ref('membros');
+    if (sobrescrever) await membrosRef.set({});
+
+    const total = data.length;
+    let imported = 0;
+
+    for (const membro of data) {
       if (!membro.fotoURL) membro.fotoURL = 'sem-foto.png';
+      const novoMembroRef = membrosRef.child(`${Date.now()}_${imported}`);
+      await novoMembroRef.set(membro);
+      imported++;
     }
   }
 
-  if (sobrescrever) {
-    await set(ref(db), data);
-  } else {
-    const updates = {};
-    for (const [key, value] of Object.entries(data.membros)) {
-      updates[`membros/${key}`] = value;
+  async function importJSONData(data, sobrescrever) {
+    if (data.membros) {
+      for (const [key, membro] of Object.entries(data.membros)) {
+        if (!membro.fotoURL) membro.fotoURL = 'sem-foto.png';
+      }
     }
-    await update(ref(db), updates);
-  }
-}
 
-btnExportar.addEventListener('click', async () => {
-  btnExportar.disabled = true;
-  btnExportar.innerHTML = 'Exportando...';
-  const formato = document.getElementById('formato-exportacao')?.value || 'excel';
-  const snapshot = await get(ref(db, 'membros'));
-  if (!snapshot.exists()) return showMessage('Nenhum dado', 'warning');
-  const data = Object.values(snapshot.val());
-
-  if (formato === 'excel') exportToExcel(data);
-
-  btnExportar.disabled = false;
-  btnExportar.innerHTML = 'Exportar';
-});
-
-btnImportar.addEventListener('click', async () => {
-  if (!dadosImportacao) return;
-  const formato = document.getElementById('formato-importacao').value;
-  const sobrescrever = document.getElementById('sobrescrever-dados')?.checked || false;
-
-  btnImportar.disabled = true;
-  btnImportar.innerHTML = 'Importando...';
-
-  if (formato === 'csv' || formato === 'excel') {
-    await importCSVData(dadosImportacao, sobrescrever);
-  } else if (formato === 'json') {
-    await importJSONData(dadosImportacao, sobrescrever);
+    const dbRef = firebase.database().ref();
+    if (sobrescrever) {
+      await dbRef.set(data);
+    } else {
+      const updates = {};
+      for (const [key, value] of Object.entries(data.membros)) {
+        updates[`membros/${key}`] = value;
+      }
+      await dbRef.update(updates);
+    }
   }
 
-  btnImportar.disabled = false;
-  btnImportar.innerHTML = 'Importar';
-});
+  btnExportar.addEventListener('click', async () => {
+    btnExportar.disabled = true;
+    btnExportar.innerHTML = 'Exportando...';
 
-function showPreview(headers, rows) {
-  const thead = previewTable.querySelector('thead') || previewTable.createTHead();
-  const tbody = previewTable.querySelector('tbody') || previewTable.createTBody();
-  thead.innerHTML = '';
-  tbody.innerHTML = '';
-  const headerRow = document.createElement('tr');
-  headers.forEach(h => { const th = document.createElement('th'); th.textContent = h; headerRow.appendChild(th); });
-  thead.appendChild(headerRow);
-  rows.slice(0, 10).forEach(row => {
-    const tr = document.createElement('tr');
-    headers.forEach(h => { const td = document.createElement('td'); td.textContent = row[h] || ''; tr.appendChild(td); });
-    tbody.appendChild(tr);
+    const formato = document.getElementById('formato-exportacao').value;
+    const snapshot = await firebase.database().ref('membros').once('value');
+    if (!snapshot.exists()) {
+      showMessage('Nenhum dado', 'warning');
+      btnExportar.disabled = false;
+      btnExportar.innerHTML = 'Exportar';
+      return;
+    }
+
+    const data = Object.values(snapshot.val());
+
+    if (formato === 'excel') exportToExcel(data);
+
+    btnExportar.disabled = false;
+    btnExportar.innerHTML = 'Exportar';
   });
-  previewTable.style.display = 'table';
-}
-function showMessage(txt, type='info') {
-  mensagens.innerHTML = `<div class="alert alert-${type}">${txt}</div>`;
-}
 
+  btnImportar.addEventListener('click', async () => {
+    if (!dadosImportacao) return;
+
+    const formato = document.getElementById('formato-importacao').value;
+    const sobrescrever = document.getElementById('sobrescrever-dados')?.checked || false;
+
+    btnImportar.disabled = true;
+    btnImportar.innerHTML = 'Importando...';
+
+    if (formato === 'csv' || formato === 'excel') {
+      await importCSVData(dadosImportacao, sobrescrever);
+    } else if (formato === 'json') {
+      await importJSONData(dadosImportacao, sobrescrever);
+    }
+
+    btnImportar.disabled = false;
+    btnImportar.innerHTML = 'Importar';
+  });
+
+  function showPreview(headers, rows) {
+    const thead = previewTable.querySelector('thead') || previewTable.createTHead();
+    const tbody = previewTable.querySelector('tbody') || previewTable.createTBody();
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+    const headerRow = document.createElement('tr');
+    headers.forEach(h => { const th = document.createElement('th'); th.textContent = h; headerRow.appendChild(th); });
+    thead.appendChild(headerRow);
+    rows.slice(0, 10).forEach(row => {
+      const tr = document.createElement('tr');
+      headers.forEach(h => { const td = document.createElement('td'); td.textContent = row[h] || ''; tr.appendChild(td); });
+      tbody.appendChild(tr);
+    });
+    previewTable.style.display = 'table';
+  }
+
+  function showMessage(txt, type='info') {
+    mensagens.innerHTML = `<div class="alert alert-${type}">${txt}</div>`;
+  }
+
+});
 </script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
