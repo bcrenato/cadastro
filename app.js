@@ -86,60 +86,46 @@ fotoInput.addEventListener("change", () => {
 
 // Aplica a máscara nos campos de CEP
 document.addEventListener('DOMContentLoaded', () => {
-  ['cep', 'editCep'].forEach(id => {
-    const cepInput = document.getElementById(id);
-    if (cepInput) {
-      IMask(cepInput, { mask: '00000-000' });
-    }
-  });
+  const cepInput = document.getElementById('cep');
+  IMask(cepInput, { mask: '00000-000' });
 });
 
 // Função para buscar dados do CEP e preencher os campos
-window.buscarCEP = function (
-  cepId = 'cep',
-  enderecoId = 'endereco',
-  bairroId = 'bairro',
-  cidadeId = 'cidade',
-  estadoId = 'estado'
-) {
-  const cepInput = document.getElementById(cepId);
-  const cep = cepInput.value.replace(/\D/g, '');
 
-  const endereco = document.getElementById(enderecoId);
-  const bairro = document.getElementById(bairroId);
-  const cidade = document.getElementById(cidadeId);
-  const estado = document.getElementById(estadoId);
+window.buscarCEP = function () {
+  const cepInput = document.getElementById('cep');
+  const cep = cepInput.value.replace(/\D/g, '');
 
   if (cep.length === 8) {
     fetch(`https://viacep.com.br/ws/${cep}/json/`)
       .then(response => response.json())
       .then(data => {
         if (data.erro) {
-          endereco.value = 'CEP não encontrado';
-          bairro.value = '';
-          cidade.value = '';
-          estado.value = '';
+          document.getElementById('endereco').value = 'CEP não encontrado';
+          document.getElementById('bairro').value = '';
+          document.getElementById('cidade').value = '';
+          document.getElementById('estado').value = '';
         } else {
           const ruaComNumero = `${data.logradouro}, Nº`;
-          endereco.value = ruaComNumero;
-          bairro.value = data.bairro || '';
-          cidade.value = data.localidade || '';
-          estado.value = data.uf || '';
+          document.getElementById('endereco').value = ruaComNumero;
+
+          document.getElementById('bairro').value = data.bairro || '';
+          document.getElementById('cidade').value = data.localidade || '';
+          document.getElementById('estado').value = data.uf || '';
         }
       })
       .catch(error => {
         console.error('Erro ao buscar o CEP:', error);
-        endereco.value = 'Erro ao buscar';
-        bairro.value = '';
-        cidade.value = '';
-        estado.value = '';
+        document.getElementById('endereco').value = 'Erro ao buscar';
+        document.getElementById('bairro').value = '';
+        document.getElementById('cidade').value = '';
+        document.getElementById('estado').value = '';
       });
   } else {
-    // Se CEP incompleto ou inválido, limpa os campos
-    endereco.value = '';
-    bairro.value = '';
-    cidade.value = '';
-    estado.value = '';
+    document.getElementById('endereco').value = '';
+    document.getElementById('bairro').value = '';
+    document.getElementById('cidade').value = '';
+    document.getElementById('estado').value = '';
   }
 };
 
