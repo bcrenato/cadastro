@@ -137,8 +137,11 @@ body.autorizado .conteudo-restrito {
     });
   });
 </script>
-  
-<!-- 🔹 Navbar -->
+
+
+
+
+  <!-- 🔹 Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
   <div class="container">
       <a class="navbar-brand" href="#">
@@ -209,7 +212,8 @@ body.autorizado .conteudo-restrito {
           <div class="mb-3">
             <label class="form-label">Formato:</label>
             <select id="formato-importacao" class="form-select">
-              <option value="csv">CSV (Excel e outros)</option>
+              <option value="csv">CSV</option>
+              <option value="xlsx">Excel (XLSX)</option>
               <option value="json">JSON (Backup completo)</option>
             </select>
           </div>
@@ -262,7 +266,11 @@ body.autorizado .conteudo-restrito {
 <!-- SheetJS (para exportação Excel) -->
 <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
 
-<!-- Script principal -->
+
+
+
+
+  <!-- Script principal -->
 <script type="module">
 // Referência global para FileSaver
 const { saveAs } = window;
@@ -279,127 +287,122 @@ const previewTable = document.getElementById('preview-table');
 const mensagens = document.getElementById('mensagens');
 const progressBar = document.getElementById('progress-bar');
 
+// Ordem desejada dos campos
+const ordemCampos = [
+  'nome', 'nascimento', 'sexo', 'telefone', 'funcao',
+  'batismo', 'endereco', 'bairro', 'cidade', 'estado', 'cep', 'fotoURL'
+];
+
 // Variáveis globais
 let dadosImportacao = null;
 
-// Configura arrastar e soltar
-importArea.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  importArea.style.borderColor = '#4CAF50';
-  importArea.style.backgroundColor = '#e8f5e9';
-});
-
-importArea.addEventListener('dragleave', () => {
-  importArea.style.borderColor = '#ccc';
-  importArea.style.backgroundColor = '';
-});
-
-importArea.addEventListener('drop', (e) => {
-  e.preventDefault();
-  importArea.style.borderColor = '#ccc';
-  importArea.style.backgroundColor = '';
-  
-  if (e.dataTransfer.files.length) {
-    fileInput.files = e.dataTransfer.files;
-    handleFileSelection();
-  }
-});
-
-importArea.addEventListener('click', () => {
-  fileInput.click();
-});
-
-fileInput.addEventListener('change', handleFileSelection);
-
-// Função para lidar com a seleção de arquivo
+// ====================== FUNÇÕES DE IMPORTAÇÃO ======================
 function handleFileSelection() {
   const file = fileInput.files[0];
   if (!file) return;
   
   const formato = document.getElementById('formato-importacao').value;
-  const reader = new FileReader();
   
   btnImportar.disabled = true;
   previewTable.style.display = 'none';
   
+  if (formato === 'xlsx') {
+    parseXLSX(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        if (formato === 'csv') {
+          parseCSV(e.target.result);
+        } else if (formato === 'json') {
+          parseJSON(e.target.result);
+        }
+        btnImportar.disabled = false;
+      } catch (error) {
+        showMessage(`Erro ao processar arquivo: ${error.message}`, 'danger');
+        console.error(error);
+      }
+    };
+    reader.readAsText(file);
+  }
+}
+
+function parseXLSX(file) {
+  const reader = new FileReader();
+  
   reader.onload = function(e) {
     try {
-      const data = e.target.result;
-      
-      if (formato === 'csv') {
-        parseCSV(data);
-      } else if (formato === 'json') {
-        parseJSON(data);
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+      // Processar cada registro
+      const dadosFormatados = jsonData.map(item => {
+        const novoItem = {};
+        
+        // Mapear campos existentes e tratar fotoURL
+        ordemCampos.forEach(campo => {
+          if (campo === 'fotoURL' && (!item[campo] || item[campo].toString().trim() === '')) {
+            novoItem[campo] = 'sem-foto.png';
+          } else {
+            novoItem[campo] = item[campo] || '';
+          }
+        });
+
+        return novoItem;
+      });
+
+      if (dadosFormatados.length > 0) {
+        dadosImportacao = dadosFormatados;
+        showPreview(ordemCampos, dadosFormatados);
       }
-      
-      btnImportar.disabled = false;
     } catch (error) {
-      showMessage(`Erro ao processar arquivo: ${error.message}`, 'danger');
+      showMessage(`Erro ao ler arquivo Excel: ${error.message}`, 'danger');
       console.error(error);
     }
   };
   
-  if (formato === 'csv') {
-    reader.readAsText(file);
-  } else {
-    reader.readAsText(file);
-  }
+  reader.readAsArrayBuffer(file);
 }
 
-// Função para analisar CSV
-function parseCSV(csvData) {
-  const lines = csvData.split('\n');
-  const headers = lines[0].split(',').map(h => h.trim());
-  const rows = [];
-  
-  for (let i = 1; i < lines.length; i++) {
-    if (lines[i].trim() === '') continue;
-    
-    const values = lines[i].split(',');
-    const row = {};
-    
-    for (let j = 0; j < headers.length; j++) {
-      row[headers[j]] = values[j] ? values[j].trim() : '';
-    }
-    
-    rows.push(row);
-  }
-  
-  dadosImportacao = rows;
-  showPreview(headers, rows);
-}
+// ====================== FUNÇÕES DE EXPORTAÇÃO ======================
+async function exportToExcel(data) {
+  if (data.length === 0) return;
 
-// Função para analisar JSON
-function parseJSON(jsonData) {
-  try {
-    const data = JSON.parse(jsonData);
-    
-    if (typeof data === 'object' && data !== null) {
-      if (Array.isArray(data)) {
-        // É um array de objetos
-        if (data.length > 0) {
-          const headers = Object.keys(data[0]);
-          dadosImportacao = data;
-          showPreview(headers, data);
-        }
+  // Preparar dados com a ordem correta e tratamento de fotoURL
+  const dadosOrdenados = data.map(membro => {
+    const novoMembro = {};
+    ordemCampos.forEach(coluna => {
+      // Tratamento especial para fotoURL
+      if (coluna === 'fotoURL') {
+        novoMembro[coluna] = (membro[coluna] && membro[coluna].trim() !== '') 
+          ? membro[coluna] 
+          : 'sem-foto.png';
       } else {
-        // É um objeto único (provavelmente um backup completo)
-        if (data.membros) {
-          const membros = Object.values(data.membros);
-          if (membros.length > 0) {
-            const headers = Object.keys(membros[0]);
-            dadosImportacao = data; // Mantemos a estrutura completa para importação
-            showPreview(headers, membros);
-          }
-        }
+        novoMembro[coluna] = membro[coluna] || '';
       }
-    }
-  } catch (error) {
-    throw new Error('JSON inválido: ' + error.message);
-  }
+    });
+    return novoMembro;
+  });
+
+  // Criar planilha com a ordem definida
+  const ws = XLSX.utils.json_to_sheet(dadosOrdenados, { header: ordemCampos });
+
+  // Definir larguras das colunas
+  ws['!cols'] = [
+    { wch: 25 }, { wch: 12 }, { wch: 8 }, { wch: 15 },
+    { wch: 15 }, { wch: 12 }, { wch: 30 }, { wch: 15 },
+    { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 20 }
+  ];
+
+  // Criar e salvar arquivo
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Membros");
+  XLSX.writeFile(wb, `membros_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-// Mostrar pré-visualização
+// ====================== FUNÇÕES AUXILIARES ======================
 function showPreview(headers, rows) {
   const thead = previewTable.querySelector('thead');
   const tbody = previewTable.querySelector('tbody');
@@ -433,7 +436,10 @@ function showPreview(headers, rows) {
   showMessage(`Pré-visualização carregada (mostrando ${maxRows} de ${rows.length} registros)`, 'success');
 }
 
-// Exportar dados
+// ====================== EVENT LISTENERS ======================
+importArea.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFileSelection);
+
 btnExportar.addEventListener('click', async () => {
   try {
     btnExportar.disabled = true;
@@ -450,12 +456,8 @@ btnExportar.addEventListener('click', async () => {
     const data = snapshot.val();
     const membros = Object.values(data);
     
-    if (formato === 'csv') {
-      exportToCSV(membros);
-    } else if (formato === 'excel') {
-      exportToExcel(membros);
-    } else if (formato === 'json') {
-      exportToJSON(data);
+    if (formato === 'xlsx') {
+      await exportToExcel(membros);
     }
     
     showMessage('Exportação concluída com sucesso!', 'success');
@@ -467,144 +469,6 @@ btnExportar.addEventListener('click', async () => {
     btnExportar.innerHTML = '<i class="fas fa-download me-2"></i>Exportar Dados';
   }
 });
-
-// Funções de exportação
-function exportToCSV(data) {
-  if (data.length === 0) return;
-  
-  const headers = Object.keys(data[0]);
-  let csv = headers.join(',') + '\n';
-  
-  data.forEach(item => {
-    const row = headers.map(header => {
-      // Tratar valores nulos/undefined e strings com vírgulas
-      const value = item[header] !== undefined && item[header] !== null ? item[header] : '';
-      return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
-    }).join(',');
-    
-    csv += row + '\n';
-  });
-  
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  saveAs(blob, `membros_${new Date().toISOString().slice(0,10)}.csv`);
-}
-
-function exportToExcel(data) {
-  if (data.length === 0) return;
-  
-  // Usando SheetJS (XLSX) carregado globalmente
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Membros");
-  XLSX.writeFile(wb, `membros_${new Date().toISOString().slice(0,10)}.xlsx`);
-}
-
-function exportToJSON(data) {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  saveAs(blob, `backup_membros_${new Date().toISOString().slice(0,10)}.json`);
-}
-
-// Importar dados
-btnImportar.addEventListener('click', async () => {
-  try {
-    if (!dadosImportacao) {
-      showMessage('Nenhum dado carregado para importação', 'warning');
-      return;
-    }
-    
-    if (!confirm('Tem certeza que deseja importar estes dados?')) return;
-    
-    btnImportar.disabled = true;
-    btnImportar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Importando...';
-    progressBar.classList.remove('d-none');
-    
-    const formato = document.getElementById('formato-importacao').value;
-    const sobrescrever = document.getElementById('sobrescrever-dados').checked;
-    
-    if (formato === 'csv') {
-      await importCSVData(dadosImportacao, sobrescrever);
-    } else if (formato === 'json') {
-      await importJSONData(dadosImportacao, sobrescrever);
-    }
-    
-    showMessage('Importação concluída com sucesso!', 'success');
-  } catch (error) {
-    showMessage(`Erro na importação: ${error.message}`, 'danger');
-    console.error(error);
-  } finally {
-    btnImportar.disabled = false;
-    btnImportar.innerHTML = '<i class="fas fa-upload me-2"></i>Importar Dados';
-    progressBar.classList.add('d-none');
-  }
-});
-
-// Funções de importação
-async function importCSVData(data, sobrescrever) {
-  const membrosRef = ref(db, 'membros');
-  
-  if (sobrescrever) {
-    // Limpar dados existentes
-    await set(membrosRef, {});
-  }
-  
-  const total = data.length;
-  let imported = 0;
-  
-  for (const membro of data) {
-    try {
-      const novoMembroRef = ref(db, `membros/${Date.now()}`);
-      await set(novoMembroRef, membro);
-      
-      imported++;
-      updateProgress(imported, total);
-    } catch (error) {
-      console.error(`Erro ao importar membro: ${error}`);
-    }
-  }
-}
-
-async function importJSONData(data, sobrescrever) {
-  if (sobrescrever) {
-    // Importação completa sobrescrevendo tudo
-    await set(ref(db), data);
-  } else {
-    // Importação apenas dos membros, mesclando com existentes
-    if (data.membros) {
-      const updates = {};
-      for (const [key, value] of Object.entries(data.membros)) {
-        updates[`membros/${key}`] = value;
-      }
-      await update(ref(db), updates);
-    }
-  }
-}
-
-// Atualizar barra de progresso
-function updateProgress(current, total) {
-  const percent = Math.round((current / total) * 100);
-  const progressBarElement = progressBar.querySelector('.progress-bar');
-  progressBarElement.style.width = `${percent}%`;
-  progressBarElement.textContent = `${percent}%`;
-}
-
-// Mostrar mensagens
-function showMessage(text, type) {
-  const alert = document.createElement('div');
-  alert.className = `alert alert-${type} alert-dismissible fade show`;
-  alert.innerHTML = `
-    ${text}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  `;
-  
-  mensagens.appendChild(alert);
-  
-  // Remove a mensagem após 5 segundos
-  setTimeout(() => {
-    alert.classList.remove('show');
-    setTimeout(() => alert.remove(), 150);
-  }, 5000);
-}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
