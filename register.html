@@ -310,11 +310,12 @@
     e.preventDefault();
     try {
       await registerUser(
-        document.getElementById('username').value,
-        document.getElementById('password').value,
-        document.getElementById('fullName').value,
-        document.getElementById('isAdmin').checked
-      );
+  document.getElementById('username').value,
+  document.getElementById('password').value,
+  document.getElementById('fullName').value,
+  document.getElementById('role').value
+);
+
       showToast('Usuário cadastrado com sucesso!');
       registerForm.reset();
       loadUsers();
