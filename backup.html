@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backup e Restauração</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+body {
+  padding-top: 70px;
+  background-color: #f8f9fa;
+}
+.navbar { 
+  background-color: #4CAF50; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+}
+.navbar-brand, .nav-link { 
+  color: white !important; 
+}
+.navbar-brand:hover, .nav-link:hover { 
+  color: #e0e0e0 !important; 
+}
+.card {
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+  border: none;
+}
+.card-header { 
+  background-color: #4CAF50; 
+  color: white; 
+  border-radius: 10px 10px 0 0 !important; 
+}
+#preview { 
+  font-size: 14px; 
+  background-color: #f8f9fa; 
+  border-radius: 5px; 
+}
+.progress { 
+  height: 25px; 
+  border-radius: 5px; 
+}
+.progress-bar { 
+  background-color: #4CAF50; 
+}
+.btn-primary { 
+  background-color: #4CAF50; 
+  border-color: #4CAF50; 
+}
+.btn-primary:hover { 
+  background-color: #3e8e41; 
+  border-color: #3e8e41; 
+}
+.btn-danger { 
+  background-color: #f44336; 
+  border-color: #f44336; 
+}
+
+/* Estilos para mensagem de não autorizado */
+#nao-autorizado {
+  margin-top: 100px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  display: none;
+}
+
+/* Oculta conteúdo restrito por padrão */
+.conteudo-restrito {
+  display: none;
+}
+
+body.autorizado .conteudo-restrito {
+  display: block;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Mensagem de não autorizado (igual à listagem.html) -->
+<div id="nao-autorizado">
+  <div class="alert alert-danger text-center">
+    <h4><i class="fas fa-exclamation-triangle me-2"></i>Acesso Restrito</h4>
+    <p class="mb-4">Você não tem permissão para acessar esta área administrativa.</p>
+    <a href="index.html" class="btn btn-primary">
+      <i class="fas fa-arrow-left me-2"></i>Voltar à página inicial
+    </a>
+  </div>
+</div>
+
+<!-- 🔹 Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
+  <div class="container">
+    <a class="navbar-brand" href="#"><i class="fas fa-database me-2"></i>Backup Firebase</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="index.html"><i class="fas fa-home me-1"></i> Home</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-5 conteudo-restrito">
+  <h1 class="mb-4 text-center"><i class="fas fa-cloud me-2"></i>Backup & Restauração</h1>
+
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0"><i class="fas fa-download me-2"></i>Backup do Banco de Dados</h5>
+    </div>
+    <div class="card-body">
+      <p class="card-text">Crie um backup completo do seu banco de dados Firebase em formato JSON.</p>
+      <button class="btn btn-primary" id="backup-db">
+        <i class="fas fa-file-download me-2"></i>Gerar Backup
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0"><i class="fas fa-upload me-2"></i>Restaurar Banco de Dados</h5>
+    </div>
+    <div class="card-body">
+      <p class="card-text">Selecione um arquivo de backup (.json) para restaurar seus dados.</p>
+      <div class="mb-3">
+        <input type="file" class="form-control" id="restaurar-db" accept=".json">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Pré-visualização:</label>
+        <pre id="preview" class="bg-light p-3 border rounded" style="max-height: 300px; overflow:auto;"></pre>
+      </div>
+      <button class="btn btn-danger" id="confirm-restore" disabled>
+        <i class="fas fa-redo me-2"></i>Confirmar Restauração
+      </button>
+    </div>
+  </div>
+
+  <div class="progress mt-4">
+    <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%"></div>
+  </div>
+  <div class="text-center mt-2" id="progress-label"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCv6pzl34tyPTARtGxV6g2AJfkrtQeA-xU",
+  authDomain: "cadastro-igreja-23042.firebaseapp.com",
+  databaseURL: "https://cadastro-igreja-23042-default-rtdb.firebaseio.com",
+  projectId: "cadastro-igreja-23042",
+  storageBucket: "cadastro-igreja-23042.appspot.com",
+  messagingSenderId: "977906864836",
+  appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+// Verifica se é admin no Realtime Database
+async function checkAdmin(user) {
+  try {
+    if (!user) return false;
+    
+    const userRef = ref(db, `users/${user.uid}`);
+    const snapshot = await get(userRef);
+    
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      return userData.isAdmin === true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Erro na verificação:", error);
+    return false;
+  }
+}
+
+// Controla a exibição do conteúdo
+function toggleContent(isAdmin) {
+  const authMsg = document.getElementById('nao-autorizado');
+  const content = document.querySelectorAll('.conteudo-restrito');
+  
+  if (isAdmin) {
+    document.body.classList.add('autorizado');
+    authMsg.style.display = 'none';
+  } else {
+    document.body.classList.remove('autorizado');
+    authMsg.style.display = 'block';
+  }
+}
+
+// Verificação de autenticação e permissões
+document.addEventListener('DOMContentLoaded', () => {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+    
+    const isAdmin = await checkAdmin(user);
+    toggleContent(isAdmin);
+  });
+});
+
+// Funções de backup e restauração
+document.getElementById('backup-db').addEventListener('click', async () => {
+  resetProgress();
+  setProgress(10, "Iniciando backup...");
+
+  const dados = {};
+  const paths = [
+    { path: 'membros', label: 'membros' },
+    { path: 'presencas_culto', label: 'presencas_culto' },
+    { path: 'relogio/horarios', label: 'relogio' },
+    { path: 'users', label: 'users' }
+  ];
+  let percent = 10;
+
+  for (const {path, label} of paths) {
+    setProgress(percent, `Lendo ${label}...`);
+    const snapshot = await get(ref(db, `/${path}`));
+    dados[label] = snapshot.exists() ? snapshot.val() : {};
+    percent += Math.floor(80 / paths.length);
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  setProgress(90, "Preparando arquivo...");
+  const blob = new Blob([JSON.stringify(dados, null, 2)], {type : 'application/json'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `backup-database-${new Date().toISOString()}.json`;
+  await new Promise(r => setTimeout(r, 500));
+  link.click();
+  setProgress(100, "Backup concluído!");
+});
+
+document.getElementById('restaurar-db').addEventListener('change', async (e) => {
+  resetProgress();
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const json = JSON.parse(text);
+  document.getElementById("preview").textContent = JSON.stringify(json, null, 2);
+  document.getElementById("confirm-restore").disabled = false;
+  window.dadosParaRestaurar = json;
+});
+
+document.getElementById('confirm-restore').addEventListener('click', async () => {
+  if (!window.dadosParaRestaurar) return;
+
+  const dados = window.dadosParaRestaurar;
+  let percent = 10;
+  const delayBetweenOperations = 300;
+
+  try {
+    // Verificação de admin
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado");
+    
+    const userRef = ref(db, `users/${user.uid}/isAdmin`);
+    const snapshot = await get(userRef);
+    if (!snapshot.exists() || !snapshot.val()) {
+      throw new Error("Apenas administradores podem restaurar backups");
+    }
+
+    // Restauração dos membros
+    if (dados.membros) {
+      setProgress(percent, "Restaurando membros...");
+      await set(ref(db, 'membros'), dados.membros);
+      percent += 25;
+      await new Promise(r => setTimeout(r, delayBetweenOperations));
+    }
+
+    // Restauração das presenças
+    if (dados.presencas_culto) {
+      setProgress(percent, "Restaurando presenças...");
+      await set(ref(db, 'presencas_culto'), dados.presencas_culto);
+      percent += 25;
+      await new Promise(r => setTimeout(r, delayBetweenOperations));
+    }
+
+    // Restauração do relógio/horarios
+    if (dados.relogio?.horarios) {
+      setProgress(percent, "Restaurando horários...");
+      await set(ref(db, 'relogio/horarios'), dados.relogio.horarios);
+      percent += 25;
+      await new Promise(r => setTimeout(r, delayBetweenOperations));
+    }
+
+    // Restauração dos usuários
+    if (dados.users) {
+      setProgress(percent, "Restaurando usuários...");
+      const usersData = dados.users;
+      
+      for (const userId in usersData) {
+        if (usersData[userId]) {
+          await set(ref(db, `users/${userId}`), {
+            username: usersData[userId].username,
+            fullName: usersData[userId].fullName,
+            isAdmin: usersData[userId].isAdmin
+          });
+          await new Promise(r => setTimeout(r, 100));
+        }
+      }
+      percent += 25;
+    }
+
+    setProgress(100, "Restauração concluída com sucesso!");
+    alert("Banco de dados restaurado com sucesso!");
+    
+  } catch (error) {
+    console.error("Erro na restauração:", error);
+    setProgress(0, `Erro: ${error.message}`, true);
+    alert(`Falha na restauração: ${error.message}`);
+  } finally {
+    document.getElementById("confirm-restore").disabled = true;
+    document.getElementById("preview").textContent = "";
+    window.dadosParaRestaurar = null;
+  }
+});
+
+function setProgress(percent, text, isError = false) {
+  const bar = document.getElementById("progress-bar");
+  const label = document.getElementById("progress-label");
+  bar.style.width = percent + "%";
+  bar.setAttribute('aria-valuenow', percent);
+  if (isError) {
+    bar.classList.remove('bg-success');
+    bar.classList.add('bg-danger');
+  } else {
+    bar.classList.remove('bg-danger');
+    bar.classList.add('bg-success');
+  }
+  label.textContent = text;
+  label.style.color = isError ? 'red' : 'inherit';
+}
+function resetProgress() { setProgress(0, ""); }
+</script>
+
+  
+<!-- Logoff após inatividade -->
+<script type="module" src="js/session-timeout.js"></script>
+
+</body>
+</html>

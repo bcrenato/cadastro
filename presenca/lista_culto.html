@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta de Presenças</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    .culto-card {
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .culto-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .badge-member {
+      background-color: #0d6efd;
+    }
+    .badge-visitor {
+      background-color: #ffc107;
+      color: #000;
+    }
+    .count-badge {
+      background-color: #6c757d;
+      margin-left: 5px;
+    }
+    
+ .navbar {
+  background-color: #4CAF50; /* verde */
+   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand {
+  color: #fff;
+}
+
+.navbar .nav-link:hover,
+.navbar .navbar-brand:hover {
+  color: #ddd;
+}
+
+    .bg-verde-escuro {
+        background-color: #1e7e34 !important;
+    }
+
+ .btn-primary {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+    }
+    .btn-primary:hover {
+        background-color: #218838 !important;
+        border-color: #1e7e34 !important;
+    }
+    /* Adicione essas linhas para evitar o azul ao clicar */
+    .btn-primary:active,
+    .btn-primary:focus,
+    .btn-primary.active {
+        background-color: #1e7e34 !important;
+        border-color: #1c7430 !important;
+        box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.5) !important;
+    }
+    
+
+
+    
+    .loading-spinner {
+      display: none;
+    }
+    .btn-buscar .loading-spinner {
+      display: inline-block;
+      margin-right: 8px;
+    }
+  </style>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <!-- Navbar com botão de voltar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">Consulta de Presenças</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+
+          <li class="nav-item">
+            <a class="nav-link" href="frequencia.html">
+              <i class="bi bi-graph-up me-1"></i> Frequencia Mensal
+            </a>
+            
+          <li class="nav-item">
+            <a class="nav-link" href="lista.html">
+              <i class="bi bi-arrow-left"></i> Voltar para Cadastro
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="btn-logout" href="#">
+              <i class="bi bi-box-arrow-right"></i> Sair
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <div class="card shadow">
+      <div class="card-header bg-verde-escuro text-white">
+        <h4 class="mb-0">Consulta de Presenças nos Cultos</h4>
+      </div>
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <label for="data-inicio" class="form-label">Data Início</label>
+            <input type="date" id="data-inicio" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label for="data-fim" class="form-label">Data Fim</label>
+            <input type="date" id="data-fim" class="form-control">
+          </div>
+        </div>
+        
+        <button id="btn-buscar" class="btn btn-primary mb-4">
+          <span class="loading-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <i class="bi bi-search"></i> Buscar Cultos
+        </button>
+        
+        <div id="lista-cultos" class="row g-3"></div>
+        
+        <!-- Modal para detalhes do culto -->
+        <div class="modal fade" id="cultoModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="cultoModalTitle">Detalhes do Culto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <h6 id="cultoModalDate" class="mb-3"></h6>
+                <div id="cultoModalContent" class="list-group"></div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button id="btn-exportar" type="button" class="btn btn-success">
+                  <i class="bi bi-download"></i> Exportar Lista
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  
+  <script type="module">
+    // Importe sua configuração do Firebase
+    import { firebaseConfig } from '../firebase-config.js';
+
+    // Inicialize o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+    const cultoModal = new bootstrap.Modal(document.getElementById('cultoModal'));
+    
+    // Variáveis globais
+    let membrosCadastrados = [];
+    let cultoAtual = null;
+    
+    // Verifica autenticação
+    auth.onAuthStateChanged((user) => {
+      if (!user) {
+        window.location.href = '../login.html';
+        return;
+      }
+      
+      // Usuário autenticado, inicializa a aplicação
+      inicializarAplicacao();
+    });
+    
+    // Configura logout
+    document.getElementById('btn-logout').addEventListener('click', (e) => {
+      e.preventDefault();
+      auth.signOut().then(() => {
+        window.location.href = '../login.html';
+      });
+    });
+    
+    function inicializarAplicacao() {
+      // Define datas padrão (últimos 30 dias)
+      const fim = new Date();
+      const inicio = new Date();
+      inicio.setDate(inicio.getDate() - 30);
+      
+      document.getElementById('data-inicio').value = inicio.toISOString().split('T')[0];
+      document.getElementById('data-fim').value = fim.toISOString().split('T')[0];
+      
+      // Carrega membros cadastrados
+      carregarMembros();
+      
+      // Configura eventos
+      document.getElementById('btn-buscar').addEventListener('click', buscarCultosPorPeriodo);
+      
+      // Busca automaticamente
+      buscarCultosPorPeriodo();
+    }
+    
+    // Carrega a lista de membros cadastrados
+    function carregarMembros() {
+      database.ref('membros').once('value').then((snapshot) => {
+        membrosCadastrados = [];
+        snapshot.forEach((childSnapshot) => {
+          membrosCadastrados.push({
+            id: childSnapshot.key,
+            ...childSnapshot.val()
+          });
+        });
+        console.log('Membros carregados:', membrosCadastrados.length);
+      }).catch(error => {
+        console.error('Erro ao carregar membros:', error);
+      });
+    }
+    
+    // Busca cultos por período
+    function buscarCultosPorPeriodo() {
+      const dataInicio = document.getElementById('data-inicio').value;
+      const dataFim = document.getElementById('data-fim').value;
+      const btnBuscar = document.getElementById('btn-buscar');
+      
+      if (!dataInicio || !dataFim) {
+        mostrarAlerta('Selecione ambas as datas', 'warning');
+        return;
+      }
+      
+      // Mostra spinner e desabilita botão
+      btnBuscar.disabled = true;
+      btnBuscar.querySelector('.loading-spinner').style.display = 'inline-block';
+      
+      const listaCultos = document.getElementById('lista-cultos');
+      listaCultos.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+      
+      database.ref('presencas_culto').once('value').then((snapshot) => {
+        const cultos = [];
+        
+        snapshot.forEach((childSnapshot) => {
+          const cultoData = childSnapshot.val();
+          const cultoId = childSnapshot.key;
+          const cultoDate = cultoData.data;
+          
+          // Verifica se está no intervalo
+          if (cultoDate >= dataInicio && cultoDate <= dataFim) {
+            // Conta membros e visitantes
+            let membros = 0;
+            let visitantes = 0;
+            
+            if (cultoData.presentes) {
+              Object.values(cultoData.presentes).forEach(valor => {
+                if (valor === true) membros++;
+                else visitantes++;
+              });
+            }
+            
+            cultos.push({
+              id: cultoId,
+              date: cultoDate,
+              totalPresentes: Object.keys(cultoData.presentes || {}).length,
+              membros: membros,
+              visitantes: visitantes,
+              dados: cultoData.presentes
+            });
+          }
+        });
+        
+        // Ordena por data (mais recente primeiro)
+        cultos.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        exibirCultos(cultos);
+      }).catch(error => {
+        console.error('Erro ao buscar cultos:', error);
+        mostrarAlerta('Erro ao carregar os cultos', 'danger');
+        listaCultos.innerHTML = '<div class="col-12 text-center text-danger py-4">Erro ao carregar os cultos</div>';
+      }).finally(() => {
+        // Restaura botão
+        btnBuscar.disabled = false;
+        btnBuscar.querySelector('.loading-spinner').style.display = 'none';
+      });
+    }
+    
+    // Exibe os cultos encontrados
+    function exibirCultos(cultos) {
+      const listaCultos = document.getElementById('lista-cultos');
+      listaCultos.innerHTML = '';
+      
+      if (cultos.length === 0) {
+        listaCultos.innerHTML = '<div class="col-12 text-center text-muted py-4">Nenhum culto encontrado neste período</div>';
+        return;
+      }
+      
+      cultos.forEach(culto => {
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4';
+        
+        const card = document.createElement('div');
+        card.className = 'card culto-card mb-3';
+        card.innerHTML = `
+          <div class="card-body">
+            <h5 class="card-title">${formatarData(culto.date)}</h5>
+            <p class="card-text">
+              ${culto.totalPresentes} ${culto.totalPresentes === 1 ? 'presente' : 'presentes'}
+              <span class="badge count-badge">${culto.membros} membros</span>
+              <span class="badge count-badge">${culto.visitantes} visitantes</span>
+            </p>
+            <button class="btn btn-sm btn-outline-primary" data-cultoid="${culto.id}" data-cultodate="${culto.date}">
+              Ver lista completa
+            </button>
+          </div>
+        `;
+        
+        col.appendChild(card);
+        listaCultos.appendChild(col);
+      });
+      
+      // Adiciona eventos aos botões
+      document.querySelectorAll('[data-cultoid]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const cultoId = e.target.getAttribute('data-cultoid');
+          const cultoDate = e.target.getAttribute('data-cultodate');
+          mostrarDetalhesCulto(cultoId, cultoDate);
+        });
+      });
+    }
+    
+    // Mostra os detalhes de um culto específico
+    function mostrarDetalhesCulto(cultoId, cultoDate) {
+      cultoAtual = { id: cultoId, date: cultoDate };
+      
+      const modalTitle = document.getElementById('cultoModalTitle');
+      const modalDate = document.getElementById('cultoModalDate');
+      const modalContent = document.getElementById('cultoModalContent');
+      
+      modalTitle.textContent = 'Lista de Presença';
+      modalDate.textContent = `Culto de ${formatarData(cultoDate)}`;
+      modalContent.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+      
+      database.ref(`presencas_culto/${cultoId}/presentes`).once('value').then((snapshot) => {
+        const presentesData = snapshot.val();
+        
+        modalContent.innerHTML = '';
+        
+        if (!presentesData || Object.keys(presentesData).length === 0) {
+          modalContent.innerHTML = '<div class="text-center text-muted py-4">Nenhum registro de presença encontrado</div>';
+          return;
+        }
+        
+        // Processa membros e visitantes
+        Object.entries(presentesData).forEach(([id, valor]) => {
+          const item = document.createElement('div');
+          item.className = 'list-group-item d-flex justify-content-between align-items-center';
+          
+          if (valor === true) {
+            // É um membro - busca nome e função
+            const membro = membrosCadastrados.find(m => m.id === id) || { nome: `Membro (ID: ${id})`, funcao: '' };
+            item.innerHTML = `
+              <div>${membro.nome}${membro.funcao ? ` - ${membro.funcao}` : ''}</div>
+              <span class="badge badge-member rounded-pill">Membro</span>
+            `;
+          } else {
+            // É um visitante
+            item.innerHTML = `
+              <div>${valor}</div>
+              <span class="badge badge-visitor rounded-pill">Visitante</span>
+            `;
+          }
+          
+          modalContent.appendChild(item);
+        });
+        
+        // Configura botão de exportar
+        document.getElementById('btn-exportar').onclick = () => exportarParaPDF(cultoId, cultoDate, presentesData);
+        
+        cultoModal.show();
+      }).catch(error => {
+        console.error('Erro ao carregar detalhes:', error);
+        modalContent.innerHTML = '<div class="text-center text-danger py-4">Erro ao carregar a lista de presença</div>';
+      });
+    }
+    
+    // Exporta a lista para PDF
+    function exportarParaPDF(cultoId, cultoDate, presentesData) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  const lineHeight = 7;
+  let yPos = 15;
+
+  // chama a nova função que adiciona logo e frase
+  adicionarLogoEFrase(doc, yPos, cultoDate, function(novoYPos) {
+    continuarGeracaoPDF(doc, novoYPos, cultoDate, presentesData);
+  });
+}
+
+function adicionarLogoEFrase(doc, yPos, cultoDate, callback) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const lineHeight = 7;
+  const margin = 15;
+
+  const logo = new Image();
+  logo.src = './logo.png'; // ajuste para a URL correta do logo
+
+  logo.onload = () => {
+    const desiredWidth = 80; // 🔷 ajuste aqui a largura do logo no PDF
+    const aspectRatio = logo.height / logo.width;
+
+    const logoWidth = desiredWidth;
+    const logoHeight = desiredWidth * aspectRatio;
+
+    const logoX = (pageWidth - logoWidth) / 2;
+
+    // adiciona logo
+    doc.addImage(logo, 'PNG', logoX, yPos, logoWidth, logoHeight);
+    yPos += logoHeight + 5;
+
+    // frase
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.text('Famílias vivendo na graça e unção do Espírito', pageWidth / 2, yPos, { align: 'center' });
+    yPos += lineHeight;
+
+    // 🔷 adiciona apenas um espaço extra aqui
+    yPos += lineHeight * 2;
+
+    // título
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('Lista de Presença - Culto', pageWidth / 2, yPos, { align: 'center' });
+    yPos += lineHeight;
+
+    // data
+    doc.setFontSize(14);
+    doc.text(formatarDataSimples(cultoDate), pageWidth / 2, yPos, { align: 'center' });
+    yPos += lineHeight * 2;
+
+    callback(yPos);
+  };
+}
+
+function continuarGeracaoPDF(doc, yPos, cultoDate, presentesData) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+
+  const headers = [['Nome', 'Tipo', 'Função']];
+  const rows = [];
+  let membrosCount = 0;
+  let visitantesCount = 0;
+
+  Object.entries(presentesData).forEach(([id, valor]) => {
+    if (valor === true) {
+      const membro = membrosCadastrados.find(m => m.id === id) || { nome: `Membro (ID: ${id})`, funcao: '' };
+      rows.push([membro.nome, 'Membro', membro.funcao || '']);
+      membrosCount++;
+    } else {
+      rows.push([valor, 'Visitante', '']);
+      visitantesCount++;
+    }
+  });
+
+  const ordemFuncoes = ['Pastor', 'Missionario(a)', 'Diacono', 'Obreiro(a)', 'Membro'];
+
+  rows.sort((a, b) => {
+    const funcA = a[2] || 'ZZZ';
+    const funcB = b[2] || 'ZZZ';
+
+    const idxA = ordemFuncoes.indexOf(funcA) !== -1 ? ordemFuncoes.indexOf(funcA) : ordemFuncoes.length;
+    const idxB = ordemFuncoes.indexOf(funcB) !== -1 ? ordemFuncoes.indexOf(funcB) : ordemFuncoes.length;
+
+    if (idxA !== idxB) {
+      return idxA - idxB;
+    }
+
+    return a[0].localeCompare(b[0]);
+  });
+
+  doc.autoTable({
+    startY: yPos,
+    head: headers,
+    body: rows,
+    margin: { left: margin, right: margin },
+    styles: {
+      fontSize: 13,
+      cellPadding: 3,
+      valign: 'middle'
+    },
+    headStyles: {
+      fillColor: [13, 110, 253],
+      textColor: 255,
+      fontStyle: 'bold'
+    },
+    alternateRowStyles: {
+      fillColor: [240, 240, 240]
+    }
+  });
+
+  yPos = doc.lastAutoTable.finalY + 10;
+
+  const totalPresentes = membrosCount + visitantesCount;
+
+  doc.setFontSize(12);
+  doc.text(`Total de Presentes no culto: ${totalPresentes}`, margin, yPos);
+  yPos += 7;
+  doc.text(`Membros: ${membrosCount}`, margin, yPos);
+  yPos += 7;
+  doc.text(`Visitantes: ${visitantesCount}`, margin, yPos);
+
+  doc.save(`presenca_culto_${cultoDate}.pdf`);
+}
+    
+    // Formata a data para exibição
+    function formatarData(dataString) {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const date = new Date(dataString + 'T12:00:00'); // 👈 aqui
+  return date.toLocaleDateString('pt-BR', options);
+}
+
+    // Formata data simples para o PDF
+    function formatarDataSimples(dataString) {
+  const date = new Date(dataString + 'T12:00:00'); // 👈 aqui
+  const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
+  return date.toLocaleDateString('pt-BR', options);
+}
+    
+    // Mostra alerta estilizado
+    function mostrarAlerta(mensagem, tipo) {
+      const alerta = document.createElement('div');
+      alerta.className = `alert alert-${tipo} alert-dismissible fade show mt-3`;
+      alerta.role = 'alert';
+      alerta.innerHTML = `
+        ${mensagem}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      
+      // Adiciona temporariamente ao DOM
+      const container = document.querySelector('.card-body');
+      const primeiroFilho = container.firstChild;
+      container.insertBefore(alerta, primeiroFilho);
+      
+      // Remove após 5 segundos
+      setTimeout(() => {
+        alerta.remove();
+      }, 5000);
+    }
+  </script>
+
+<!-- Logoff após inatividade -->
+<script type="module" src="../js/session-timeout.js"></script>
+
+
+
+</body>
+</html>

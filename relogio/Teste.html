@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Inicializar horários</title>
+  <script src="firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
+</head>
+<body>
+  <h1>Inicializar horários no Firebase</h1>
+  <button onclick="inicializarHorarios()">Criar horários 06:00–18:00</button>
+  <pre id="resultado"></pre>
+
+  <script>
+    const db = firebase.database();
+
+    function inicializarHorarios() {
+      const updates = {};
+      for (let h = 6; h <= 18; h++) {
+        let hora = h.toString().padStart(2, '0') + ':00';
+        updates[`horarios/${hora}`] = {
+          reservado: false,
+          nome_reserva: ''
+        };
+      }
+
+      db.ref().update(updates)
+        .then(() => {
+          document.getElementById('resultado').textContent =
+            '✅ Horários criados de 06:00 até 18:00.';
+        })
+        .catch(err => {
+          document.getElementById('resultado').textContent =
+            '❌ Erro: ' + err.message;
+        });
+    }
+  </script>
+</body>
+</html>

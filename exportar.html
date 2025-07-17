@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Administração - Importar/Exportar</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+body { padding-top: 70px; }
+.navbar { background-color: #4CAF50; }
+.navbar .nav-link, .navbar .navbar-brand { color: #fff; }
+.navbar .nav-link:hover, .navbar .navbar-brand:hover { color: #ddd; }
+#nao-autorizado {
+  margin-top: 100px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  display: none;
+}
+.conteudo-restrito { display: none; }
+body.autorizado .conteudo-restrito { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Acesso restrito -->
+<div id="nao-autorizado">
+  <div class="alert alert-danger text-center">
+    <h4><i class="fas fa-exclamation-triangle me-2"></i>Acesso Restrito</h4>
+    <p class="mb-4">Você não tem permissão para acessar esta área administrativa.</p>
+    <a href="index.html" class="btn btn-primary"><i class="fas fa-arrow-left me-2"></i>Voltar à página inicial</a>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from './firebase-config.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+async function checkAdmin(user) {
+  if (!user) return false;
+  const snapshot = await get(ref(db, `users/${user.uid}`));
+  if (!snapshot.exists()) return false;
+  return snapshot.val().isAdmin === true;
+}
+
+function toggleContent(isAdmin) {
+  const authMsg = document.getElementById('nao-autorizado');
+  const content = document.querySelectorAll('.conteudo-restrito');
+  if (isAdmin) {
+    authMsg.style.display = 'none';
+    content.forEach(el => el.style.display = 'block');
+    document.body.classList.add('autorizado');
+  } else {
+    authMsg.style.display = 'block';
+    content.forEach(el => el.style.display = 'none');
+    document.body.classList.remove('autorizado');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  onAuthStateChanged(auth, async (user) => {
+    const isAdmin = await checkAdmin(user);
+    toggleContent(isAdmin);
+  });
+});
+</script>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
+  <div class="container">
+    <a class="navbar-brand" href="#"><i class="fas fa-database me-2"></i>Administração</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-home me-1"></i> Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="lista.html"><i class="fas fa-list me-1"></i> Lista de Membros</a></li>
+      </ul>
+    </div>
+  </div> 
+</nav>
+
+<!-- Conteúdo -->
+<div class="container mt-4 conteudo-restrito">
+  <h3>Importar/Exportar Membros</h3>
+  <div class="mb-3">
+    <button id="btnExportar" class="btn btn-success"><i class="fas fa-file-excel me-1"></i> Exportar Excel</button>
+    <input type="file" id="inputImportar" accept=".xlsx,.xls" class="form-control mt-3" />
+  </div>
+  <div id="mensagem" class="mt-3"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="module">
+import { db } from './firebase-config.js';
+import { ref, set, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const btnExportar = document.getElementById("btnExportar");
+const inputImportar = document.getElementById("inputImportar");
+const mensagem = document.getElementById("mensagem");
+
+btnExportar.addEventListener("click", async () => {
+  const { get } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js");
+  const snapshot = await get(ref(db, "membros"));
+  if (!snapshot.exists()) return alert("Nenhum membro encontrado.");
+  
+  const membros = Object.values(snapshot.val()).map(m => [
+    m.nome || "",
+    formatDate(m.nascimento),
+    m.sexo || "",
+    m.telefone || "",
+    m.funcao || "",
+    formatDate(m.batismo),
+    m.endereco || "",
+    m.bairro || "",
+    m.cidade || "",
+    m.estado || "",
+    m.cep || "",
+    m.fotoURL || ""
+  ]);
+  
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["nome", "nascimento", "sexo", "telefone", "funcao", "batismo", "endereco", "bairro", "cidade", "estado", "cep", "fotoURL"],
+    ...membros
+  ]);
+  
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Membros");
+  XLSX.writeFile(wb, "membros.xlsx");
+});
+
+inputImportar.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    const data = new Uint8Array(evt.target.result);
+    const workbook = XLSX.read(data, {type: 'array'});
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet, {header:1});
+    const headers = json[0];
+    const rows = json.slice(1);
+
+    const novos = {};
+    for (const r of rows) {
+      const m = {};
+      headers.forEach((h,i) => {
+        m[h] = r[i] ?? "";
+      });
+
+      m.nascimento = parseDate(m.nascimento);
+      m.batismo = parseDate(m.batismo);
+      m.fotoURL = m.fotoURL || "sem-foto.png";
+
+      const novoId = crypto.randomUUID();
+      novos[novoId] = m;
+    }
+
+    // sobrescreve todos
+    await set(ref(db, "membros"), novos);
+    mostrarMensagem("✅ Importação concluída. Registros substituídos com sucesso.");
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const [y,m,d] = dateStr.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function excelDateToYMD(excelDate) {
+  const date = XLSX.SSF.parse_date_code(excelDate);
+  const y = date.y;
+  const m = String(date.m).padStart(2,'0');
+  const d = String(date.d).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
+function parseDate(value) {
+  if (!value) return "";
+  if (typeof value === "number") return excelDateToYMD(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+    const [d,m,y] = value.split("/");
+    return `${y}-${m}-${d}`;
+  }
+  return "";
+}
+
+function mostrarMensagem(msg) {
+  mensagem.innerHTML = `<div class="alert alert-info">${msg}</div>`;
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="js/session-timeout.js"></script>
+
+</body>
+</html>

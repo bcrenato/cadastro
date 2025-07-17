@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frequência Mensal nos Cultos</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    .badge-member {
+      background-color: #0d6efd;
+    }
+    .badge-visitor {
+      background-color: #ffc107;
+      color: #000;
+    }
+    .frequencia-badge {
+      background-color: #6c757d;
+      margin-left: 5px;
+    }
+    
+    .navbar {
+      background-color: #4CAF50; /* verde */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .navbar .nav-link,
+    .navbar .navbar-brand {
+      color: #fff;
+    }
+
+    .navbar .nav-link:hover,
+    .navbar .navbar-brand:hover {
+      color: #ddd;
+    }
+
+    .bg-verde-escuro {
+      background-color: #1e7e34 !important;
+    }
+
+    .btn-primary {
+      background-color: #28a745 !important;
+      border-color: #28a745 !important;
+    }
+    .btn-primary:hover {
+      background-color: #218838 !important;
+      border-color: #1e7e34 !important;
+    }
+    
+    .loading-spinner {
+      display: none;
+    }
+    .btn-buscar .loading-spinner {
+      display: inline-block;
+      margin-right: 8px;
+    }
+    
+    .frequencia-progress {
+      height: 25px;
+      border-radius: 5px;
+    }
+    
+    .list-group-item {
+      transition: all 0.2s;
+    }
+    .list-group-item:hover {
+      transform: translateX(5px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+  </style>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#">Frequência Mensal</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="lista.html">
+            <i class="bi bi-people-fill me-1"></i> Cadastro de Presença no Culto
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="lista_culto.html">
+            <i class="bi bi-list-check me-1"></i> Consulta Lista de Presença
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  <div class="container py-4">
+    <div class="card shadow">
+      <div class="card-header bg-verde-escuro text-white">
+        <h4 class="mb-0">Frequência Mensal nos Cultos</h4>
+      </div>
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <label for="mes" class="form-label">Mês</label>
+            <select id="mes" class="form-select">
+              <option value="1">Janeiro</option>
+              <option value="2">Fevereiro</option>
+              <option value="3">Março</option>
+              <option value="4">Abril</option>
+              <option value="5">Maio</option>
+              <option value="6">Junho</option>
+              <option value="7">Julho</option>
+              <option value="8">Agosto</option>
+              <option value="9">Setembro</option>
+              <option value="10">Outubro</option>
+              <option value="11">Novembro</option>
+              <option value="12">Dezembro</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="ano" class="form-label">Ano</label>
+            <select id="ano" class="form-select"></select>
+          </div>
+        </div>
+        
+        <button id="btn-buscar" class="btn btn-primary mb-4">
+          <span class="loading-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <i class="bi bi-search"></i> Buscar Frequência
+        </button>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card mb-4">
+              <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Membros</h5>
+              </div>
+              <div class="card-body">
+                <div id="lista-membros" class="list-group"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card mb-4">
+              <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Visitantes Frequentes</h5>
+              </div>
+              <div class="card-body">
+                <div id="lista-visitantes" class="list-group"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Estatísticas</h5>
+          </div>
+          <div class="card-body">
+            <div id="estatisticas" class="row">
+              <div class="col-md-6">
+                <h6>Total de Cultos no Mês: <span id="total-cultos" class="badge bg-primary">0</span></h6>
+                <h6>Média de Presença por Culto: <span id="media-presenca" class="badge bg-primary">0</span></h6>
+              </div>
+              <div class="col-md-6">
+                <h6>Membros com 100% de Frequência: <span id="membros-100" class="badge bg-success">0</span></h6>
+                <h6>Visitantes que Voltaram: <span id="visitantes-repetidos" class="badge bg-warning text-dark">0</span></h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+  
+  <script type="module">
+    // Importe sua configuração do Firebase
+    import { firebaseConfig } from '../firebase-config.js';
+
+    // Inicialize o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+    
+    // Variáveis globais
+    let membrosCadastrados = [];
+    let cultosDoMes = [];
+    
+    // Verifica autenticação
+    auth.onAuthStateChanged((user) => {
+      if (!user) {
+        window.location.href = '../login.html';
+        return;
+      }
+      
+      // Usuário autenticado, inicializa a aplicação
+      inicializarAplicacao();
+    });
+    
+    // Configura logout
+    document.getElementById('btn-logout').addEventListener('click', (e) => {
+      e.preventDefault();
+      auth.signOut().then(() => {
+        window.location.href = '../login.html';
+      });
+    });
+    
+    function inicializarAplicacao() {
+      // Preenche anos (últimos 5 anos)
+      const anoAtual = new Date().getFullYear();
+      const selectAno = document.getElementById('ano');
+      
+      for (let i = anoAtual; i >= anoAtual - 5; i--) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        selectAno.appendChild(option);
+      }
+      
+      // Define mês atual
+      const mesAtual = new Date().getMonth() + 1;
+      document.getElementById('mes').value = mesAtual;
+      
+      // Carrega membros cadastrados
+      carregarMembros();
+      
+      // Configura evento de busca
+      document.getElementById('btn-buscar').addEventListener('click', buscarFrequenciaMensal);
+      
+      // Busca automaticamente
+      buscarFrequenciaMensal();
+    }
+    
+    // Carrega a lista de membros cadastrados
+    function carregarMembros() {
+      database.ref('membros').once('value').then((snapshot) => {
+        membrosCadastrados = [];
+        snapshot.forEach((childSnapshot) => {
+          membrosCadastrados.push({
+            id: childSnapshot.key,
+            ...childSnapshot.val()
+          });
+        });
+        console.log('Membros carregados:', membrosCadastrados.length);
+      }).catch(error => {
+        console.error('Erro ao carregar membros:', error);
+      });
+    }
+    
+    // Busca frequência mensal
+    function buscarFrequenciaMensal() {
+      const mes = parseInt(document.getElementById('mes').value);
+      const ano = parseInt(document.getElementById('ano').value);
+      const btnBuscar = document.getElementById('btn-buscar');
+      
+      // Mostra spinner e desabilita botão
+      btnBuscar.disabled = true;
+      btnBuscar.querySelector('.loading-spinner').style.display = 'inline-block';
+      
+      // Limpa listas
+      document.getElementById('lista-membros').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+      document.getElementById('lista-visitantes').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-warning" role="status"></div></div>';
+      
+      // Calcula datas de início e fim do mês
+      const dataInicio = `${ano}-${mes.toString().padStart(2, '0')}-01`;
+      const ultimoDia = new Date(ano, mes, 0).getDate();
+      const dataFim = `${ano}-${mes.toString().padStart(2, '0')}-${ultimoDia.toString().padStart(2, '0')}`;
+      
+      database.ref('presencas_culto').once('value').then((snapshot) => {
+        cultosDoMes = [];
+        const frequenciaMembros = {};
+        const frequenciaVisitantes = {};
+        let totalCultos = 0;
+        
+        snapshot.forEach((childSnapshot) => {
+          const cultoData = childSnapshot.val();
+          const cultoId = childSnapshot.key;
+          const cultoDate = cultoData.data;
+          
+          // Verifica se está no intervalo do mês selecionado
+          if (cultoDate >= dataInicio && cultoDate <= dataFim) {
+            totalCultos++;
+            
+            if (cultoData.presentes) {
+              // Contabiliza presenças
+              Object.entries(cultoData.presentes).forEach(([id, valor]) => {
+                if (valor === true) {
+                  // É um membro
+                  if (!frequenciaMembros[id]) {
+                    frequenciaMembros[id] = 0;
+                  }
+                  frequenciaMembros[id]++;
+                } else {
+                  // É um visitante
+                  const nomeVisitante = valor;
+                  if (!frequenciaVisitantes[nomeVisitante]) {
+                    frequenciaVisitantes[nomeVisitante] = 0;
+                  }
+                  frequenciaVisitantes[nomeVisitante]++;
+                }
+              });
+            }
+          }
+        });
+        
+        // Atualiza estatísticas
+        document.getElementById('total-cultos').textContent = totalCultos;
+        
+        // Calcula média de presença (se houver cultos)
+        let mediaPresenca = 0;
+        if (totalCultos > 0) {
+          const totalPresentes = Object.values(frequenciaMembros).reduce((a, b) => a + b, 0) + 
+                               Object.values(frequenciaVisitantes).reduce((a, b) => a + b, 0);
+          mediaPresenca = Math.round(totalPresentes / totalCultos);
+        }
+        document.getElementById('media-presenca').textContent = mediaPresenca;
+        
+        // Conta membros com 100% de frequência
+        let membrosCompleta = 0;
+        Object.entries(frequenciaMembros).forEach(([id, freq]) => {
+          if (freq === totalCultos && totalCultos > 0) {
+            membrosCompleta++;
+          }
+        });
+        document.getElementById('membros-100').textContent = membrosCompleta;
+        
+        // Conta visitantes que compareceram mais de uma vez
+        let visitantesRepetidos = 0;
+        Object.values(frequenciaVisitantes).forEach(freq => {
+          if (freq > 1) {
+            visitantesRepetidos++;
+          }
+        });
+        document.getElementById('visitantes-repetidos').textContent = visitantesRepetidos;
+        
+        // Exibe lista de membros ordenada por frequência
+        exibirListaMembros(frequenciaMembros, totalCultos);
+        
+        // Exibe lista de visitantes frequentes
+        exibirListaVisitantes(frequenciaVisitantes);
+        
+      }).catch(error => {
+        console.error('Erro ao buscar frequência:', error);
+        mostrarAlerta('Erro ao carregar a frequência mensal', 'danger');
+      }).finally(() => {
+        // Restaura botão
+        btnBuscar.disabled = false;
+        btnBuscar.querySelector('.loading-spinner').style.display = 'none';
+      });
+    }
+    
+    // Exibe lista de membros ordenada por frequência
+    function exibirListaMembros(frequenciaMembros, totalCultos) {
+      const listaMembros = document.getElementById('lista-membros');
+      listaMembros.innerHTML = '';
+      
+      if (Object.keys(frequenciaMembros).length === 0) {
+        listaMembros.innerHTML = '<div class="text-center text-muted py-4">Nenhum membro compareceu neste período</div>';
+        return;
+      }
+      
+      // Cria array de membros com frequência
+      const membrosComFrequencia = [];
+      
+      for (const [id, freq] of Object.entries(frequenciaMembros)) {
+        const membro = membrosCadastrados.find(m => m.id === id) || { nome: `Membro (ID: ${id})`, funcao: '' };
+        membrosComFrequencia.push({
+          id,
+          nome: membro.nome,
+          funcao: membro.funcao,
+          frequencia: freq,
+          percentual: totalCultos > 0 ? Math.round((freq / totalCultos) * 100) : 0
+        });
+      }
+      
+      // Ordena por frequência (decrescente)
+      membrosComFrequencia.sort((a, b) => b.frequencia - a.frequencia);
+      
+      // Adiciona à lista
+      membrosComFrequencia.forEach(membro => {
+        const item = document.createElement('div');
+        item.className = 'list-group-item';
+        
+        item.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1">${membro.nome}</h6>
+              <small class="text-muted">${membro.funcao || 'Membro'}</small>
+            </div>
+            <span class="badge frequencia-badge rounded-pill">${membro.frequencia}/${totalCultos}</span>
+          </div>
+          <div class="mt-2">
+            <div class="progress frequencia-progress">
+              <div class="progress-bar" role="progressbar" style="width: ${membro.percentual}%" 
+                   aria-valuenow="${membro.percentual}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <small class="text-muted">${membro.percentual}% de frequência</small>
+          </div>
+        `;
+        
+        listaMembros.appendChild(item);
+      });
+    }
+    
+    // Exibe lista de visitantes frequentes
+    function exibirListaVisitantes(frequenciaVisitantes) {
+      const listaVisitantes = document.getElementById('lista-visitantes');
+      listaVisitantes.innerHTML = '';
+      
+      if (Object.keys(frequenciaVisitantes).length === 0) {
+        listaVisitantes.innerHTML = '<div class="text-center text-muted py-4">Nenhum visitante neste período</div>';
+        return;
+      }
+      
+      // Converte para array e ordena por frequência
+      const visitantesArray = Object.entries(frequenciaVisitantes)
+        .map(([nome, freq]) => ({ nome, freq }))
+        .sort((a, b) => b.freq - a.freq);
+      
+      // Adiciona à lista
+      visitantesArray.forEach(visitante => {
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex justify-content-between align-items-center';
+        
+        item.innerHTML = `
+          <div>${visitante.nome}</div>
+          <div>
+            <span class="badge bg-warning text-dark rounded-pill">${visitante.freq} ${visitante.freq === 1 ? 'vez' : 'vezes'}</span>
+          </div>
+        `;
+        
+        listaVisitantes.appendChild(item);
+      });
+    }
+    
+    // Mostra alerta estilizado
+    function mostrarAlerta(mensagem, tipo) {
+      const alerta = document.createElement('div');
+      alerta.className = `alert alert-${tipo} alert-dismissible fade show mt-3`;
+      alerta.role = 'alert';
+      alerta.innerHTML = `
+        ${mensagem}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      
+      // Adiciona temporariamente ao DOM
+      const container = document.querySelector('.card-body');
+      const primeiroFilho = container.firstChild;
+      container.insertBefore(alerta, primeiroFilho);
+      
+      // Remove após 5 segundos
+      setTimeout(() => {
+        alerta.remove();
+      }, 5000);
+    }
+  </script>
+
+
+
+<!-- Logoff após inatividade -->
+<script type="module" src="../js/session-timeout.js"></script>
+
+
+</body>
+</html>

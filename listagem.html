@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lista de Membros</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+body { padding-top: 70px; }
+.foto-miniatura {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.navbar {
+  background-color: #4CAF50; /* verde */
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand {
+  color: #fff;
+}
+
+.navbar .nav-link:hover,
+.navbar .navbar-brand:hover {
+  color: #ddd;
+}
+
+.membro-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+.info-membro {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  flex-grow: 1;
+}
+.checkbox-selecao {
+  display: none;
+}
+
+/* Estilos para mensagem de não autorizado */
+#nao-autorizado {
+  margin-top: 100px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  display: none;
+}
+
+/* Oculta conteúdo restrito por padrão */
+.conteudo-restrito {
+  display: none;
+}
+
+body.autorizado .conteudo-restrito {
+  display: block;
+}
+</style>
+</head>
+<body>
+
+<!-- Mensagem de não autorizado -->
+<div id="nao-autorizado">
+  <div class="alert alert-danger text-center">
+    <h4><i class="fas fa-exclamation-triangle me-2"></i>Acesso Restrito</h4>
+    <p class="mb-4">Você não tem permissão para acessar esta área administrativa.</p>
+    <a href="index.html" class="btn btn-primary">
+      <i class="fas fa-arrow-left me-2"></i>Voltar à página inicial
+    </a>
+  </div>
+</div>
+
+<script type="module">
+  import { auth, db } from './firebase-config.js';
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  // Verifica se é admin no Realtime Database
+  async function checkAdmin(user) {
+    try {
+      if (!user) return false;
+      
+      // Busca os dados do usuário no Realtime Database
+      const userRef = ref(db, `users/${user.uid}`);
+      const snapshot = await get(userRef);
+      
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        console.log("Dados do usuário:", userData);
+        return userData.isAdmin === true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Erro na verificação:", error);
+      return false;
+    }
+  }
+
+  // Controla a exibição do conteúdo
+  function toggleContent(isAdmin) {
+    const authMsg = document.getElementById('nao-autorizado');
+    const content = document.querySelectorAll('.conteudo-restrito');
+    
+    if (isAdmin) {
+      console.log("Acesso concedido: usuário é admin");
+      authMsg.style.display = 'none';
+      content.forEach(el => el.style.display = 'block');
+      document.body.classList.add('autorizado');
+    } else {
+      console.log("Acesso negado: usuário não é admin");
+      authMsg.style.display = 'block';
+      content.forEach(el => el.style.display = 'none');
+      document.body.classList.remove('autorizado');
+    }
+  }
+
+  // Quando a página carrega
+  document.addEventListener('DOMContentLoaded', () => {
+    onAuthStateChanged(auth, async (user) => {
+      const isAdmin = await checkAdmin(user);
+      toggleContent(isAdmin);
+    });
+  });
+</script>
+  
+<!-- 🔹 Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
+  <div class="container">
+      <a class="navbar-brand" href="#">
+        <i class="fas fa-list me-2"></i>Lista de Membros
+      </a>
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <!-- Botão Home -->
+        <li class="nav-item">
+          <a class="nav-link" href="index.html">
+            <i class="fas fa-home me-1"></i> Home
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="cadastro-membros.html">
+            <i class="fas fa-users me-1"></i> Cadastro de Membros
+          </a>
+        </li>
+        
+      </ul>
+    </div>
+  </div> 
+</nav>
+
+<div class="container mt-4 conteudo-restrito">
+  <div class="mb-3 d-flex justify-content-between">
+    <div>
+      <button id="btnSelecionar" class="btn btn-secondary">Selecionar Cadastros</button>
+      <button id="btnExportarPDF" class="btn btn-success">Exportar PDF</button>
+    </div>
+    <button id="btnExcluir" class="btn btn-danger d-none">Excluir Selecionados</button>
+  </div>
+
+  <!-- Campo de pesquisa adicionado aqui -->
+  <div class="mb-3">
+    <label for="campoPesquisa" class="form-label">Pesquisar:</label>
+    <input type="text" id="campoPesquisa" class="form-control" placeholder="Digite o nome ou sobrenome...">
+  </div>
+
+  <!-- Mensagem de sucesso -->
+  <div id="mensagemPDF"></div>
+
+  <div id="lista-membros" class="list-group"></div>
+</div>
+
+<script type="module">
+import { db } from './firebase-config.js';
+import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const lista = document.getElementById("lista-membros");
+const btnSelecionar = document.getElementById("btnSelecionar");
+const btnExcluir = document.getElementById("btnExcluir");
+let modoSelecao = false;
+const membrosRef = ref(db, "membros");
+let todosMembros = [];
+
+function carregarMembros(data) {
+  lista.innerHTML = "";
+  if (!data) {
+    lista.innerHTML = "<p class='text-center'>Nenhum membro cadastrado.</p>";
+    todosMembros = [];
+    return;
+  }
+
+  todosMembros = Object.entries(data).map(([id, m]) => {
+    const funcao = (m.funcao || "").toLowerCase();
+    let ordemFuncao = 6;
+    if (funcao === "pastor") ordemFuncao = 1;
+    else if (funcao === "missionario" || funcao === "missionario(a)") ordemFuncao = 2;
+    else if (funcao === "diacono") ordemFuncao = 3;
+    else if (funcao === "obreiro" || funcao === "obreiro(a)") ordemFuncao = 4;
+    else if (funcao === "membro") ordemFuncao = 5;
+
+    return {
+      id,
+      ...m,
+      ordemFuncao
+    };
+  });
+
+  filtrarMembros();
+}
+
+function filtrarMembros() {
+  const termoPesquisa = document.getElementById('campoPesquisa').value.toLowerCase();
+  
+  const membrosFiltrados = termoPesquisa 
+    ? todosMembros.filter(membro => 
+        (membro.nome && membro.nome.toLowerCase().includes(termoPesquisa)) ||
+        (membro.sobrenome && membro.sobrenome.toLowerCase().includes(termoPesquisa)))
+    : todosMembros;
+
+  membrosFiltrados.sort((a, b) => {
+    const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
+    if (ordemFuncao !== 0) return ordemFuncao;
+    return (a.nome || "").localeCompare(b.nome || "");
+  });
+
+  lista.innerHTML = "";
+  for (const membro of membrosFiltrados) {
+    const item = document.createElement("div");
+    item.className = "list-group-item membro-item";
+
+    item.innerHTML = `
+      <input type="checkbox" class="form-check-input me-2 checkbox-selecao" data-id="${membro.id}">
+      <a href="ficha.html?id=${membro.id}" class="info-membro">
+        <img src="${membro.fotoURL || ''}" class="foto-miniatura" alt="Foto">
+        <div>
+          <div><strong>${membro.nome}</strong></div>
+          <small>${membro.funcao}</small>
+        </div>
+      </a>
+    `;
+    lista.appendChild(item);
+  }
+
+  atualizarVisibilidadeCheckboxes();
+}
+
+function atualizarVisibilidadeCheckboxes() {
+  const checkboxes = document.querySelectorAll(".checkbox-selecao");
+  checkboxes.forEach(cb => cb.style.display = modoSelecao ? "inline-block" : "none");
+  btnExcluir.classList.toggle("d-none", !modoSelecao);
+  btnSelecionar.textContent = modoSelecao ? "Cancelar Seleção" : "Selecionar Cadastros";
+}
+
+btnSelecionar.addEventListener("click", () => {
+  modoSelecao = !modoSelecao;
+  atualizarVisibilidadeCheckboxes();
+});
+
+btnExcluir.addEventListener("click", () => {
+  const selecionados = document.querySelectorAll(".checkbox-selecao:checked");
+  if (selecionados.length === 0) return alert("Nenhum cadastro selecionado.");
+  if (!confirm("Deseja excluir os cadastros selecionados?")) return;
+
+  selecionados.forEach(cb => {
+    const id = cb.getAttribute("data-id");
+    remove(ref(db, `membros/${id}`));
+  });
+});
+
+document.getElementById('campoPesquisa').addEventListener('input', filtrarMembros);
+
+onValue(membrosRef, (snapshot) => {
+  const data = snapshot.val();
+  carregarMembros(data);
+});
+</script>
+
+
+  
+
+  
+ <script>
+const btnExportarPDF = document.getElementById("btnExportarPDF");
+
+btnExportarPDF.addEventListener("click", async () => {
+  btnExportarPDF.disabled = true;
+  btnExportarPDF.innerHTML = `
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando PDF...
+  `;
+
+  try {
+    const doc = new window.jsPDFGlobal({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
+    const logoUrl = "./logo.png";
+    const img = await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = logoUrl;
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let startY = 15;
+
+    if (img) {
+      const logoWidth = 70;
+      const logoHeight = (img.height / img.width) * logoWidth;
+      const logoX = (pageWidth - logoWidth) / 2;
+
+      doc.addImage(img, 'JPEG', logoX, 15, logoWidth, logoHeight);
+      doc.setFontSize(14);
+      doc.text("Famílias Vivendo na Graça e Unção do Espírito", pageWidth / 2, 15 + logoHeight + 8, { align: "center" });
+      doc.setFontSize(12);
+      doc.text("Lista Completa de Membros", pageWidth / 2, 15 + logoHeight + 15, { align: "center" });
+
+      startY = 15 + logoHeight + 25;
+    }
+
+    const { db } = await import("./firebase-config.js");
+    const { get, ref, child } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js");
+    const snapshot = await get(child(ref(db), "membros"));
+
+    if (!snapshot.exists()) {
+      alert("Nenhum membro encontrado.");
+      return;
+    }
+
+    const membrosArrayRaw = Object.values(snapshot.val())
+      .map(m => {
+        const funcao = (m.funcao || "").toLowerCase();
+        let ordemFuncao = 6;
+        if (funcao === "pastor") ordemFuncao = 1;
+        else if (funcao === "missionario" || funcao === "missionario(a)") ordemFuncao = 2;
+        else if (funcao === "diacono") ordemFuncao = 3;
+        else if (funcao === "obreiro" || funcao === "obreiro(a)") ordemFuncao = 4;
+        else if (funcao === "membro") ordemFuncao = 5;
+
+        return {
+          ...m,
+          ordemFuncao,
+          sexoFormatado: m.sexo === "M" || (m.sexo || "").toLowerCase() === "masculino" ? "Masculino" :
+                         m.sexo === "F" || (m.sexo || "").toLowerCase() === "feminino" ? "Feminino" :
+                         "Não informado",
+          nomeFormatado: m.nome ? m.nome.toUpperCase() : "Não informado",
+          funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "Não informado"
+        };
+      })
+      .sort((a, b) => {
+        const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
+        if (ordemFuncao !== 0) return ordemFuncao;
+        return a.nome?.localeCompare(b.nome);
+      });
+
+    const membrosArray = membrosArrayRaw.map(m => {
+      const partesEndereco = [
+        m.endereco,
+        m.numero && `Nº${m.numero}`,
+        m.bairro,
+        m.cidade,
+        m.estado
+      ].filter(Boolean);
+
+      const enderecoCompleto = partesEndereco.join(", ");
+
+      // calcular idade e faixa etária
+      let idade = "-";
+      let faixa = "Não informado";
+      if (m.nascimento) {
+        const nasc = new Date(m.nascimento);
+        const hoje = new Date();
+        idade = hoje.getFullYear() - nasc.getFullYear();
+        const mDiff = hoje.getMonth() - nasc.getMonth();
+        if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < nasc.getDate())) {
+          idade--;
+        }
+
+        if (idade <= 9) faixa = "Criança";
+        else if (idade <= 12) faixa = "Adolescente";
+        else if (idade <= 29) faixa = "Jovem";
+        else faixa = "Adulto";
+      }
+
+      return [
+        m.nomeFormatado,
+        faixa,
+        m.nascimento ? formatDate(m.nascimento) : "Não informado",
+        m.sexoFormatado,
+        m.telefone || "Não informado",
+        m.funcaoFormatada,
+        m.batismo ? formatDate(m.batismo) : "Não informado",
+        enderecoCompleto
+      ];
+    });
+
+    // TABELA PRINCIPAL
+    doc.autoTable({
+      head: [["NOME", "FAIXA ETÁRIA", "NASCIM", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
+      body: membrosArray,
+      startY: startY,
+      margin: { top: 10, bottom: 15 },
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [0, 128, 0], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 45 },  // Nome
+        1: { cellWidth: 25 },  // Faixa
+        7: { cellWidth: 80 }   // Endereço
+      },
+      didDrawPage: function(data) {
+        doc.setFontSize(8);
+        doc.text(`Página ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: "center" });
+        const now = new Date();
+        doc.text(`Gerado em: ${now.toLocaleString("pt-BR")}`, pageWidth - 10, doc.internal.pageSize.getHeight() - 10, { align: "right" });
+      }
+    });
+
+    // RESUMO PROFISSIONAL
+    const resumo = {
+  funcoes: { Pastor: 0, Missionário: 0, Diácono: 0, Membro: 0 },
+  sexos: { Masculino: 0, Feminino: 0 },
+  faixas: { Criança: 0, Adolescente: 0, Jovem: 0, Adulto: 0 },
+  total: membrosArray.length
+};
+
+membrosArray.forEach(row => {
+  const funcao = row[5].toLowerCase();
+  const sexo = row[3];
+  const faixa = row[1];
+
+  if (funcao.includes("pastor")) resumo.funcoes.Pastor++;
+  else if (funcao.includes("missionario")) resumo.funcoes.Missionário++;
+  else if (funcao.includes("diácono") || funcao.includes("diacono")) resumo.funcoes.Diácono++;
+  else resumo.funcoes.Membro++;
+
+  if (sexo === "Masculino") resumo.sexos.Masculino++;
+  else if (sexo === "Feminino") resumo.sexos.Feminino++;
+
+  if (faixa in resumo.faixas) resumo.faixas[faixa]++;
+});
+
+
+    let finalY = doc.lastAutoTable.finalY + 10;
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    if (finalY + 80 > pageHeight - 15) {
+      doc.addPage();
+      finalY = 20;
+    }
+
+    const makeResumoTable = (title, dataObj) => {
+      const rows = Object.entries(dataObj).map(([k, v]) => [k, v]);
+      doc.autoTable({
+        head: [[title, "Quantidade"]],
+        body: rows,
+        startY: finalY,
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [22, 160, 133], textColor: 255, fontStyle: 'bold' },
+        margin: { left: 10, right: 10 },
+        tableWidth: 'auto'
+      });
+      finalY = doc.lastAutoTable.finalY + 5;
+    };
+
+    makeResumoTable("Resumo por Função", resumo.funcoes);
+    makeResumoTable("Resumo por Sexo", resumo.sexos);
+    makeResumoTable("Resumo por Faixa Etária", resumo.faixas);
+
+    doc.autoTable({
+      head: [["TOTAL GERAL DE MEMBROS", resumo.total]],
+      body: [],
+      startY: finalY,
+      theme: 'plain',
+      styles: { fontSize: 12 },
+      headStyles: { fillColor: [39, 174, 96], textColor: 255, halign: 'center' },
+      margin: { left: 10, right: 10 },
+      tableWidth: 'auto'
+    });
+
+    doc.save("Lista_Membros.pdf");
+    mostrarMensagemPDF("✅ PDF gerado com sucesso!");
+
+  } catch (error) {
+    console.error("Erro ao gerar PDF:", error);
+    alert("Erro ao gerar PDF: " + error.message);
+  } finally {
+    btnExportarPDF.disabled = false;
+    btnExportarPDF.innerHTML = `Exportar PDF`;
+  }
+});
+
+function formatDate(dateString) {
+  if (!dateString) return "";
+  try {
+    const [ano, mes, dia] = dateString.split("-");
+    return `${dia}/${mes}/${ano}`;
+  } catch {
+    return dateString;
+  }
+}
+
+function mostrarMensagemPDF(mensagem) {
+  const container = document.getElementById("mensagemPDF");
+  container.innerHTML = `
+    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+      ${mensagem}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
+}
+</script>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script>
+window.jsPDFGlobal = window.jspdf.jsPDF;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+<!-- Logoff após inatividade -->
+<script type="module" src="js/session-timeout.js"></script>
+
+</body>
+</html>
