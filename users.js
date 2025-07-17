@@ -34,7 +34,7 @@ export async function registerUser(username, password, fullName, isAdmin = false
     await set(ref(db, `users/${userCredential.user.uid}`), {
       username,
       fullName,
-      isAdmin,
+      role,
       createdAt: new Date().toISOString()
     });
 
