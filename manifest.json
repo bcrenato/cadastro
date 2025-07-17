@@ -1,19 +1,20 @@
 {
-  "name": "Igreja Mine PWA",
-  "short_name": "IgrejaMine",
-  "start_url": "/igreja/index.html",
-  "scope": "/",
+  "name": "Cadastro",
+  "short_name": "Cadastro",
+  "start_url": "/cadastro/index.html",
+  "scope": "/cadastro/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#3367D6",
+  "theme_color": "#4CAF50",
+  "description": "Cadastro de membros",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "/cadastro/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "/cadastro/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
