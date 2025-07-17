@@ -8,8 +8,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="/cadastro/manifest.json">
 <meta name="theme-color" content="#4CAF50">
+
     
     <style>
 :root {
@@ -270,7 +271,7 @@ navItems.forEach(item => {
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
+    navigator.serviceWorker.register('/cadastro/service-worker.js')
       .then(reg => {
         console.log('Service Worker registrado:', reg.scope);
       })
