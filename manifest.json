@@ -1,6 +1,6 @@
 {
   "name": "Sistema MINE",
-  "short_name": "Cadastro",
+  "short_name": "Sistema MINE",
   "start_url": "/cadastro/index.html",
   "scope": "/cadastro/",
   "display": "standalone",
