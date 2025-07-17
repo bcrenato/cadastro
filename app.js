@@ -84,13 +84,10 @@ fotoInput.addEventListener("change", () => {
   }
 });
 
-// Aplica a máscara nos campos de CEP
 document.addEventListener('DOMContentLoaded', () => {
   const cepInput = document.getElementById('cep');
   IMask(cepInput, { mask: '00000-000' });
 });
-
-// Função para buscar dados do CEP e preencher os campos
 
 window.buscarCEP = function () {
   const cepInput = document.getElementById('cep');

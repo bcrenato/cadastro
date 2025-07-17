@@ -1,7 +1,7 @@
 // js/session-timeout.js
 import { auth } from '../firebase-config.js';
 
-const timeoutMillis = 2 * 60 * 1000;
+const timeoutMillis = 5 * 60 * 1000;
 let logoutTimeoutId;
 
 function resetTimer() {
@@ -12,10 +12,10 @@ function resetTimer() {
 function logout() {
     console.log("Sessão expirada por inatividade.");
     auth.signOut().then(() => {
-        window.location.href = "/cadastro/login.html";
+        window.location.href = "login.html";
     }).catch((error) => {
         console.error("Erro ao deslogar:", error);
-        window.location.href = "/cadastro/login.html";
+        window.location.href = "login.html";
     });
 }
 
