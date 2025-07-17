@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerenciar Usuários - Sistema Igreja</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+.bg-admin { background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%) !important; }
+.nav-link.active { font-weight: 600; border-bottom: 2px solid #ffc107; }
+body { padding-top: 70px; background-color: #f8f9fa; }
+.navbar { background-color: #4CAF50; }
+.navbar .nav-link, .navbar .navbar-brand { color: #fff; }
+.navbar .nav-link:hover, .navbar .navbar-brand:hover { color: #ddd; }
+.btn-primary { background-color: #28a745; border-color: #28a745; }
+.btn-primary:hover { background-color: #218838; border-color: #1e7e34; }
+.btn-primary:active, .btn-primary:focus, .btn-primary.active {
+  background-color: #1e7e34 !important; border-color: #1c7430 !important; box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.5) !important; }
+.admin-card { border-left: 4px solid #ffc107; }
+.password-field { position: relative; }
+.toggle-password {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; }
+.user-table th { white-space: nowrap; }
+.action-buttons { white-space: nowrap; }
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 1100; }
+</style>
+</head>
+<body>
+
+<script type="module">
+import { checkAdminAuth } from './auth.js';
+if (!await checkAdminAuth()) {
+  window.location.href = 'index.html';
+}
+</script>
+
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+<div class="container">
+<a class="navbar-brand" href="index.html"><i class="fas fa-user-shield me-2"></i> Gerenciar Usuários</a>
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+<span class="navbar-toggler-icon"></span>
+</button>
+<div class="collapse navbar-collapse" id="adminNav">
+<ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-arrow-left me-1"></i> Voltar para o Painel</a></li>
+<li class="nav-item"><a class="nav-link active" href="register.html"><i class="fas fa-users-cog me-1"></i> Gerenciar Usuários</a></li>
+</ul>
+<div class="d-flex align-items-center">
+<span class="navbar-text text-warning me-3" id="currentUserDisplay"><i class="fas fa-user-cog me-1"></i>Admin</span>
+<button id="logoutBtn" class="btn btn-sm btn-outline-warning"><i class="fas fa-sign-out-alt me-1"></i> Sair</button>
+</div>
+</div>
+</div>
+</nav>
+
+<div class="container mt-4">
+<div class="row">
+<div class="col-lg-6 mb-4">
+<div class="card admin-card shadow">
+<div class="card-header bg-white"><h3 class="text-center mb-0"><i class="fas fa-user-plus text-primary me-2"></i>Cadastrar Novo Usuário</h3></div>
+<div class="card-body">
+<form id="registerForm">
+<div class="mb-3"><label for="fullName" class="form-label"><i class="fas fa-user me-1"></i> Nome Completo</label><input type="text" id="fullName" class="form-control" required></div>
+<div class="mb-3"><label for="username" class="form-label"><i class="fas fa-at me-1"></i> Nome de Usuário</label><input type="text" id="username" class="form-control" required></div>
+<div class="mb-3 password-field"><label for="password" class="form-label"><i class="fas fa-lock me-1"></i> Senha</label><input type="password" id="password" class="form-control" required minlength="6"><i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i></div>
+<div class="mb-3 form-check"><input type="checkbox" id="isAdmin" class="form-check-input"><label for="isAdmin" class="form-check-label"><i class="fas fa-user-shield me-1"></i> É administrador?</label></div>
+<button type="submit" class="btn btn-primary w-100 py-2"><i class="fas fa-save me-2"></i> Cadastrar Usuário</button>
+</form>
+</div></div></div>
+
+<div class="col-lg-6">
+<div class="card admin-card shadow">
+<div class="card-header bg-white"><h3 class="text-center mb-0"><i class="fas fa-users text-primary me-2"></i>Usuários Cadastrados</h3></div>
+<div class="card-body">
+<div class="table-responsive">
+<table class="table table-hover user-table">
+<thead><tr><th>Nome</th><th>Usuário</th><th>Tipo</th><th class="action-buttons">Ações</th></tr></thead>
+<tbody id="usersList"></tbody>
+</table></div></div></div></div>
+
+<div class="col-lg-12 mb-4">
+<div class="card admin-card shadow">
+<div class="card-header bg-white"><h3 class="text-center mb-0"><i class="fas fa-user-clock text-primary me-2"></i>Pendentes de Aprovação</h3></div>
+<div class="card-body">
+<ul id="pendingList" class="list-group"></ul>
+</div></div></div></div></div>
+
+<div class="modal fade" id="passwordModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header bg-warning">
+<h5 class="modal-title"><i class="fas fa-key me-2"></i> Alterar Senha</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<form id="passwordForm">
+<input type="hidden" id="userId">
+<div class="mb-3 password-field"><label for="newPassword" class="form-label">Nova Senha</label><input type="password" id="newPassword" class="form-control" required minlength="6"><i class="fas fa-eye toggle-password" onclick="togglePassword('newPassword')"></i></div>
+<div class="mb-3 password-field"><label for="confirmPassword" class="form-label">Confirmar Senha</label><input type="password" id="confirmPassword" class="form-control" required minlength="6"><i class="fas fa-eye toggle-password" onclick="togglePassword('confirmPassword')"></i></div>
+</form>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+<button type="button" id="savePasswordBtn" class="btn btn-primary">Salvar Alterações</button>
+</div></div></div></div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script type="module">
+import { db, auth } from './firebase-config.js';
+import { ref, get, set, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { createUserWithEmailAndPassword, updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { registerUser, getAllUsers, deleteUser } from './users.js';
+
+const usersList = document.getElementById('usersList');
+const pendingList = document.getElementById('pendingList');
+const registerForm = document.getElementById('registerForm');
+const passwordForm = document.getElementById('passwordForm');
+
+async function loadUsers() {
+  const users = await getAllUsers();
+  usersList.innerHTML = '';
+  if (!users.length) {
+    usersList.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum usuário cadastrado</td></tr>';
+    return;
+  }
+  users.forEach(user => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${user.fullName || 'Não informado'}</td>
+      <td>${user.username}</td>
+      <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
+      <td class="action-buttons">
+        <button class="btn btn-sm btn-warning change-password me-2" data-id="${user.id}"><i class="fas fa-key"></i> Alterar Senha</button>
+        <button class="btn btn-sm btn-danger delete-user" data-id="${user.id}"><i class="fas fa-trash"></i> Excluir</button>
+      </td>`;
+    usersList.appendChild(row);
+  });
+  document.querySelectorAll('.change-password').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('userId').value = btn.getAttribute('data-id');
+      new bootstrap.Modal(document.getElementById('passwordModal')).show();
+    });
+  });
+}
+
+async function loadPending() {
+  const snap = await get(ref(db, 'pending_users'));
+  pendingList.innerHTML = '';
+  if (!snap.exists()) {
+    pendingList.innerHTML = '<li class="list-group-item">Nenhum usuário pendente</li>';
+    return;
+  }
+  snap.forEach(child => {
+    const u = child.val();
+    const key = child.key;
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    li.innerHTML = `<span>${u.fullName} (${u.username})</span>
+      <button class="btn btn-primary btn-sm" onclick="aprovar('${key}')">Aprovar</button>`;
+    pendingList.appendChild(li);
+  });
+}
+
+window.aprovar = async (key) => {
+  const snap = await get(ref(db, `pending_users/${key}`));
+  const u = snap.val();
+
+  const email = `${u.username}@igreja.local`;
+  const password = u.password;
+
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  const uid = userCredential.user.uid;
+
+  await updateProfile(userCredential.user, { displayName: u.fullName });
+  await set(ref(db, `users/${uid}`), {
+    username: u.username, fullName: u.fullName, isAdmin: false, isEnabled: true, createdAt: new Date().toISOString()
+  });
+
+  await remove(ref(db, `pending_users/${key}`));
+  showToast(`✅ ${u.fullName} aprovado!`);
+  loadUsers();
+  loadPending();
+};
+
+registerForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  await registerUser(document.getElementById('username').value, document.getElementById('password').value, document.getElementById('fullName').value, document.getElementById('isAdmin').checked);
+  showToast('Usuário cadastrado!');
+  registerForm.reset();
+  loadUsers();
+});
+
+document.getElementById('savePasswordBtn').addEventListener('click', async () => {
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+
+  if (newPassword !== confirmPassword) {
+    showToast('As senhas não coincidem!', "danger");
+    return;
+  }
+
+  await set(ref(db, `users/${document.getElementById('userId').value}/passwordReset`), newPassword);
+  showToast('Senha salva para reset.');
+  passwordForm.reset();
+  bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+});
+
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = `toast show align-items-center text-white bg-${type}`;
+  toast.role = 'alert';
+  toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+  document.getElementById('toastContainer').appendChild(toast);
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadUsers();
+  loadPending();
+});
+
+window.togglePassword = (fieldId) => {
+  const field = document.getElementById(fieldId);
+  field.type = field.type === 'password' ? 'text' : 'password';
+};
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
