@@ -1,4 +1,3 @@
-
 import { db, auth, firebaseConfig } from './firebase-config.js';
 import { ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { deleteUser as deleteAuthUser, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
@@ -14,7 +13,7 @@ export async function deleteUser(userId) {
     if (!currentUser) throw new Error("Usuário não autenticado");
 
     const currentUserData = await get(ref(db, `users/${currentUser.uid}`));
-    if (!currentUserData.exists() || !currentUserData.val().isAdmin) {
+    if (!currentUserData.exists() || currentUserData.val().role !== 'admin') {
       throw new Error("Apenas administradores podem excluir usuários");
     }
 
@@ -26,7 +25,7 @@ export async function deleteUser(userId) {
   }
 }
 
-export async function registerUser(username, password, fullName, isAdmin = false) {
+export async function registerUser(username, password, fullName, role = 'membro') {
   const email = `${username}@igreja.local`;
   try {
     const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
@@ -53,8 +52,8 @@ export async function loginUser(username, password) {
 export async function isUserAdmin() {
   const user = auth.currentUser;
   if (!user) return false;
-  const snapshot = await get(ref(db, `users/${user.uid}/isAdmin`));
-  return snapshot.val() === true;
+  const snapshot = await get(ref(db, `users/${user.uid}/role`));
+  return snapshot.val() === 'admin';
 }
 
 export async function getCurrentUserData() {
