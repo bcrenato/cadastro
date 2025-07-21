@@ -271,6 +271,9 @@
         const presentesData = snapshot.val();
         presentes = [];
         atualizarListaPresentes();
+        
+        document.getElementById('btn-salvar').disabled = true;
+
         if (!presentesData) return;
 
         const membrosSnapshot = await database.ref('membros').once('value');
