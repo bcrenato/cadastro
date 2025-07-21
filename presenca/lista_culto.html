@@ -376,12 +376,18 @@ const ordemFuncoes = ['Pastor', 'Missionario(a)', 'Diacono', 'Obreiro(a)', 'Memb
 
 const itens = Object.entries(presentesData).map(([id, valor]) => {
   if (valor === true) {
+    // membro cadastrado
     const membro = membrosCadastrados.find(m => m.id === id) || { nome: `Membro (ID: ${id})`, funcao: '' };
-    return { nome: membro.nome, tipo: 'membro', funcao: membro.funcao || '', valor, id };
+    return { nome: membro.nome, tipo: 'membro', funcao: membro.funcao || '', id };
+  } else if (typeof valor === 'object' && valor.nome) {
+    // visitante
+    return { nome: valor.nome, tipo: 'visitante', funcao: '', id };
   } else {
-    return { nome: valor, tipo: 'visitante', funcao: '', valor, id };
+    // fallback
+    return { nome: String(valor), tipo: 'visitante', funcao: '', id };
   }
 });
+
 
 itens.sort((a, b) => {
   const idxA = a.tipo === 'visitante' ? ordemFuncoes.length + 1 :
