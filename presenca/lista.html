@@ -1,340 +1,271 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Controle de Presença - Cultos</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <style>
-    .search-container {
-      position: relative;
-    }
-    .search-results {
-      position: absolute;
-      width: 100%;
-      max-height: 300px;
-      overflow-y: auto;
-      z-index: 1000;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 0 0 5px 5px;
-      display: none;
-    }
-    .presente-badge {
-      cursor: pointer;
-    }
-    .list-group-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .navbar {
-      background-color: #4CAF50;
-      z-index: 1030;
-    }
-    .navbar .nav-link,
-    .navbar .navbar-brand {
-      color: #fff;
-    }
-    .navbar .nav-link:hover,
-    .navbar .navbar-brand:hover {
-      color: #ddd;
-    }
-    .bg-verde-escuro {
-      background-color: #1e7e34;
-    }
-    body {
-      padding-top: 56px;
-    }
-    .container.py-4 {
-      position: relative;
-      z-index: 1;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Presença - Cultos</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+.navbar { background-color: #4CAF50; z-index: 1030; }
+.navbar .nav-link, .navbar .navbar-brand { color: #fff; }
+.navbar .nav-link:hover, .navbar .navbar-brand:hover { color: #ddd; }
+.bg-verde-escuro { background-color: #1e7e34; }
+body { padding-top: 56px; }
+</style>
 </head>
 <body class="bg-light">
-  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-    <div class="container">
-      <a class="navbar-brand" href="#"><i class="fas fa-church me-2"></i>Presença Culto</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="../index.html"><i class="fas fa-home me-1"></i> Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="lista_culto.html"><i class="fas fa-church me-1"></i> Consulta Lista de Presença</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="frequencia.html"><i class="bi bi-graph-up me-1"></i> Frequencia Mensal</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
 
-  <div class="container py-4">
-    <div class="card shadow">
-      <div class="card-header bg-verde-escuro text-white">
-        <h4 class="mb-0">Registro de Presença - Culto</h4>
-      </div>
-      <div class="card-body">
-        <div class="mb-4">
-          <label for="data-culto" class="form-label">Data do Culto</label>
-          <input type="date" id="data-culto" class="form-control">
-        </div>
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+<div class="container">
+<a class="navbar-brand" href="#"><i class="fas fa-church me-2"></i>Presença Culto</a>
+</div>
+</nav>
 
-        <div class="search-container mb-3">
-          <label for="busca-nome" class="form-label">Buscar Membro</label>
-          <input type="text" id="busca-nome" class="form-control" placeholder="Digite o nome do membro...">
-          <div id="resultados-busca" class="search-results list-group"></div>
-        </div>
+<div class="container py-4">
+<div class="card shadow">
+<div class="card-header bg-verde-escuro text-white">
+<h4 class="mb-0">Registro de Presença - Culto</h4>
+</div>
+<div class="card-body">
+<div class="mb-4">
+<label for="data-culto" class="form-label">Data do Culto</label>
+<input type="date" id="data-culto" class="form-control">
+</div>
 
-        <button id="btn-adicionar-manual" class="btn btn-outline-secondary mb-3">
-          <i class="bi bi-person-plus"></i> Adicionar Visitante
-        </button>
+<div class="search-container mb-3">
+<label for="busca-nome" class="form-label">Buscar Membro</label>
+<input type="text" id="busca-nome" class="form-control" placeholder="Digite o nome do membro...">
+<div id="resultados-busca" class="list-group mt-1"></div>
+</div>
 
-        <div class="mb-3" id="adicionar-manual-box" style="display: none;">
-          <div class="input-group">
-            <input type="text" id="novo-nome" class="form-control" placeholder="Nome completo do visitante">
-            <button id="btn-confirmar-nome" class="btn btn-primary">
-              <i class="bi bi-check"></i> Confirmar
-            </button>
-          </div>
-        </div>
+<button id="btn-adicionar-manual" class="btn btn-outline-secondary mb-3">
+<i class="bi bi-person-plus"></i> Adicionar Visitante
+</button>
 
-        <h5 class="mt-4 mb-3">Lista de Presentes</h5>
+<h5 class="mt-4 mb-3">Lista de Presentes</h5>
 
-        <button id="btn-salvar" class="btn btn-success mb-3 w-100 py-2" disabled>
-          <i class="bi bi-save"></i> Salvar Relação
-        </button>
+<button id="btn-salvar" class="btn btn-success mb-3 w-100 py-2" disabled>
+<i class="bi bi-save"></i> Salvar Relação
+</button>
 
-        <div id="lista-presentes" class="list-group"></div>
-      </div>
-    </div>
-  </div>
+<div id="lista-presentes" class="list-group"></div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+</div>
+</div>
+</div>
 
-  <script type="module">
-    import { firebaseConfig } from '../firebase-config.js';
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    const auth = firebase.auth();
+<!-- MODAL -->
+<div class="modal fade" id="modalVisitante" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header bg-verde-escuro text-white">
+<h5 class="modal-title">Cadastrar Visitante</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<div class="mb-3">
+<label>Nome Completo</label>
+<input type="text" id="visitante-nome" class="form-control">
+</div>
+<div class="mb-3">
+<label>Endereço</label>
+<input type="text" id="visitante-endereco" class="form-control">
+</div>
+<div class="mb-3">
+<label>É cristão?</label>
+<select id="visitante-cristao" class="form-select">
+<option value="">Não informado</option>
+<option value="sim">Sim</option>
+<option value="nao">Não</option>
+</select>
+</div>
+<div class="mb-3">
+<label>Telefone</label>
+<input type="text" id="visitante-telefone" class="form-control">
+</div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+<button type="button" class="btn btn-primary" id="btnSalvarVisitante">Salvar</button>
+</div>
+</div>
+</div>
+</div>
 
-    auth.onAuthStateChanged((user) => {
-      if (!user) {
-        window.location.href = '../login.html';
-        return;
-      }
-      inicializarAplicacao();
-    });
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    let membrosCadastrados = [];
-    let presentes = [];
+<script type="module">
+import { firebaseConfig } from '../firebase-config.js';
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const auth = firebase.auth();
 
-    function inicializarAplicacao() {
-      const hoje = new Date();
-      const hojeAjustado = new Date(hoje.getTime() - hoje.getTimezoneOffset() * 60000);
-      document.getElementById('data-culto').value = hojeAjustado.toISOString().split('T')[0];
-
-      carregarMembros();
-      document.getElementById('data-culto').addEventListener('change', (e) => {
-        if (e.target.value) carregarPresencasExistente(e.target.value);
-      });
-      configurarEventListeners();
-
-      carregarPresencasExistente(document.getElementById('data-culto').value);
-    }
-
-    function configurarEventListeners() {
-      document.getElementById('busca-nome').addEventListener('input', buscarMembros);
-      document.getElementById('btn-adicionar-manual').addEventListener('click', toggleAdicionarVisitante);
-      document.getElementById('btn-confirmar-nome').addEventListener('click', adicionarVisitante);
-      document.getElementById('btn-salvar').addEventListener('click', salvarPresencas);
-    }
-
-    function carregarMembros() {
-      database.ref('membros').once('value').then((snapshot) => {
-        membrosCadastrados = [];
-        snapshot.forEach((childSnapshot) => {
-          const membro = {
-            id: childSnapshot.key,
-            nome: childSnapshot.val().nome,
-            funcao: childSnapshot.val().funcao || ''
-          };
-          membrosCadastrados.push(membro);
-        });
-      }).catch(error => {
-        mostrarAlerta('Erro ao carregar lista de membros', 'danger');
-      });
-    }
-
-    function buscarMembros(e) {
-      const termo = e.target.value.toLowerCase();
-      const resultados = document.getElementById('resultados-busca');
-      if (termo.length < 2) {
-        resultados.style.display = 'none';
-        return;
-      }
-      const matches = membrosCadastrados.filter(membro =>
-        membro.nome.toLowerCase().includes(termo)).slice(0, 5);
-
-      resultados.innerHTML = '';
-      if (matches.length > 0) {
-        matches.forEach(membro => {
-          const item = document.createElement('button');
-          item.className = 'list-group-item list-group-item-action';
-          item.innerHTML = `<div>${membro.nome}</div>${membro.funcao ? `<small class="text-muted">${membro.funcao}</small>` : ''}`;
-          item.addEventListener('click', () => {
-            adicionarPresente(membro.id, membro.nome, 'membro');
-            resultados.style.display = 'none';
-            e.target.value = '';
-          });
-          resultados.appendChild(item);
-        });
-        resultados.style.display = 'block';
-      } else {
-        resultados.style.display = 'none';
-      }
-    }
-
-    function toggleAdicionarVisitante() {
-      const box = document.getElementById('adicionar-manual-box');
-      box.style.display = box.style.display === 'none' ? 'block' : 'none';
-      document.getElementById('busca-nome').value = '';
-      document.getElementById('resultados-busca').style.display = 'none';
-      document.getElementById('novo-nome').focus();
-    }
-
-    function adicionarVisitante() {
-      const nome = document.getElementById('novo-nome').value.trim();
-      if (nome) {
-        adicionarPresente('visitante_' + Date.now(), nome, 'visitante');
-        document.getElementById('novo-nome').value = '';
-        document.getElementById('adicionar-manual-box').style.display = 'none';
-      }
-    }
-
-    function adicionarPresente(id, nome, tipo, carregando = false) {
-  if (presentes.some(p => p.id === id)) {
-    mostrarAlerta('Esta pessoa já está na lista', 'warning');
+auth.onAuthStateChanged((user) => {
+  if (!user) {
+    window.location.href = '../login.html';
     return;
   }
-  presentes.unshift({ id, nome, tipo: tipo || 'visitante' });
-  atualizarListaPresentes();
-
-  if (!carregando) {
-    document.getElementById('btn-salvar').disabled = false;
-  }
-}
-
-
-    function atualizarListaPresentes() {
-      const lista = document.getElementById('lista-presentes');
-      lista.innerHTML = '';
-      if (presentes.length === 0) {
-        lista.innerHTML = '<div class="list-group-item text-muted">Nenhum presente adicionado ainda</div>';
-        return;
-      }
-      presentes.forEach((pessoa, index) => {
-        const item = document.createElement('div');
-        item.className = `list-group-item ${pessoa.tipo === 'membro' ? 'list-group-item-primary' : ''}`;
-        item.innerHTML = `
-          <div>
-            <span>${pessoa.nome}</span>
-            ${pessoa.tipo === 'membro' ? '<span class="badge bg-info ms-2">Membro</span>' : '<span class="badge bg-warning ms-2">Visitante</span>'}
-          </div>
-          <button class="btn btn-sm btn-outline-danger" data-index="${index}"><i class="bi bi-x"></i></button>`;
-        lista.appendChild(item);
-      });
-      document.querySelectorAll('#lista-presentes .btn-outline-danger').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    const index = parseInt(e.target.closest('button').dataset.index);
-    if (confirm("Deseja realmente remover esta pessoa da lista?")) {
-    presentes.splice(index, 1);
-    atualizarListaPresentes();
-    document.getElementById('btn-salvar').disabled = false;
-}
-
-  });
+  inicializarAplicacao();
 });
 
-    }
+let membrosCadastrados = [];
+let presentes = [];
 
-    async function carregarPresencasExistente(dataCulto) {
-      try {
-        const cultoId = 'culto_' + dataCulto.replace(/-/g, '_');
-        const snapshot = await database.ref(`presencas_culto/${cultoId}/presentes`).once('value');
-        const presentesData = snapshot.val();
-        presentes = [];
-        atualizarListaPresentes();
-        
-        document.getElementById('btn-salvar').disabled = true;
+function inicializarAplicacao() {
+  const hoje = new Date();
+  const hojeAjustado = new Date(hoje.getTime() - hoje.getTimezoneOffset() * 60000);
+  document.getElementById('data-culto').value = hojeAjustado.toISOString().split('T')[0];
 
-        if (!presentesData) return;
+  carregarMembros();
+  document.getElementById('data-culto').addEventListener('change', (e) => {
+    if (e.target.value) carregarPresencasExistente(e.target.value);
+  });
 
-        const membrosSnapshot = await database.ref('membros').once('value');
-        const membrosData = membrosSnapshot.val();
+  document.getElementById('busca-nome').addEventListener('input', buscarMembros);
+  document.getElementById('btn-adicionar-manual').addEventListener('click', () => {
+    new bootstrap.Modal(document.getElementById('modalVisitante')).show();
+  });
+  document.getElementById('btnSalvarVisitante').addEventListener('click', salvarVisitante);
+  document.getElementById('btn-salvar').addEventListener('click', salvarPresencas);
 
-        const entries = Object.entries(presentesData).reverse();
-for (const [id, valor] of entries) {
-  if (valor === true) {
-    const nome = membrosData[id]?.nome || `Membro (ID: ${id})`;
-    adicionarPresente(id, nome, 'membro', true);
-  } else {
-    adicionarPresente(id, valor, 'visitante', true);
-  }
+  carregarPresencasExistente(document.getElementById('data-culto').value);
 }
 
-      } catch (error) {
-        mostrarAlerta('Erro ao carregar presenças', 'danger');
+function carregarMembros() {
+  database.ref('membros').once('value').then(snapshot => {
+    membrosCadastrados = [];
+    snapshot.forEach(child => {
+      membrosCadastrados.push({ id: child.key, nome: child.val().nome, funcao: child.val().funcao || '' });
+    });
+  });
+}
+
+function buscarMembros(e) {
+  const termo = e.target.value.toLowerCase();
+  const resultados = document.getElementById('resultados-busca');
+  if (termo.length < 2) { resultados.innerHTML = ''; return; }
+  const matches = membrosCadastrados.filter(m => m.nome.toLowerCase().includes(termo)).slice(0,5);
+  resultados.innerHTML = '';
+  matches.forEach(m => {
+    const item = document.createElement('button');
+    item.className = 'list-group-item list-group-item-action';
+    item.innerHTML = `<div>${m.nome}</div>${m.funcao ? `<small>${m.funcao}</small>`:''}`;
+    item.onclick = () => {
+      adicionarPresente(m.id, m.nome, 'membro');
+      resultados.innerHTML = '';
+      e.target.value = '';
+    }
+    resultados.appendChild(item);
+  });
+}
+
+function salvarVisitante() {
+  const nome = document.getElementById('visitante-nome').value.trim();
+  const endereco = document.getElementById('visitante-endereco').value.trim();
+  const cristao = document.getElementById('visitante-cristao').value;
+  const telefone = document.getElementById('visitante-telefone').value.trim();
+
+  if (!nome) {
+    mostrarAlerta('Informe ao menos o nome.', 'warning'); return;
+  }
+
+  const id = 'visitante_' + Date.now();
+  const visitante = { id, nome, tipo:'visitante', endereco, cristao, telefone };
+  presentes.unshift(visitante);
+  atualizarListaPresentes();
+  document.getElementById('btn-salvar').disabled = false;
+
+  bootstrap.Modal.getInstance(document.getElementById('modalVisitante')).hide();
+
+  ['visitante-nome','visitante-endereco','visitante-cristao','visitante-telefone'].forEach(id=>document.getElementById(id).value='');
+}
+
+function adicionarPresente(id, nome, tipo, extra = {}) {
+  if (presentes.some(p => p.id === id)) {
+    mostrarAlerta('Já está na lista.', 'warning'); return;
+  }
+  presentes.unshift({ id, nome, tipo, ...extra });
+  atualizarListaPresentes();
+  document.getElementById('btn-salvar').disabled = false;
+}
+
+function atualizarListaPresentes() {
+  const lista = document.getElementById('lista-presentes');
+  lista.innerHTML = '';
+  if (presentes.length === 0) {
+    lista.innerHTML = '<div class="list-group-item text-muted">Nenhum presente</div>';
+    return;
+  }
+  presentes.forEach((pessoa, idx) => {
+    const item = document.createElement('div');
+    item.className = `list-group-item ${pessoa.tipo==='membro'?'list-group-item-primary':''}`;
+    item.innerHTML = `
+    <div>
+      <span>${pessoa.nome}</span>
+      ${pessoa.tipo==='membro' ? '<span class="badge bg-info ms-2">Membro</span>' : '<span class="badge bg-warning ms-2">Visitante</span>'}
+    </div>
+    <button class="btn btn-sm btn-outline-danger" data-index="${idx}"><i class="bi bi-x"></i></button>`;
+    lista.appendChild(item);
+  });
+  lista.querySelectorAll('button').forEach(btn=>{
+    btn.onclick = () => {
+      const i = parseInt(btn.dataset.index);
+      if (confirm("Remover?")) {
+        presentes.splice(i,1);
+        atualizarListaPresentes();
+        document.getElementById('btn-salvar').disabled = false;
       }
+    };
+  });
+}
+
+async function carregarPresencasExistente(data) {
+  const cultoId = 'culto_' + data.replace(/-/g,'_');
+  const snap = await database.ref(`presencas_culto/${cultoId}/presentes`).once('value');
+  presentes = [];
+  if (!snap.val()) { atualizarListaPresentes(); return; }
+  for (const [id, val] of Object.entries(snap.val())) {
+    if (val === true) {
+      const nome = membrosCadastrados.find(m=>m.id===id)?.nome || `Membro (${id})`;
+      adicionarPresente(id, nome, 'membro', true);
+    } else {
+      adicionarPresente(id, val.nome || val, 'visitante', val);
     }
+  }
+  atualizarListaPresentes();
+  document.getElementById('btn-salvar').disabled = true;
+}
 
-    async function salvarPresencas() {
-      const dataCulto = document.getElementById('data-culto').value;
-      if (!dataCulto) return;
-      if (presentes.length === 0) return;
+async function salvarPresencas() {
+  const dataCulto = document.getElementById('data-culto').value;
+  if (!dataCulto || presentes.length===0) return;
+  const relacao = {};
+  presentes.forEach(p=>{
+    if(p.tipo==='membro') relacao[p.id]=true;
+    else relacao[p.id]={nome:p.nome,endereco:p.endereco||'',cristao:p.cristao||'',telefone:p.telefone||''};
+  });
+  const cultoId = 'culto_' + dataCulto.replace(/-/g,'_');
+  await database.ref('presencas_culto/'+cultoId).set({
+    data: dataCulto,
+    presentes: relacao,
+    atualizadoEm: firebase.database.ServerValue.TIMESTAMP
+  });
+  mostrarAlerta('Salvo com sucesso!','success');
+  document.getElementById('btn-salvar').disabled = true;
+}
 
-      const relacao = {};
-      presentes.forEach(pessoa => {
-        if (pessoa.tipo === 'membro') relacao[pessoa.id] = true;
-        else relacao[pessoa.id] = pessoa.nome;
-      });
+function mostrarAlerta(msg,tipo) {
+  const alerta=document.createElement('div');
+  alerta.className=`alert alert-${tipo} mt-2`;
+  alerta.textContent=msg;
+  document.querySelector('.card-body').prepend(alerta);
+  setTimeout(()=>alerta.remove(),3000);
+}
+</script>
 
-      const cultoId = 'culto_' + dataCulto.replace(/-/g, '_');
-      try {
-        await database.ref('presencas_culto/' + cultoId).set({
-          data: dataCulto,
-          presentes: relacao,
-          atualizadoEm: firebase.database.ServerValue.TIMESTAMP
-        });
-        mostrarAlerta('Relação salva com sucesso!', 'success');
-        document.getElementById('btn-salvar').disabled = true;
-      } catch (error) {
-        mostrarAlerta('Erro ao salvar: ' + error.message, 'danger');
-      }
-    }
-
-    function mostrarAlerta(mensagem, tipo) {
-      const alerta = document.createElement('div');
-      alerta.className = `alert alert-${tipo} alert-dismissible fade show mt-3`;
-      alerta.role = 'alert';
-      alerta.innerHTML = `${mensagem}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
-      const container = document.querySelector('.card-body');
-      container.insertBefore(alerta, container.lastElementChild);
-      setTimeout(() => alerta.remove(), 5000);
-    }
-  </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module" src="../js/session-timeout.js"></script>
 </body>
 </html>
