@@ -222,15 +222,19 @@
       }
     }
 
-    function adicionarPresente(id, nome, tipo) {
-      if (presentes.some(p => p.id === id)) {
-        mostrarAlerta('Esta pessoa já está na lista', 'warning');
-        return;
-      }
-      presentes.unshift({ id, nome, tipo: tipo || 'visitante' }); // topo da lista
-      atualizarListaPresentes();
-      document.getElementById('btn-salvar').disabled = false;
-    }
+    function adicionarPresente(id, nome, tipo, carregando = false) {
+  if (presentes.some(p => p.id === id)) {
+    mostrarAlerta('Esta pessoa já está na lista', 'warning');
+    return;
+  }
+  presentes.unshift({ id, nome, tipo: tipo || 'visitante' });
+  atualizarListaPresentes();
+
+  if (!carregando) {
+    document.getElementById('btn-salvar').disabled = false;
+  }
+}
+
 
     function atualizarListaPresentes() {
       const lista = document.getElementById('lista-presentes');
@@ -282,9 +286,11 @@
         for (const [id, valor] of Object.entries(presentesData)) {
           if (valor === true) {
             const nome = membrosData[id]?.nome || `Membro (ID: ${id})`;
-            adicionarPresente(id, nome, 'membro');
+            adicionarPresente(id, nome, 'membro', true);
+
           } else {
-            adicionarPresente(id, valor, 'visitante');
+            adicionarPresente(id, valor, 'visitante', true);
+
           }
         }
       } catch (error) {
