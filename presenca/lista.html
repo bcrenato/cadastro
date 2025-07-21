@@ -17,9 +17,25 @@ body { padding-top: 56px; }
 <body class="bg-light">
 
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-<div class="container">
-<a class="navbar-brand" href="#"><i class="fas fa-church me-2"></i>Presença Culto</a>
-</div>
+  <div class="container">
+    <a class="navbar-brand" href="#"><i class="fas fa-church me-2"></i>Presença Culto</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="../index.html"><i class="fas fa-home me-1"></i> Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="lista_culto.html"><i class="fas fa-church me-1"></i> Consulta Lista de Presença</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="frequencia.html"><i class="bi bi-graph-up me-1"></i> Frequência Mensal</a>
+        </li>
+      </ul>
+    </div>
+  </div>
 </nav>
 
 <div class="container py-4">
@@ -50,12 +66,13 @@ body { padding-top: 56px; }
 </button>
 
 <div id="lista-presentes" class="list-group"></div>
-
 </div>
 </div>
 </div>
 
-<!-- MODAL -->
+
+
+<!-- MODAL VISITANTE -->
 <div class="modal fade" id="modalVisitante" tabindex="-1" aria-hidden="true">
 <div class="modal-dialog">
 <div class="modal-content">
@@ -135,6 +152,8 @@ function inicializarAplicacao() {
   carregarPresencasExistente(document.getElementById('data-culto').value);
 }
 
+
+
 function carregarMembros() {
   database.ref('membros').once('value').then(snapshot => {
     membrosCadastrados = [];
@@ -170,18 +189,22 @@ function salvarVisitante() {
   const telefone = document.getElementById('visitante-telefone').value.trim();
 
   if (!nome) {
-    mostrarAlerta('Informe ao menos o nome.', 'warning'); return;
+    mostrarAlerta('Informe ao menos o nome.', 'warning');
+    return;
   }
 
   const id = 'visitante_' + Date.now();
-  const visitante = { id, nome, tipo:'visitante', endereco, cristao, telefone };
+  const visitante = { id, nome, tipo: 'visitante', endereco, cristao, telefone };
+
   presentes.unshift(visitante);
   atualizarListaPresentes();
   document.getElementById('btn-salvar').disabled = false;
 
   bootstrap.Modal.getInstance(document.getElementById('modalVisitante')).hide();
 
-  ['visitante-nome','visitante-endereco','visitante-cristao','visitante-telefone'].forEach(id=>document.getElementById(id).value='');
+  ['visitante-nome', 'visitante-endereco', 'visitante-cristao', 'visitante-telefone'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
 }
 
 function adicionarPresente(id, nome, tipo, extra = {}) {
