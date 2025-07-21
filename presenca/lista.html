@@ -253,9 +253,12 @@
       document.querySelectorAll('#lista-presentes .btn-outline-danger').forEach(btn => {
   btn.addEventListener('click', (e) => {
     const index = parseInt(e.target.closest('button').dataset.index);
+    if (confirm("Deseja realmente remover esta pessoa da lista?")) {
     presentes.splice(index, 1);
     atualizarListaPresentes();
-    document.getElementById('btn-salvar').disabled = false; // ✅ habilita botão ao excluir
+    document.getElementById('btn-salvar').disabled = false;
+}
+
   });
 });
 
