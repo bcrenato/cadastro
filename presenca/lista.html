@@ -283,16 +283,16 @@
         const membrosSnapshot = await database.ref('membros').once('value');
         const membrosData = membrosSnapshot.val();
 
-        for (const [id, valor] of Object.entries(presentesData)) {
-          if (valor === true) {
-            const nome = membrosData[id]?.nome || `Membro (ID: ${id})`;
-            adicionarPresente(id, nome, 'membro', true);
+        const entries = Object.entries(presentesData).reverse();
+for (const [id, valor] of entries) {
+  if (valor === true) {
+    const nome = membrosData[id]?.nome || `Membro (ID: ${id})`;
+    adicionarPresente(id, nome, 'membro', true);
+  } else {
+    adicionarPresente(id, valor, 'visitante', true);
+  }
+}
 
-          } else {
-            adicionarPresente(id, valor, 'visitante', true);
-
-          }
-        }
       } catch (error) {
         mostrarAlerta('Erro ao carregar presenças', 'danger');
       }
