@@ -510,15 +510,22 @@ function continuarGeracaoPDF(doc, yPos, cultoDate, presentesData) {
   let visitantesCount = 0;
 
   Object.entries(presentesData).forEach(([id, valor]) => {
-    if (valor === true) {
-      const membro = membrosCadastrados.find(m => m.id === id) || { nome: `Membro (ID: ${id})`, funcao: '' };
-      rows.push([membro.nome, 'Membro', membro.funcao || '']);
-      membrosCount++;
-    } else {
-      rows.push([valor, 'Visitante', '']);
-      visitantesCount++;
-    }
-  });
+  if (valor === true) {
+    // membro
+    const membro = membrosCadastrados.find(m => m.id === id) || { nome: `Membro (ID: ${id})`, funcao: '' };
+    rows.push([membro.nome, 'Membro', membro.funcao || '']);
+    membrosCount++;
+  } else if (typeof valor === 'object' && valor.nome) {
+    // visitante
+    rows.push([valor.nome, 'Visitante', '']);
+    visitantesCount++;
+  } else {
+    // fallback
+    rows.push([String(valor), 'Visitante', '']);
+    visitantesCount++;
+  }
+});
+
 
   const ordemFuncoes = ['Pastor', 'Missionario(a)', 'Diacono', 'Obreiro(a)', 'Membro'];
 
