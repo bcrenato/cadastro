@@ -116,6 +116,12 @@ const cultoModal = new bootstrap.Modal(document.getElementById('cultoModal'));
 
 
 
+
+
+
+  
+
+
   // PARTE 2
 const auth = firebase.auth();
 
@@ -159,20 +165,25 @@ function buscar() {
   database.ref('presencas_culto').once('value').then(snapshot => {
     const cultos = [];
     snapshot.forEach(child => {
-      const dados = child.val();
-      const data = dados.data;
-      if (data >= inicio && data <= fim) {
-        const visitantes = Object.values(dados.presentes || {}).filter(v => v.nome).length;
-        if (visitantes > 0) {
-          cultos.push({
-            id: child.key,
-            data,
-            visitantes,
-            dados: dados.presentes
-          });
-        }
+  const dados = child.val();
+  const chave = child.key;
+  const partes = chave.split('_');
+  if (partes.length >= 4) {
+    const data = `${partes[1]}-${partes[2]}-${partes[3]}`; // YYYY-MM-DD
+    if (data >= inicio && data <= fim) {
+      const visitantes = Object.values(dados.presentes || {}).filter(v => v.nome).length;
+      if (visitantes > 0) {
+        cultos.push({
+          id: child.key,
+          data,
+          visitantes,
+          dados: dados.presentes
+        });
       }
-    });
+    }
+  }
+});
+
 
     cultos.sort((a, b) => new Date(b.data) - new Date(a.data));
 
