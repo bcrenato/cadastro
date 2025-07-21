@@ -158,6 +158,7 @@
   </div>
 </div>
 
+
       </div>
     </div>
   </div>
@@ -356,6 +357,7 @@
       
       modalTitle.textContent = 'Lista de Presença';
       modalDate.textContent = `Lista de Presença - Culto de ${formatarData(cultoDate)}`;
+
       modalContent.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
       
       database.ref(`presencas_culto/${cultoId}/presentes`).once('value').then((snapshot) => {
@@ -370,16 +372,32 @@
         
         // Processa membros e visitantes
         
+const ordemFuncoes = ['Pastor', 'Missionario(a)', 'Diacono', 'Obreiro(a)', 'Membro'];
+
 const itens = Object.entries(presentesData).map(([id, valor]) => {
   if (valor === true) {
     const membro = membrosCadastrados.find(m => m.id === id) || { nome: `Membro (ID: ${id})`, funcao: '' };
-    return { nome: membro.nome, tipo: 'membro', funcao: membro.funcao, valor, id };
+    return { nome: membro.nome, tipo: 'membro', funcao: membro.funcao || '', valor, id };
   } else {
     return { nome: valor, tipo: 'visitante', funcao: '', valor, id };
   }
 });
 
-itens.sort((a, b) => a.nome.localeCompare(b.nome));
+itens.sort((a, b) => {
+  const idxA = a.tipo === 'visitante' ? ordemFuncoes.length + 1 :
+    (ordemFuncoes.findIndex(f => f.toLowerCase() === a.funcao.toLowerCase()) !== -1
+      ? ordemFuncoes.findIndex(f => f.toLowerCase() === a.funcao.toLowerCase()) : ordemFuncoes.length);
+
+  const idxB = b.tipo === 'visitante' ? ordemFuncoes.length + 1 :
+    (ordemFuncoes.findIndex(f => f.toLowerCase() === b.funcao.toLowerCase()) !== -1
+      ? ordemFuncoes.findIndex(f => f.toLowerCase() === b.funcao.toLowerCase()) : ordemFuncoes.length);
+
+  if (idxA !== idxB) {
+    return idxA - idxB;
+  }
+
+  return a.nome.localeCompare(b.nome);
+});
 
 modalContent.innerHTML = '';
 
@@ -401,6 +419,7 @@ itens.forEach(item => {
 
   modalContent.appendChild(div);
 });
+
 
 
         
