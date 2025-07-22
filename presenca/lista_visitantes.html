@@ -318,13 +318,12 @@ function exportarPDF(data, visitantes) {
 
   adicionarCabecalho(doc, yPos, data, () => {
     const rows = visitantes.map(v => {
-      const enderecoCompleto = 
-        `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}${v.cep ? ', CEP: ' + v.cep : ''}`;
+      const enderecoCompleto = montarEndereco(v);
       return [
-        v.nome || 'Não informado',
+        v.nome?.trim() || 'Não informado',
         enderecoCompleto || 'Não informado',
-        v.cristao || 'Não informado',
-        v.telefone || 'Não informado',
+        v.cristao?.trim() || 'Não informado',
+        v.telefone?.trim() || 'Não informado',
         formatarDataSimples(data)
       ];
     });
@@ -338,11 +337,11 @@ function exportarPDF(data, visitantes) {
       headStyles: { fillColor: [13, 110, 253], textColor: 255 },
       alternateRowStyles: { fillColor: [240, 240, 240] },
       columnStyles: {
-          0: { cellWidth: 70 },    // Nome
-          1: { cellWidth: 100 },    // Endereço
-          2: { cellWidth: 35 },    // É Cristão
-          3: { cellWidth: 40 },    // Telefone
-          4: { cellWidth: 30 }     // Data da Visita
+        0: { cellWidth: 70 },
+        1: { cellWidth: 100 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 40 },
+        4: { cellWidth: 30 }
       },
       didDrawPage: () => {
         adicionarRodape(doc);
@@ -366,13 +365,12 @@ function exportarPeriodo() {
 
       const visitantes = Object.values(data.presentes || {}).filter(v => typeof v === 'object' && v.nome);
       visitantes.forEach(v => {
-        const enderecoCompleto = 
-          `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}${v.cep ? ', CEP: ' + v.cep : ''}`;
+        const enderecoCompleto = montarEndereco(v);
         visitas.push([
-          v.nome || 'Não informado',
+          v.nome?.trim() || 'Não informado',
           enderecoCompleto || 'Não informado',
-          v.cristao || 'Não informado',
-          v.telefone || 'Não informado',
+          v.cristao?.trim() || 'Não informado',
+          v.telefone?.trim() || 'Não informado',
           formatarDataSimples(data.data)
         ]);
       });
@@ -398,11 +396,11 @@ function exportarPeriodo() {
         headStyles: { fillColor: [13, 110, 253], textColor: 255 },
         alternateRowStyles: { fillColor: [240, 240, 240] },
         columnStyles: {
-          0: { cellWidth: 70 },    // Nome
-          1: { cellWidth: 100 },    // Endereço
-          2: { cellWidth: 35 },    // É Cristão
-          3: { cellWidth: 40 },    // Telefone
-          4: { cellWidth: 30 }     // Data da Visita
+          0: { cellWidth: 70 },
+          1: { cellWidth: 100 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 40 },
+          4: { cellWidth: 30 }
         },
         didDrawPage: () => {
           adicionarRodape(doc);
@@ -413,6 +411,18 @@ function exportarPeriodo() {
     });
   });
 }
+
+// nova função para montar endereço
+function montarEndereco(v) {
+  let end = v.endereco?.trim() || '';
+  if (v.numero) end += `${end ? ', ' : ''}N° ${v.numero}`;
+  if (v.bairro) end += `${end ? ', ' : ''}${v.bairro}`;
+  if (v.cidade) end += `${end ? ', ' : ''}${v.cidade}`;
+  if (v.estado) end += `${end ? ', ' : ''}${v.estado}`;
+  if (v.cep) end += `${end ? ', ' : ''}CEP: ${v.cep}`;
+  return end || 'Não informado';
+}
+
 
 function adicionarCabecalho(doc, yPos, dataStr, callback) {
   const logo = new Image();
