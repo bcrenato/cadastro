@@ -235,8 +235,15 @@ function inicializarAplicacao() {
 
   document.getElementById('busca-nome').addEventListener('input', buscarMembros);
   document.getElementById('btn-adicionar-manual').addEventListener('click', () => {
-    new bootstrap.Modal(document.getElementById('modalVisitante')).show();
+  // limpa os campos
+  ['visitante-nome', 'visitante-endereco', 'visitante-cristao', 'visitante-telefone', 'visitante-cep', 'visitante-bairro', 'visitante-cidade', 'visitante-estado', 'visitante-numero'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
   });
+
+  new bootstrap.Modal(document.getElementById('modalVisitante')).show();
+});
+
   document.getElementById('btnSalvarVisitante').addEventListener('click', salvarVisitante);
   document.getElementById('btn-salvar').addEventListener('click', salvarPresencas);
 
