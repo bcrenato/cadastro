@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consulta de Visitantes</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    .culto-card {
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .culto-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .badge-visitor {
+      background-color: #ffc107;
+      color: #000;
+    }
+    .count-badge {
+      background-color: #6c757d;
+      margin-left: 5px;
+    }
+    .navbar {
+      background-color: #4CAF50;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .navbar .nav-link,
+    .navbar .navbar-brand {
+      color: #fff;
+    }
+    .navbar .nav-link:hover,
+    .navbar .navbar-brand:hover {
+      color: #ddd;
+    }
+    .bg-verde-escuro {
+      background-color: #1e7e34 !important;
+    }
+    .btn-primary {
+      background-color: #28a745 !important;
+      border-color: #28a745 !important;
+    }
+    .btn-primary:hover {
+      background-color: #218838 !important;
+      border-color: #1e7e34 !important;
+    }
+    .loading-spinner {
+      display: none;
+    }
+    .btn-buscar .loading-spinner {
+      display: inline-block;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#">Consulta de Visitantes</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="frequencia.html">
+            <i class="bi bi-graph-up me-1"></i> Frequência Mensal
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="lista.html">
+            <i class="bi bi-arrow-left"></i> Voltar para Cadastro
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="btn-logout" href="#">
+            <i class="bi bi-box-arrow-right"></i> Sair
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-4">
+  <div class="card shadow">
+    <div class="card-header bg-verde-escuro text-white">
+      <h4 class="mb-0">Consulta de Visitantes nos Cultos</h4>
+    </div>
+    <div class="card-body">
+
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <label for="data-inicio" class="form-label">Data Início</label>
+          <input type="date" id="data-inicio" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label for="data-fim" class="form-label">Data Fim</label>
+          <input type="date" id="data-fim" class="form-control">
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mb-4">
+        <button id="btn-buscar" class="btn btn-primary">
+          <span class="loading-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <i class="bi bi-search"></i> Buscar
+        </button>
+        <button id="btn-exportar-periodo" class="btn btn-success">
+          <i class="bi bi-download"></i> Exportar Lista do Período
+        </button>
+      </div>
+
+      <div id="lista-cultos" class="row g-3"></div>
+
+      <div class="modal fade" id="cultoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="cultoModalTitle">Detalhes do Culto</h5>
+              <div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+            </div>
+            <div class="modal-body">
+              <h6 id="cultoModalDate" class="mb-3"></h6>
+              <div class="mb-2">
+                <button id="btn-exportar" type="button" class="btn btn-success btn-sm">
+                  <i class="bi bi-download"></i> Exportar Lista do Dia
+                </button>
+              </div>
+              <div id="cultoModalContent" class="list-group" style="max-height:400px; overflow-y:auto;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<script type="module">
+
+
+
+
+
+
+//parte 2
+  import { firebaseConfig } from '../firebase-config.js';
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const auth = firebase.auth();
+const cultoModal = new bootstrap.Modal(document.getElementById('cultoModal'));
+
+let cultoAtual = null;
+
+auth.onAuthStateChanged(user => {
+  if (!user) window.location.href = '../login.html';
+  else inicializar();
+});
+
+document.getElementById('btn-logout').addEventListener('click', (e) => {
+  e.preventDefault();
+  auth.signOut().then(() => window.location.href = '../login.html');
+});
+
+function inicializar() {
+  const hoje = new Date();
+  const inicio = new Date();
+  inicio.setDate(inicio.getDate() - 30);
+
+  document.getElementById('data-inicio').value = inicio.toISOString().split('T')[0];
+  document.getElementById('data-fim').value = hoje.toISOString().split('T')[0];
+
+  document.getElementById('btn-buscar').addEventListener('click', buscarCultos);
+  document.getElementById('btn-exportar-periodo').addEventListener('click', exportarPeriodo);
+
+  buscarCultos();
+}
+
+function buscarCultos() {
+  const dataInicio = document.getElementById('data-inicio').value;
+  const dataFim = document.getElementById('data-fim').value;
+
+  const btnBuscar = document.getElementById('btn-buscar');
+  btnBuscar.disabled = true;
+  btnBuscar.querySelector('.loading-spinner').style.display = 'inline-block';
+
+  const lista = document.getElementById('lista-cultos');
+  lista.innerHTML = `<div class="col-12 text-center py-4"><div class="spinner-border text-primary"></div></div>`;
+
+  database.ref('presencas_culto').once('value').then(snapshot => {
+    const cultos = [];
+
+    snapshot.forEach(child => {
+      const data = child.val();
+      const id = child.key;
+      if (!data.data || data.data < dataInicio || data.data > dataFim) return;
+
+      const visitantes = Object.values(data.presentes || {}).filter(v => typeof v === 'object' && v.nome).length;
+
+      if (visitantes > 0) {
+        cultos.push({
+          id,
+          date: data.data,
+          visitantes,
+          dados: data.presentes
+        });
+      }
+    });
+
+    cultos.sort((a,b) => new Date(b.date) - new Date(a.date));
+    exibirCultos(cultos);
+  }).finally(() => {
+    btnBuscar.disabled = false;
+    btnBuscar.querySelector('.loading-spinner').style.display = 'none';
+  });
+}
+
+function exibirCultos(cultos) {
+  const lista = document.getElementById('lista-cultos');
+  lista.innerHTML = '';
+
+  if (cultos.length === 0) {
+    lista.innerHTML = `<div class="col-12 text-center text-muted py-4">Nenhum culto com visitantes no período</div>`;
+    return;
+  }
+
+  cultos.forEach(c => {
+    const col = document.createElement('div');
+    col.className = 'col-md-6 col-lg-4';
+
+    const card = document.createElement('div');
+    card.className = 'card culto-card mb-3';
+    card.innerHTML = `
+      <div class="card-body">
+        <h5 class="card-title">${formatarData(c.date)}</h5>
+        <p class="card-text">
+          <span class="badge count-badge">${c.visitantes} visitantes</span>
+        </p>
+        <button class="btn btn-sm btn-outline-primary" data-cultoid="${c.id}" data-cultodate="${c.date}">
+          Ver lista completa
+        </button>
+      </div>`;
+
+    col.appendChild(card);
+    lista.appendChild(col);
+  });
+
+  document.querySelectorAll('[data-cultoid]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-cultoid');
+      const date = btn.getAttribute('data-cultodate');
+      mostrarDetalhes(id, date);
+    });
+  });
+}
+
+function mostrarDetalhes(id, date) {
+  cultoAtual = { id, date };
+  const modalTitle = document.getElementById('cultoModalTitle');
+  const modalDate = document.getElementById('cultoModalDate');
+  const modalContent = document.getElementById('cultoModalContent');
+
+  modalTitle.textContent = 'Lista de Visitantes';
+  modalDate.textContent = `Culto de ${formatarData(date)}`;
+  modalContent.innerHTML = `<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>`;
+
+  database.ref(`presencas_culto/${id}/presentes`).once('value').then(snap => {
+    const data = snap.val() || {};
+    const visitantes = Object.values(data).filter(v => typeof v === 'object' && v.nome);
+
+    modalContent.innerHTML = '';
+
+    if (visitantes.length === 0) {
+      modalContent.innerHTML = `<div class="text-center text-muted py-4">Nenhum visitante</div>`;
+      return;
+    }
+
+    visitantes.forEach(v => {
+      const div = document.createElement('div');
+      div.className = 'list-group-item d-flex justify-content-between align-items-center';
+      div.innerHTML = `
+        <div>${v.nome}</div>
+        <span class="badge badge-visitor rounded-pill">Visitante</span>`;
+      modalContent.appendChild(div);
+    });
+
+    document.getElementById('btn-exportar').onclick = () => exportarPDF(date, visitantes);
+    cultoModal.show();
+  });
+}
+
+
+
+
+
+  //parte 3
+function exportarPDF(data, visitantes) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape' });
+  const margin = 15;
+  let yPos = 20;
+
+  adicionarCabecalho(doc, yPos, data, () => {
+    const rows = visitantes.map(v => {
+      const enderecoCompleto = 
+        `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}, CEP: ${v.cep || ''}`;
+      return [
+        v.nome || 'Não informado',
+        enderecoCompleto || 'Não informado',
+        v.cristao || 'Não informado',
+        v.telefone || 'Não informado',
+        formatarDataSimples(data)
+      ];
+    });
+
+    doc.autoTable({
+      startY: yPos + 40,
+      head: [['Nome', 'Endereço', 'É Cristão', 'Telefone', 'Data da Visita']],
+      body: rows,
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 10, cellPadding: 2 },
+      headStyles: { fillColor: [13,110,253], textColor: 255 },
+      alternateRowStyles: { fillColor: [240,240,240] }
+    });
+
+    doc.save(`visitantes_${data}.pdf`);
+  });
+}
+
+function exportarPeriodo() {
+  const dataInicio = document.getElementById('data-inicio').value;
+  const dataFim = document.getElementById('data-fim').value;
+
+  database.ref('presencas_culto').once('value').then(snapshot => {
+    const visitas = [];
+
+    snapshot.forEach(child => {
+      const data = child.val();
+      if (!data.data || data.data < dataInicio || data.data > dataFim) return;
+
+      const visitantes = Object.values(data.presentes || {}).filter(v => typeof v === 'object' && v.nome);
+      visitantes.forEach(v => {
+        const enderecoCompleto = 
+          `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}, CEP: ${v.cep || ''}`;
+        visitas.push([
+          v.nome || 'Não informado',
+          enderecoCompleto || 'Não informado',
+          v.cristao || 'Não informado',
+          v.telefone || 'Não informado',
+          formatarDataSimples(data.data)
+        ]);
+      });
+    });
+
+    if (visitas.length === 0) {
+      alert('Nenhum visitante no período');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape' });
+    const margin = 15;
+    let yPos = 20;
+
+    adicionarCabecalho(doc, yPos, `${dataInicio} a ${dataFim}`, () => {
+      doc.autoTable({
+        startY: yPos + 40,
+        head: [['Nome', 'Endereço', 'É Cristão', 'Telefone', 'Data da Visita']],
+        body: visitas,
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [13,110,253], textColor: 255 },
+        alternateRowStyles: { fillColor: [240,240,240] }
+      });
+
+      doc.save(`visitantes_${dataInicio}_a_${dataFim}.pdf`);
+    });
+  });
+}
+
+
+function adicionarCabecalho(doc, yPos, dataStr, callback) {
+  const logo = new Image();
+  logo.src = './logo.png';
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  logo.onload = () => {
+    const logoW = 60;
+    const logoH = logo.height / logo.width * logoW;
+    const x = (pageWidth - logoW) / 2;
+
+    doc.addImage(logo, 'PNG', x, yPos, logoW, logoH);
+    yPos += logoH + 5;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Famílias vivendo na graça e unção do Espírito', pageWidth / 2, yPos, { align: 'center' });
+    yPos += 10;
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Lista de Visitantes', pageWidth / 2, yPos, { align: 'center' });
+    yPos += 8;
+
+    doc.setFontSize(12);
+    doc.text(`Período: ${dataStr}`, pageWidth / 2, yPos, { align: 'center' });
+    yPos += 10;
+
+    callback(yPos);
+  };
+}
+
+function formatarData(dataStr) {
+  const op = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const date = new Date(`${dataStr}T12:00:00`);
+  return date.toLocaleDateString('pt-BR', op);
+}
+
+function formatarDataSimples(dataStr) {
+  const date = new Date(`${dataStr}T12:00:00`);
+  return date.toLocaleDateString('pt-BR');
+}
+
+</script>
+
+<script type="module" src="../js/session-timeout.js"></script>
+</body>
+</html>
+
+  
+
+
+  
