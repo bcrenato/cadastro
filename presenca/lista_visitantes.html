@@ -343,6 +343,9 @@ function exportarPDF(data, visitantes) {
         2: { cellWidth: 20 },    // É Cristão
         3: { cellWidth: 40 },    // Telefone
         4: { cellWidth: 30 }     // Data da Visita
+      },
+      didDrawPage: () => {
+        adicionarRodape(doc);
       }
     });
 
@@ -396,10 +399,13 @@ function exportarPeriodo() {
         alternateRowStyles: { fillColor: [240, 240, 240] },
         columnStyles: {
           0: { cellWidth: 70 },    // Nome
-          1: { cellWidth: 80 },   // Endereço
+          1: { cellWidth: 80 },    // Endereço
           2: { cellWidth: 20 },    // É Cristão
           3: { cellWidth: 40 },    // Telefone
           4: { cellWidth: 30 }     // Data da Visita
+        },
+        didDrawPage: () => {
+          adicionarRodape(doc);
         }
       });
 
@@ -407,8 +413,6 @@ function exportarPeriodo() {
     });
   });
 }
-
-
 
 function adicionarCabecalho(doc, yPos, dataStr, callback) {
   const logo = new Image();
@@ -441,6 +445,32 @@ function adicionarCabecalho(doc, yPos, dataStr, callback) {
   };
 }
 
+function adicionarRodape(doc) {
+  const pageCount = doc.internal.getNumberOfPages();
+  const pageSize = doc.internal.pageSize;
+  const pageWidth = pageSize.getWidth();
+  const pageHeight = pageSize.getHeight();
+
+  const agora = new Date();
+  const dia = String(agora.getDate()).padStart(2, '0');
+  const mes = String(agora.getMonth() + 1).padStart(2, '0');
+  const ano = agora.getFullYear();
+  const hora = String(agora.getHours()).padStart(2, '0');
+  const min = String(agora.getMinutes()).padStart(2, '0');
+  const dataHora = `Gerado em ${dia}/${mes}/${ano} às ${hora}:${min} h`;
+
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+
+    // Página x centralizado
+    doc.text(`Página ${i}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+    // Gerado em ... no canto esquerdo
+    doc.text(dataHora, 15, pageHeight - 5);
+  }
+}
+
 function formatarData(dataStr) {
   const op = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const date = new Date(`${dataStr}T12:00:00`);
@@ -451,6 +481,7 @@ function formatarDataSimples(dataStr) {
   const date = new Date(`${dataStr}T12:00:00`);
   return date.toLocaleDateString('pt-BR');
 }
+
 
 </script>
 
