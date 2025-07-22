@@ -319,7 +319,7 @@ function exportarPDF(data, visitantes) {
   adicionarCabecalho(doc, yPos, data, () => {
     const rows = visitantes.map(v => {
       const enderecoCompleto = 
-        `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}, CEP: ${v.cep || ''}`;
+        `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}${v.cep ? ', CEP: ' + v.cep : ''}`;
       return [
         v.nome || 'Não informado',
         enderecoCompleto || 'Não informado',
@@ -335,8 +335,15 @@ function exportarPDF(data, visitantes) {
       body: rows,
       margin: { left: margin, right: margin },
       styles: { fontSize: 10, cellPadding: 2 },
-      headStyles: { fillColor: [13,110,253], textColor: 255 },
-      alternateRowStyles: { fillColor: [240,240,240] }
+      headStyles: { fillColor: [13, 110, 253], textColor: 255 },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+      columnStyles: {
+        0: { cellWidth: 50 },    // Nome
+        1: { cellWidth: 100 },   // Endereço
+        2: { cellWidth: 20 },    // É Cristão
+        3: { cellWidth: 40 },    // Telefone
+        4: { cellWidth: 30 }     // Data da Visita
+      }
     });
 
     doc.save(`visitantes_${data}.pdf`);
@@ -357,7 +364,7 @@ function exportarPeriodo() {
       const visitantes = Object.values(data.presentes || {}).filter(v => typeof v === 'object' && v.nome);
       visitantes.forEach(v => {
         const enderecoCompleto = 
-          `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}, CEP: ${v.cep || ''}`;
+          `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}${v.cep ? ', CEP: ' + v.cep : ''}`;
         visitas.push([
           v.nome || 'Não informado',
           enderecoCompleto || 'Não informado',
@@ -385,14 +392,22 @@ function exportarPeriodo() {
         body: visitas,
         margin: { left: margin, right: margin },
         styles: { fontSize: 10, cellPadding: 2 },
-        headStyles: { fillColor: [13,110,253], textColor: 255 },
-        alternateRowStyles: { fillColor: [240,240,240] }
+        headStyles: { fillColor: [13, 110, 253], textColor: 255 },
+        alternateRowStyles: { fillColor: [240, 240, 240] },
+        columnStyles: {
+          0: { cellWidth: 50 },    // Nome
+          1: { cellWidth: 100 },   // Endereço
+          2: { cellWidth: 20 },    // É Cristão
+          3: { cellWidth: 40 },    // Telefone
+          4: { cellWidth: 30 }     // Data da Visita
+        }
       });
 
       doc.save(`visitantes_${dataInicio}_a_${dataFim}.pdf`);
     });
   });
 }
+
 
 
 function adicionarCabecalho(doc, yPos, dataStr, callback) {
