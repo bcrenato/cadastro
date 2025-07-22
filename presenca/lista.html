@@ -94,6 +94,27 @@ body { padding-top: 56px; }
 <label>Endereço</label>
 <input type="text" id="visitante-endereco" class="form-control">
 </div>
+
+<!-- INÍCIO DOS NOVOS CAMPOS -->
+<div class="mb-3">
+  <label>CEP</label>
+  <input type="text" id="visitante-cep" class="form-control" maxlength="9" placeholder="00000-000">
+  <div id="cep-feedback" class="form-text text-danger" style="display:none;">CEP não localizado.</div>
+</div>
+<div class="mb-3">
+  <label>Bairro</label>
+  <input type="text" id="visitante-bairro" class="form-control">
+</div>
+<div class="mb-3">
+  <label>Cidade</label>
+  <input type="text" id="visitante-cidade" class="form-control">
+</div>
+<div class="mb-3">
+  <label>Estado</label>
+  <input type="text" id="visitante-estado" class="form-control" maxlength="2" placeholder="UF">
+</div>
+<!-- FIM DOS NOVOS CAMPOS -->
+
 <div class="mb-3">
 <label>É cristão?</label>
 <select id="visitante-cristao" class="form-select">
@@ -115,6 +136,11 @@ body { padding-top: 56px; }
 </div>
 </div>
 
+
+
+
+
+<!-- PARTE 2 -->
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
@@ -154,10 +180,13 @@ function inicializarAplicacao() {
   document.getElementById('btnSalvarVisitante').addEventListener('click', salvarVisitante);
   document.getElementById('btn-salvar').addEventListener('click', salvarPresencas);
 
+  // Evento do CEP para buscar dados
+  document.getElementById('visitante-cep').addEventListener('blur', (e) => {
+    buscarCep(e.target.value);
+  });
+
   carregarPresencasExistente(document.getElementById('data-culto').value);
 }
-
-
 
 function carregarMembros() {
   database.ref('membros').once('value').then(snapshot => {
@@ -190,6 +219,10 @@ function buscarMembros(e) {
 function salvarVisitante() {
   const nome = document.getElementById('visitante-nome').value.trim();
   const endereco = document.getElementById('visitante-endereco').value.trim();
+  const cep = document.getElementById('visitante-cep').value.trim();
+  const bairro = document.getElementById('visitante-bairro').value.trim();
+  const cidade = document.getElementById('visitante-cidade').value.trim();
+  const estado = document.getElementById('visitante-estado').value.trim();
   const cristao = document.getElementById('visitante-cristao').value;
   const telefone = document.getElementById('visitante-telefone').value.trim();
 
@@ -199,7 +232,7 @@ function salvarVisitante() {
   }
 
   const id = 'visitante_' + Date.now();
-  const visitante = { id, nome, tipo: 'visitante', endereco, cristao, telefone };
+  const visitante = { id, nome, tipo: 'visitante', endereco, cep, bairro, cidade, estado, cristao, telefone };
 
   presentes.unshift(visitante);
   atualizarListaPresentes();
@@ -207,11 +240,19 @@ function salvarVisitante() {
 
   bootstrap.Modal.getInstance(document.getElementById('modalVisitante')).hide();
 
-  ['visitante-nome', 'visitante-endereco', 'visitante-cristao', 'visitante-telefone'].forEach(id => {
+  // Limpar todos os campos, inclusive os novos
+  ['visitante-nome', 'visitante-endereco', 'visitante-cristao', 'visitante-telefone',
+   'visitante-cep', 'visitante-bairro', 'visitante-cidade', 'visitante-estado'].forEach(id => {
     document.getElementById(id).value = '';
   });
 }
 
+
+
+
+//<!-- PARTE 3 -->
+
+  
 function adicionarPresente(id, nome, tipo, extra = {}) {
   if (presentes.some(p => p.id === id)) {
     mostrarAlerta('Já está na lista.', 'warning'); return;
@@ -274,7 +315,7 @@ async function salvarPresencas() {
   const relacao = {};
   presentes.forEach(p=>{
     if(p.tipo==='membro') relacao[p.id]=true;
-    else relacao[p.id]={nome:p.nome,endereco:p.endereco||'',cristao:p.cristao||'',telefone:p.telefone||''};
+    else relacao[p.id]={nome:p.nome,endereco:p.endereco||'',cep:p.cep||'',bairro:p.bairro||'',cidade:p.cidade||'',estado:p.estado||'',cristao:p.cristao||'',telefone:p.telefone||''};
   });
   const cultoId = 'culto_' + dataCulto.replace(/-/g,'_');
   await database.ref('presencas_culto/'+cultoId).set({
@@ -293,7 +334,51 @@ function mostrarAlerta(msg,tipo) {
   document.querySelector('.card-body').prepend(alerta);
   setTimeout(()=>alerta.remove(),3000);
 }
+
+// Função para buscar CEP na API ViaCEP
+async function buscarCep(cep) {
+  cep = cep.replace(/\D/g, ''); // Remove tudo que não for número
+  if (cep.length !== 8) {
+    mostrarFeedbackCep(false);
+    limparCamposEndereco();
+    return;
+  }
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = await res.json();
+    if (data.erro) {
+      mostrarFeedbackCep(false);
+      limparCamposEndereco();
+      return;
+    }
+    mostrarFeedbackCep(true);
+    // Preencher campos
+    document.getElementById('visitante-endereco').value = data.logradouro || '';
+    document.getElementById('visitante-bairro').value = data.bairro || '';
+    document.getElementById('visitante-cidade').value = data.localidade || '';
+    document.getElementById('visitante-estado').value = data.uf || '';
+  } catch {
+    mostrarFeedbackCep(false);
+    limparCamposEndereco();
+  }
+}
+
+function mostrarFeedbackCep(sucesso) {
+  const feedback = document.getElementById('cep-feedback');
+  feedback.style.display = sucesso ? 'none' : 'block';
+}
+
+function limparCamposEndereco() {
+  document.getElementById('visitante-endereco').value = '';
+  document.getElementById('visitante-bairro').value = '';
+  document.getElementById('visitante-cidade').value = '';
+  document.getElementById('visitante-estado').value = '';
+}
 </script>
 
 </body>
 </html>
+
+
+
+  
