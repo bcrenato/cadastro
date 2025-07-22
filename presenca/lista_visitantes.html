@@ -317,13 +317,17 @@ function exportarPDF(data, visitantes) {
   let yPos = 20;
 
   adicionarCabecalho(doc, yPos, data, () => {
-    const rows = visitantes.map(v => [
-      v.nome || 'Não informado',
-      v.endereco || 'Não informado',
-      v.cristao || 'Não informado',
-      v.telefone || 'Não informado',
-      formatarDataSimples(data)
-    ]);
+    const rows = visitantes.map(v => {
+      const enderecoCompleto = 
+        `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}, CEP: ${v.cep || ''}`;
+      return [
+        v.nome || 'Não informado',
+        enderecoCompleto || 'Não informado',
+        v.cristao || 'Não informado',
+        v.telefone || 'Não informado',
+        formatarDataSimples(data)
+      ];
+    });
 
     doc.autoTable({
       startY: yPos + 40,
@@ -352,9 +356,11 @@ function exportarPeriodo() {
 
       const visitantes = Object.values(data.presentes || {}).filter(v => typeof v === 'object' && v.nome);
       visitantes.forEach(v => {
+        const enderecoCompleto = 
+          `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}, CEP: ${v.cep || ''}`;
         visitas.push([
           v.nome || 'Não informado',
-          v.endereco || 'Não informado',
+          enderecoCompleto || 'Não informado',
           v.cristao || 'Não informado',
           v.telefone || 'Não informado',
           formatarDataSimples(data.data)
@@ -387,6 +393,7 @@ function exportarPeriodo() {
     });
   });
 }
+
 
 function adicionarCabecalho(doc, yPos, dataStr, callback) {
   const logo = new Image();
