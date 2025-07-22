@@ -313,34 +313,16 @@ function mostrarDetalhes(id, date) {
 function exportarPDF(data, visitantes) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'landscape' });
-  const margin = 15;
-  let yPos = 20;
 
-  adicionarCabecalho(doc, yPos, data, () => {
-    const rows = visitantes.map(v => {
-      const enderecoCompleto = 
-        `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}, CEP: ${v.cep || ''}`;
-      return [
-        v.nome || 'Não informado',
-        enderecoCompleto || 'Não informado',
-        v.cristao || 'Não informado',
-        v.telefone || 'Não informado',
-        formatarDataSimples(data)
-      ];
-    });
+  const rows = visitantes.map(v => [
+    v.nome || 'Não informado',
+    montarEndereco(v),
+    v.cristao || 'Não informado',
+    v.telefone || 'Não informado',
+    formatarDataSimples(data)
+  ]);
 
-    doc.autoTable({
-      startY: yPos + 40,
-      head: [['Nome', 'Endereço', 'É Cristão', 'Telefone', 'Data da Visita']],
-      body: rows,
-      margin: { left: margin, right: margin },
-      styles: { fontSize: 10, cellPadding: 2 },
-      headStyles: { fillColor: [13,110,253], textColor: 255 },
-      alternateRowStyles: { fillColor: [240,240,240] }
-    });
-
-    doc.save(`visitantes_${data}.pdf`);
-  });
+  gerarPDF(doc, rows, `Culto de ${data}`, `visitantes_${data}.pdf`);
 }
 
 function exportarPeriodo() {
@@ -356,11 +338,9 @@ function exportarPeriodo() {
 
       const visitantes = Object.values(data.presentes || {}).filter(v => typeof v === 'object' && v.nome);
       visitantes.forEach(v => {
-        const enderecoCompleto = 
-          `${v.endereco || ''}${v.numero ? ', N° ' + v.numero : ''}${v.bairro ? ', ' + v.bairro : ''}, ${v.cidade || ''}, ${v.estado || ''}, CEP: ${v.cep || ''}`;
         visitas.push([
           v.nome || 'Não informado',
-          enderecoCompleto || 'Não informado',
+          montarEndereco(v),
           v.cristao || 'Não informado',
           v.telefone || 'Não informado',
           formatarDataSimples(data.data)
@@ -375,30 +355,18 @@ function exportarPeriodo() {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape' });
-    const margin = 15;
-    let yPos = 20;
 
-    adicionarCabecalho(doc, yPos, `${dataInicio} a ${dataFim}`, () => {
-      doc.autoTable({
-        startY: yPos + 40,
-        head: [['Nome', 'Endereço', 'É Cristão', 'Telefone', 'Data da Visita']],
-        body: visitas,
-        margin: { left: margin, right: margin },
-        styles: { fontSize: 10, cellPadding: 2 },
-        headStyles: { fillColor: [13,110,253], textColor: 255 },
-        alternateRowStyles: { fillColor: [240,240,240] }
-      });
-
-      doc.save(`visitantes_${dataInicio}_a_${dataFim}.pdf`);
-    });
+    gerarPDF(doc, visitas, `Período: ${dataInicio} a ${dataFim}`, `visitantes_${dataInicio}_a_${dataFim}.pdf`);
   });
 }
 
+function gerarPDF(doc, rows, periodo, filename) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  let yPos = 20;
 
-function adicionarCabecalho(doc, yPos, dataStr, callback) {
   const logo = new Image();
   logo.src = './logo.png';
-  const pageWidth = doc.internal.pageSize.getWidth();
 
   logo.onload = () => {
     const logoW = 60;
@@ -408,6 +376,7 @@ function adicionarCabecalho(doc, yPos, dataStr, callback) {
     doc.addImage(logo, 'PNG', x, yPos, logoW, logoH);
     yPos += logoH + 5;
 
+    // Cabeçalho como antes, separado em várias linhas
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     doc.text('Famílias vivendo na graça e unção do Espírito', pageWidth / 2, yPos, { align: 'center' });
@@ -419,23 +388,74 @@ function adicionarCabecalho(doc, yPos, dataStr, callback) {
     yPos += 8;
 
     doc.setFontSize(12);
-    doc.text(`Período: ${dataStr}`, pageWidth / 2, yPos, { align: 'center' });
+    doc.text(periodo, pageWidth / 2, yPos, { align: 'center' });
     yPos += 10;
 
-    callback(yPos);
+    doc.autoTable({
+      startY: yPos + 10,
+      head: [[
+        'Nome',
+        'Endereço',
+        'É\u00A0Cristão',
+        'Telefone',
+        'Data\u00A0da\u00A0Visita'
+      ]],
+      body: rows,
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 10, cellPadding: 2 },
+      headStyles: { fillColor: [13,110,253], textColor: 255 },
+      alternateRowStyles: { fillColor: [240,240,240] },
+      columnStyles: {
+        0: { cellWidth: 50 },
+        1: { cellWidth: 90 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 'auto' },
+        4: { cellWidth: 'auto' }
+      },
+      didDrawPage: () => {
+        adicionarRodape(doc);
+      }
+    });
+
+    doc.save(filename);
   };
 }
 
-function formatarData(dataStr) {
-  const op = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const date = new Date(`${dataStr}T12:00:00`);
-  return date.toLocaleDateString('pt-BR', op);
+function adicionarRodape(doc) {
+  const pageCount = doc.internal.getNumberOfPages();
+  const pageSize = doc.internal.pageSize;
+  const pageWidth = pageSize.getWidth();
+  const pageHeight = pageSize.getHeight();
+
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+
+    const dataHora = new Date().toLocaleString('pt-BR');
+    const texto = `Página ${i} de ${pageCount}`;
+    const dataTexto = `Gerado em: ${dataHora}`;
+
+    doc.text(texto, pageWidth / 2, pageHeight - 5, { align: 'center' });
+    doc.text(dataTexto, 15, pageHeight - 5);
+  }
+}
+
+function montarEndereco(v) {
+  let end = `${v.endereco || ''}`;
+  if (v.numero) end += `, N° ${v.numero}`;
+  if (v.bairro) end += `, ${v.bairro}`;
+  if (v.cidade) end += `, ${v.cidade}`;
+  if (v.estado) end += `, ${v.estado}`;
+  if (v.cep) end += `, CEP: ${v.cep}`;
+  return end.trim() || 'Não informado';
 }
 
 function formatarDataSimples(dataStr) {
   const date = new Date(`${dataStr}T12:00:00`);
   return date.toLocaleDateString('pt-BR');
 }
+
 
 </script>
 
