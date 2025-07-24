@@ -1,4 +1,4 @@
-// Importa Firebase Messaging para Service Worker (compat)
+// Importa Firebase Messaging para Service Worker (compat) 
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
