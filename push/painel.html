@@ -213,9 +213,10 @@
         formData.append('image', compressedBlob, 'imagem.jpg');
       }
 
-      const response = await fetch("https://igrejamine.x10.mx/igreja/PWA/send_to_all.php", {
+     const response = await fetch("https://igrejamine.x10.mx/igreja/PWA/send_to_all.php", {
         method: 'POST',
-        body: formData
+        body: formData,
+        mode: 'cors' // ✅ IMPORTANTE: permite requisição entre domínios
       });
 
       const result = await response.json();
