@@ -75,3 +75,38 @@ self.addEventListener('activate', event => {
     })
   );
 });
+
+
+
+
+
+
+
+
+
+
+self.addEventListener('push', function(event) {
+  if (!event.data) return;
+
+  let payload = {};
+  try {
+    payload = event.data.json();
+  } catch (e) {
+    console.error('Erro ao processar notificação:', e);
+  }
+
+  const title = payload.notification?.title || 'Notificação';
+  const options = {
+    body: payload.notification?.body || '',
+    icon: payload.notification?.icon || '/cadastro/icons/icon-192x192.png',
+    image: payload.notification?.image || '',
+    data: {
+      link: payload.data?.link || payload.notification?.click_action || '/'
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
