@@ -1,3 +1,34 @@
+// Importa Firebase Messaging para Service Worker (compat)
+importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
+
+// Config Firebase - use seu próprio config (igual firebase-config.js)
+firebase.initializeApp({
+  apiKey: "AIzaSyCv6pzl34tyPTARtGxV6g2AJfkrtQeA-xU",
+  authDomain: "cadastro-igreja-23042.firebaseapp.com",
+  databaseURL: "https://cadastro-igreja-23042-default-rtdb.firebaseio.com",
+  projectId: "cadastro-igreja-23042",
+  messagingSenderId: "977906864836",
+  appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
+});
+
+const messaging = firebase.messaging();
+
+// Recebe notificações em segundo plano
+messaging.onBackgroundMessage(function(payload) {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+
+  const notificationTitle = payload.notification?.title || 'Notificação';
+  const notificationOptions = {
+    body: payload.notification?.body || '',
+    icon: '/cadastro/icons/icon-192x192.png',
+    // Aqui pode adicionar ações, badge, etc, se quiser
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// SEU CÓDIGO DE CACHE E FETCH (mantido igual ao seu original)
 const CACHE_NAME = 'cadastro-app-v1';
 const urlsToCache = [
   '/cadastro/index.html',
@@ -9,7 +40,6 @@ const urlsToCache = [
   '/cadastro/icons/icon-512x512.png'
 ];
 
-// Instala e salva no cache
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -18,7 +48,6 @@ self.addEventListener('install', event => {
   );
 });
 
-// Responde com cache se offline
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(response => {
@@ -27,7 +56,6 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Limpa caches antigos
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
