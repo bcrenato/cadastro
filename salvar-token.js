@@ -21,16 +21,22 @@ auth.onAuthStateChanged((user) => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
         getToken(messaging, {
-          vapidKey: 'BFBqbUaRosOn6954OA7OgVwC1I-YIsMlRjBSLDDCkfxT7BYVpqIJHmxpJkYVPYnSQftVVkrRqKPrjuJfodnjFF4', // Troque aqui pela sua VAPID Key real
+          vapidKey: 'BFBqbUaRosOn6954OA7OgVwC1I-YIsMlRjBSLDDCkfxT7BYVpqIJHmxpJkYVPYnSQftVVkrRqKPrjuJfodnjFF4',
           serviceWorkerRegistration: registration
         }).then((currentToken) => {
           if (currentToken) {
             console.log('Token FCM:', currentToken);
-            // Envia token para o servidor (painel x10)
             fetch('https://igrejamine.x10.mx/PWA/salvar_token.php', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ token: currentToken })
+            })
+            .then(response => response.text())  // Ou .json() se o PHP retornar JSON
+            .then(data => {
+              console.log('Resposta do servidor:', data);
+            })
+            .catch(err => {
+              console.error('Erro no fetch:', err);
             });
           } else {
             console.log('Nenhum token disponível. Solicite permissão para notificações.');
