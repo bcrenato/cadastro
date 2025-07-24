@@ -7,7 +7,7 @@ const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
 getToken(messaging, {
-  vapidKey: "SUA_CHAVE_VAPID_PUBLICA"
+  vapidKey: "BK1Vsw-Pp7cMx2ejEA8iA5_g2JIVp157aiA60UNT7d40Zj9OgSBsNuEios8SwmKDpCR8GgmLjUBxAuF8brKZRWI"
 }).then((currentToken) => {
   if (currentToken) {
     console.log("Token FCM:", currentToken);
