@@ -17,7 +17,7 @@ const messaging = getMessaging(app);
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.ready.then((registration) => {
     getToken(messaging, {
-      vapidKey: 'BFBqbUaRosOn6954OA7OgVwC1I-YIsMlRjBSLDDCkfxT7BYVpqIJHmxpJkYVPYnSQftVVkrRqKPrjuJfodnjFF4',  // Coloque seu VAPID key aqui (do Firebase Console)
+      vapidKey: 'SUA_VAPID_KEY_AQUI',  // Coloque seu VAPID key aqui (do Firebase Console)
       serviceWorkerRegistration: registration
     }).then((currentToken) => {
       if (currentToken) {
