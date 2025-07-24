@@ -9,6 +9,40 @@ const urlsToCache = [
   '/cadastro/icons/icon-512x512.png'
 ];
 
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+
+  let link = null;
+
+  if (event.notification.data && event.notification.data.link) {
+    link = event.notification.data.link;
+  } else if (event.notification.click_action) {
+    link = event.notification.click_action;
+  }
+
+  if (link) {
+    event.waitUntil(
+      clients.openWindow(link)
+    );
+  }
+});
+
+
+
+self.registration.showNotification(payload.notification.title, {
+  body: payload.notification.body,
+  icon: payload.notification.icon,
+  image: payload.notification.image,
+  data: payload.data, // link incluso aqui
+});
+
+
+
+
+
+
+
 // Instala e salva no cache
 self.addEventListener('install', event => {
   event.waitUntil(
