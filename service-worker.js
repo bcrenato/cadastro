@@ -22,7 +22,9 @@ messaging.onBackgroundMessage(function(payload) {
   const notificationOptions = {
     body: payload.notification?.body || '',
     icon: '/cadastro/icons/icon-192x192.png',
-    // Aqui pode adicionar ações, badge, etc, se quiser
+    data: {
+      url: payload.data?.url || '/cadastro/'
+    }
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
