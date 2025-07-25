@@ -32,13 +32,23 @@ resetTimer();
 
 // Redirecionar para última página salva após login, se houver
 auth.onAuthStateChanged((user) => {
-    if (user) {
+    const currentURL = window.location.href;
+
+    if (!user) {
+        // Usuário não autenticado e não está na página de login
+        if (!currentURL.includes("/cadastro/login.html")) {
+            localStorage.setItem("lastVisitedPage", currentURL);
+        }
+    } else {
         const lastPage = localStorage.getItem("lastVisitedPage");
 
-        if (lastPage && lastPage !== window.location.href && !window.location.href.includes("/cadastro/login.html")) {
-            // Limpa e redireciona
-            localStorage.removeItem("lastVisitedPage");
-            window.location.href = lastPage;
+        try {
+            if (lastPage && new URL(lastPage).origin === window.location.origin && lastPage !== window.location.href) {
+                localStorage.removeItem("lastVisitedPage");
+                window.location.href = lastPage;
+            }
+        } catch (e) {
+            localStorage.removeItem("lastVisitedPage"); // URL malformada
         }
     }
 });
