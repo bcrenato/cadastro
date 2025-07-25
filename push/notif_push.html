@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Enviar Notificações</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    #painelFrame {
+      width: 100%;
+      height: 100vh;
+      border: none;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<div id="status" class="status">
+  Verificando autenticação...
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCv6pzl34tyPTARtGxV6g2AJfkrtQeA-xU",
+    authDomain: "cadastro-igreja-23042.firebaseapp.com",
+    projectId: "cadastro-igreja-23042",
+    appId: "1:977906864836:web:1a21a29f4b941ac5aeaf91"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // Usuário autenticado, carrega o painel via iframe
+      document.body.innerHTML = `<iframe id="painelFrame" src="https://igrejamine.x10.mx/PWA/painel.html"></iframe>`;
+    } else {
+      // Redireciona ao login
+      document.getElementById('status').innerText = 'Não autenticado. Redirecionando...';
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 2000);
+    }
+  });
+</script>
+
+</body>
+</html>
