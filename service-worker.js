@@ -28,6 +28,42 @@ messaging.onBackgroundMessage(function(payload) {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
+
+
+
+
+
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+
+  const targetUrl = event.notification.data?.url || '/cadastro/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        // Se já estiver aberta em uma aba, foca nela
+        if (client.url === targetUrl && 'focus' in client) {
+          return client.focus();
+        }
+      }
+
+      // Abre nova aba com a URL da notificação
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+
+
+
+
+
+
+
+
+
 // SEU CÓDIGO DE CACHE E FETCH (mantido igual ao seu original)
 const CACHE_NAME = 'cadastro-app-v1';
 const urlsToCache = [
