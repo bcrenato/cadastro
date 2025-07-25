@@ -132,12 +132,18 @@
       }
 
       // Aguarda redirecionamento automático pelo session-timeout.js
-      setTimeout(() => {
-        const lastPage = localStorage.getItem("lastVisitedPage");
-        if (!lastPage) {
-          window.location.href = "index.html"; // fallback se nenhuma página estiver salva
-        }
-      }, 500);
+      // Aguarda redirecionamento automático pelo session-timeout.js ou força fallback
+setTimeout(() => {
+  const lastPage = localStorage.getItem("lastVisitedPage");
+
+  if (lastPage && lastPage !== window.location.href) {
+    // Redireciona manualmente, caso o session-timeout.js não tenha feito ainda
+    window.location.href = lastPage;
+  } else {
+    // Redirecionamento padrão
+    window.location.href = "index.html";
+  }
+}, 500);
 
     } catch (error) {
       let message = 'Erro ao fazer login.';
