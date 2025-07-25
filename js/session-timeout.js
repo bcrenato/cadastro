@@ -1,4 +1,4 @@
-// /js/js/session-timeout.js
+// /js/session-timeout.js
 import { auth } from '../firebase-config.js';
 
 const timeoutMillis = 2 * 60 * 1000;
