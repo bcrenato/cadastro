@@ -18,14 +18,15 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage(function(payload) {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
 
-  const notificationTitle = payload.notification?.title || 'Notificação';
-  const notificationOptions = {
-    body: payload.notification?.body || '',
-    icon: '/cadastro/icons/icon-192x192.png',
-    data: {
-      url: payload.data?.url || '/cadastro/'
-    }
-  };
+  const notificationTitle = payload.notification?.title || payload.data?.title || 'Notificação';
+const notificationOptions = {
+  body: payload.notification?.body || payload.data?.body || '',
+  icon: payload.notification?.icon || '/cadastro/icons/icon-192x192.png',
+  image: payload.notification?.image || payload.data?.image || undefined,
+  data: {
+    url: payload.data?.url || payload.notification?.click_action || '/cadastro/'
+  }
+};
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
