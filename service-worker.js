@@ -16,17 +16,23 @@ const messaging = firebase.messaging();
 
 // Recebe notificações em segundo plano
 messaging.onBackgroundMessage(function(payload) {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  console.log('[firebase-messaging-sw.js] Mensagem recebida em segundo plano:', payload);
 
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'Notificação';
-const notificationOptions = {
-  body: payload.notification?.body || payload.data?.body || '',
-  icon: payload.notification?.icon || '/cadastro/icons/icon-192x192.png',
-  image: payload.notification?.image || payload.data?.image || undefined,
-  data: {
-    url: payload.data?.url || payload.notification?.click_action || '/cadastro/'
-  }
-};
+  const data = payload.data || {};
+  const notification = payload.notification || {};
+
+  const notificationTitle = notification.title || data.title || 'Nova Notificação';
+  const notificationBody = notification.body || data.body || '';
+  const notificationIcon = notification.icon || '/cadastro/icons/icon-192x192.png';
+  const notificationImage = notification.image || data.image || undefined;
+  const targetUrl = data.url || notification.click_action || '/cadastro/';
+
+  const notificationOptions = {
+    body: notificationBody,
+    icon: notificationIcon,
+    image: notificationImage,
+    data: { url: targetUrl }
+  };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
