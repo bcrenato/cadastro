@@ -130,12 +130,21 @@
 
     try {
       await loginUser(username, password);
-      if (remember) {
-        localStorage.setItem('savedUsername', username);
-      } else {
-        localStorage.removeItem('savedUsername');
-      }
-      window.location.href = 'index.html';
+
+if (remember) {
+  localStorage.setItem('savedUsername', username);
+} else {
+  localStorage.removeItem('savedUsername');
+}
+
+// Redirecionamento inteligente
+const redirectUrl = localStorage.getItem('redirectAfterLogin');
+if (redirectUrl) {
+  localStorage.removeItem('redirectAfterLogin'); // Limpa para não usar de novo
+  window.location.href = redirectUrl;
+} else {
+  window.location.href = 'index.html';
+}
     } catch (error) {
       let message = 'Erro ao fazer login.';
       switch(error.message) {
