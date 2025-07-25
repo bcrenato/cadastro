@@ -32,11 +32,21 @@ resetTimer();
 
 // Redirecionar para última página salva após login, se houver
 auth.onAuthStateChanged((user) => {
-    if (user) {
+    if (!user) {
+        // Usuário não autenticado
+        if (!window.location.href.includes("/cadastro/login.html")) {
+            localStorage.setItem("lastVisitedPage", window.location.href);
+            window.location.href = "/cadastro/login.html";
+        }
+    } else {
+        // Usuário autenticado — redireciona se houver lastVisitedPage
         const lastPage = localStorage.getItem("lastVisitedPage");
 
-        if (lastPage && lastPage !== window.location.href && !window.location.href.includes("/cadastro/login.html")) {
-            // Limpa e redireciona
+        if (
+            lastPage &&
+            lastPage !== window.location.href &&
+            !window.location.href.includes("/cadastro/login.html")
+        ) {
             localStorage.removeItem("lastVisitedPage");
             window.location.href = lastPage;
         }
