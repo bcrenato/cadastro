@@ -315,5 +315,19 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+    
+<script>
+// Escuta mensagens do Service Worker com a URL clicada na notificação
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', event => {
+    const { redirectUrl } = event.data || {};
+    if (redirectUrl) {
+      // Salva a URL para redirecionar após login
+      localStorage.setItem('redirectAfterLogin', redirectUrl);
+    }
+  });
+}
+</script>    
+
 </body>
 </html>
