@@ -197,6 +197,12 @@ let modoSelecao = false;
 const membrosRef = ref(db, "membros");
 let todosMembros = [];
 
+
+  function removerAcentos(texto) {
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+
 function carregarMembros(data) {
   lista.innerHTML = "";
   if (!data) {
@@ -224,14 +230,16 @@ function carregarMembros(data) {
   filtrarMembros();
 }
 
-function filtrarMembros() {
-  const termoPesquisa = document.getElementById('campoPesquisa').value.toLowerCase();
-  
-  const membrosFiltrados = termoPesquisa 
-    ? todosMembros.filter(membro => 
-        (membro.nome && membro.nome.toLowerCase().includes(termoPesquisa)) ||
-        (membro.sobrenome && membro.sobrenome.toLowerCase().includes(termoPesquisa)))
-    : todosMembros;
+const termoPesquisa = removerAcentos(document.getElementById('campoPesquisa').value.toLowerCase());
+
+const membrosFiltrados = termoPesquisa 
+  ? todosMembros.filter(membro => {
+      const nomeNormalizado = removerAcentos((membro.nome || "").toLowerCase());
+      const sobrenomeNormalizado = removerAcentos((membro.sobrenome || "").toLowerCase());
+      return nomeNormalizado.includes(termoPesquisa) || sobrenomeNormalizado.includes(termoPesquisa);
+    })
+  : todosMembros;
+
 
   membrosFiltrados.sort((a, b) => {
     const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
