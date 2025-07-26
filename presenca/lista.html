@@ -278,14 +278,23 @@ function carregarMembros() {
   });
 }
 
+function removerAcentos(str) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function buscarMembros(e) {
-  const termo = e.target.value.toLowerCase();
+  const termo = removerAcentos(e.target.value.toLowerCase());
   const resultados = document.getElementById('resultados-busca');
+
   if (termo.length < 2) {
     resultados.innerHTML = '';
     return;
   }
-  const matches = membrosCadastrados.filter((m) => m.nome.toLowerCase().includes(termo)).slice(0, 5);
+
+  const matches = membrosCadastrados.filter((m) =>
+    removerAcentos(m.nome.toLowerCase()).includes(termo)
+  ).slice(0, 5);
+
   resultados.innerHTML = '';
   matches.forEach((m) => {
     const item = document.createElement('button');
