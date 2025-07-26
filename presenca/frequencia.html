@@ -135,6 +135,7 @@
                 <h5 class="mb-0">Membros</h5>
               </div>
               <div class="card-body">
+                <input type="text" id="filtro-membros" class="form-control mb-3" placeholder="Buscar por nome...">
                 <div id="lista-membros" class="list-group"></div>
               </div>
             </div>
@@ -296,7 +297,7 @@
                   frequenciaMembros[id]++;
                 } else {
                   // É um visitante
-                  const nomeVisitante = valor;
+                  const nomeVisitante = valor.nome;
                   if (!frequenciaVisitantes[nomeVisitante]) {
                     frequenciaVisitantes[nomeVisitante] = 0;
                   }
@@ -362,6 +363,15 @@
         listaMembros.innerHTML = '<div class="text-center text-muted py-4">Nenhum membro compareceu neste período</div>';
         return;
       }
+
+      document.getElementById('filtro-membros').addEventListener('input', function () {
+  const filtro = this.value.toLowerCase();
+  const itens = listaMembros.querySelectorAll('.list-group-item');
+  itens.forEach(item => {
+    const nome = item.querySelector('h6').textContent.toLowerCase();
+    item.style.display = nome.includes(filtro) ? '' : 'none';
+  });
+});
       
       // Cria array de membros com frequência
       const membrosComFrequencia = [];
