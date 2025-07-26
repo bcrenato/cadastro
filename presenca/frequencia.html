@@ -256,11 +256,7 @@
     function buscarFrequenciaMensal() {
       const mes = parseInt(document.getElementById('mes').value);
       const ano = parseInt(document.getElementById('ano').value);
-      const btnBuscar = document.getElementById('btn-buscar');
-      
-      // Mostra spinner e desabilita botão
-      btnBuscar.disabled = true;
-      btnBuscar.querySelector('.loading-spinner').style.display = 'inline-block';
+     
       
       // Limpa listas
       document.getElementById('lista-membros').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
@@ -307,6 +303,11 @@
             }
           }
         });
+
+console.log('Total de cultos:', totalCultos);
+    console.log('Frequência Membros:', frequenciaMembros);
+    console.log('Frequência Visitantes:', frequenciaVisitantes);
+
         
         // Atualiza estatísticas
         document.getElementById('total-cultos').textContent = totalCultos;
