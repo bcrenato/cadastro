@@ -392,10 +392,16 @@ console.log('Total de cultos:', totalCultos);
       const ordemFuncoes = { 'Pastor': 1, 'Missionario(a)': 2, 'Diacono': 3, 'Obreiro(a)': 4, 'Membro': 5, '': 6 };
 membrosComFrequencia.sort((a, b) => {
   if (b.frequencia !== a.frequencia) {
-    return b.frequencia - a.frequencia;
+    return b.frequencia - a.frequencia; // ordem por frequência decrescente
   }
-  return (ordemFuncoes[a.funcao] || 99) - (ordemFuncoes[b.funcao] || 99);
+  const funcaoA = ordemFuncoes[a.funcao] || 99;
+  const funcaoB = ordemFuncoes[b.funcao] || 99;
+  if (funcaoA !== funcaoB) {
+    return funcaoA - funcaoB; // ordem por função
+  }
+  return a.nome.toLowerCase().localeCompare(b.nome.toLowerCase()); // ordem alfabética
 });
+
       
       // Adiciona à lista
       membrosComFrequencia.forEach(membro => {
