@@ -126,10 +126,7 @@
           </div>
         </div>
         
-        <button id="btn-buscar" class="btn btn-primary mb-4">
-          <span class="loading-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          <i class="bi bi-search"></i> Buscar Frequência
-        </button>
+  
         
         <div class="row">
           <div class="col-md-6">
@@ -232,8 +229,8 @@
       carregarMembros();
       
       // Configura evento de busca
-      document.getElementById('btn-buscar').addEventListener('click', buscarFrequenciaMensal);
-      
+      document.getElementById('mes').addEventListener('change', buscarFrequenciaMensal);
+      document.getElementById('ano').addEventListener('change', buscarFrequenciaMensal);      
       // Busca automaticamente
       buscarFrequenciaMensal();
     }
@@ -381,7 +378,13 @@
       }
       
       // Ordena por frequência (decrescente)
-      membrosComFrequencia.sort((a, b) => b.frequencia - a.frequencia);
+      const ordemFuncoes = { 'Pastor': 1, 'Missionario(a)': 2, 'Diacono': 3, 'Obreiro(a)': 4, 'Membro': 5, '': 6 };
+membrosComFrequencia.sort((a, b) => {
+  if (b.frequencia !== a.frequencia) {
+    return b.frequencia - a.frequencia;
+  }
+  return (ordemFuncoes[a.funcao] || 99) - (ordemFuncoes[b.funcao] || 99);
+});
       
       // Adiciona à lista
       membrosComFrequencia.forEach(membro => {
