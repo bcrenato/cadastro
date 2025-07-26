@@ -368,9 +368,9 @@ btnExportarPDF.addEventListener("click", async () => {
           ordemFuncao,
           sexoFormatado: m.sexo === "M" || (m.sexo || "").toLowerCase() === "masculino" ? "Masculino" :
                          m.sexo === "F" || (m.sexo || "").toLowerCase() === "feminino" ? "Feminino" :
-                         "Não informado",
-          nomeFormatado: m.nome ? m.nome.toUpperCase() : "Não informado",
-          funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "Não informado"
+                         "--",
+          nomeFormatado: m.nome ? m.nome.toUpperCase() : "--",
+          funcaoFormatada: m.funcao ? m.funcao.toUpperCase() : "--"
         };
       })
       .sort((a, b) => {
@@ -392,7 +392,7 @@ btnExportarPDF.addEventListener("click", async () => {
 
       // calcular idade e faixa etária
       let idade = "-";
-      let faixa = "Não informado";
+      let faixa = "--";
       if (m.nascimento) {
         const nasc = new Date(m.nascimento);
         const hoje = new Date();
@@ -411,18 +411,18 @@ btnExportarPDF.addEventListener("click", async () => {
       return [
         m.nomeFormatado,
         faixa,
-        m.nascimento ? formatDate(m.nascimento) : "Não informado",
+        m.nascimento ? formatDate(m.nascimento) : "--",
         m.sexoFormatado,
-        m.telefone || "Não informado",
+        m.telefone || "--",
         m.funcaoFormatada,
-        m.batismo ? formatDate(m.batismo) : "Não informado",
+        m.batismo ? formatDate(m.batismo) : "--",
         enderecoCompleto
       ];
     });
 
     // TABELA PRINCIPAL
     doc.autoTable({
-      head: [["NOME", "Fx ETÁRIA", "NASCIM", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
+      head: [["NOME", "FAIXA ETÁRIA", "NASCIM", "SEXO", "TELEFONE", "FUNÇÃO", "BATISMO", "ENDEREÇO"]],
       body: membrosArray,
       startY: startY,
       margin: { top: 10, bottom: 15 },
