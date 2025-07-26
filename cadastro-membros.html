@@ -196,5 +196,24 @@
 <!-- Logoff após inatividade -->
 <script type="module" src="js/session-timeout.js"></script>
   
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("form-membro");
+    const nomeInput = document.getElementById("nome");
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault(); // impede o envio padrão
+
+      // lógica de salvamento aqui, se necessário
+
+      form.reset(); // limpa os campos (opcional)
+      nomeInput.focus(); // volta o foco para o campo nome
+    });
+  });
+</script>
+
+
 </body>
 </html>
