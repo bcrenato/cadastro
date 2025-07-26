@@ -442,7 +442,12 @@ membrosComFrequencia.sort((a, b) => {
       // Converte para array e ordena por frequência
       const visitantesArray = Object.entries(frequenciaVisitantes)
         .map(([nome, freq]) => ({ nome, freq }))
-        .sort((a, b) => b.freq - a.freq);
+       .sort((a, b) => {
+  if (b.freq !== a.freq) {
+    return b.freq - a.freq; // ordena por frequência decrescente
+  }
+  return a.nome.toLowerCase().localeCompare(b.nome.toLowerCase()); // ordena por nome A-Z em caso de empate
+});
       
       // Adiciona à lista
       visitantesArray.forEach(visitante => {
