@@ -186,6 +186,10 @@ body.autorizado .conteudo-restrito {
   <div id="lista-membros" class="list-group"></div>
 </div>
 
+
+
+
+  
 <script type="module">
 import { db } from './firebase-config.js';
 import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
@@ -197,11 +201,10 @@ let modoSelecao = false;
 const membrosRef = ref(db, "membros");
 let todosMembros = [];
 
-
-  function removerAcentos(texto) {
+// ✅ Função para remover acentos
+function removerAcentos(texto) {
   return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
-
 
 function carregarMembros(data) {
   lista.innerHTML = "";
@@ -230,16 +233,17 @@ function carregarMembros(data) {
   filtrarMembros();
 }
 
-const termoPesquisa = removerAcentos(document.getElementById('campoPesquisa').value.toLowerCase());
+// ✅ Função corrigida para considerar acentos
+function filtrarMembros() {
+  const termoPesquisa = removerAcentos(document.getElementById('campoPesquisa').value.toLowerCase());
 
-const membrosFiltrados = termoPesquisa 
-  ? todosMembros.filter(membro => {
-      const nomeNormalizado = removerAcentos((membro.nome || "").toLowerCase());
-      const sobrenomeNormalizado = removerAcentos((membro.sobrenome || "").toLowerCase());
-      return nomeNormalizado.includes(termoPesquisa) || sobrenomeNormalizado.includes(termoPesquisa);
-    })
-  : todosMembros;
-
+  const membrosFiltrados = termoPesquisa 
+    ? todosMembros.filter(membro => {
+        const nomeNormalizado = removerAcentos((membro.nome || "").toLowerCase());
+        const sobrenomeNormalizado = removerAcentos((membro.sobrenome || "").toLowerCase());
+        return nomeNormalizado.includes(termoPesquisa) || sobrenomeNormalizado.includes(termoPesquisa);
+      })
+    : todosMembros;
 
   membrosFiltrados.sort((a, b) => {
     const ordemFuncao = a.ordemFuncao - b.ordemFuncao;
@@ -298,6 +302,7 @@ onValue(membrosRef, (snapshot) => {
   carregarMembros(data);
 });
 </script>
+
 
 
   
