@@ -146,18 +146,19 @@ function getValidade() {
 
     
 
-// Modifique apenas a função gerarCarteirinhas() conforme abaixo
-async function gerarCarteirinhas() {
+// Modifique apenas a funasync function gerarCarteirinhas() {
   preview.innerHTML = '';
   const selecionadosMembros = membros.filter(m => selecionados.includes(m.id));
   const fundoCarteirinha = "https://bcrenato.github.io/cadastro/img/carteirinha.png";
 
+  // Configurações do PDF
   const pdf = new jspdf.jsPDF({
     orientation: 'portrait',
     unit: 'cm',
     format: 'a4'
   });
 
+  // Dimensões
   const cardWidth = 19;
   const cardHeight = 6.5;
   const a4Width = 21.0;
@@ -166,6 +167,9 @@ async function gerarCarteirinhas() {
   const spacing = 0.2;
 
   let yPosition = marginTop;
+
+  // Fallback para foto (SVG com fundo cinza e texto)
+  const fallbackFoto = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiPk5lbmh1bWEgZm90bzwvdGV4dD48L3N2Zz4=';
 
   for (let i = 0; i < selecionadosMembros.length; i++) {
     const m = selecionadosMembros[i];
@@ -178,9 +182,21 @@ async function gerarCarteirinhas() {
     const batismoFormatado = formatarData(m.batismo);
     const nascimentoFormatado = formatarData(m.nascimento);
     const validade = getValidade();
-    
-    const fallbackFoto = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiPk5lbmh1bWEgZm90bzwvdGV4dD48L3N2Zz4=';
-    let fotoMembro = m.fotoURL || fallbackFoto;
+
+    // Verifica se a foto existe e é uma URL válida
+    let fotoMembro = fallbackFoto;
+    if (m.fotoURL && m.fotoURL.startsWith('http')) {
+      // Testa se a imagem é carregável
+      await new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          fotoMembro = m.fotoURL;
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = m.fotoURL;
+      });
+    }
     
     div.innerHTML = `
       <img src="${fundoCarteirinha}" class="fundo" crossorigin="anonymous">
