@@ -116,39 +116,82 @@
     });
 
     async function gerarCarteirinhas() {
-      preview.innerHTML = '';
-      const selecionadosMembros = membros.filter(m => selecionados.includes(m.id));
+  preview.innerHTML = '';
+  const selecionadosMembros = membros.filter(m => selecionados.includes(m.id));
+  
+  // URL da imagem de fundo
+  const fundoCarteirinha = "https://bcrenato.github.io/cadastro/img/carteirinha.png";
 
-      for (let m of selecionadosMembros) {
-        const div = document.createElement('div');
-        div.className = 'carteirinha';
-        div.innerHTML = `
-          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAB94AAAJ/CAYAAAA+g3hWAAAABGdBTUEAALGeYUxB9wAAACBjSFJNAACHEAAAjBIAAP1NAACBPgAA..." class="fundo">
-          <div class='info nome'>${m.nome || ''}</div>
-          <div class='info rg'>${m.rg || ''}</div>
-          <div class='info cargo'>${m.funcao || ''}</div>
-          <div class='info batismo'>${m.batismo || ''}</div>
-          <div class='info nascimento'>${m.nascimento || ''}</div>
-          <div class='info validade'>2025</div>
-          <img class='foto' src='${m.fotoURL || ''}'>
-        `;
-        preview.appendChild(div);
-      }
+  // Dimensões da carteirinha e do A4
+  const cardWidth = 19; // largura da carteirinha em cm
+  const cardHeight = 6.5; // altura da carteirinha em cm
+  const a4Width = 21.0; // largura A4 em cm
+  const a4Height = 29.7; // altura A4 em cm
 
-      const pdf = new jspdf.jsPDF({ orientation: 'landscape', unit: 'cm', format: [19, 6.5] });
-      const cards = preview.children;
-      for (let i = 0; i < cards.length; i++) {
-        const canvas = await html2canvas(cards[i], {
-          useCORS: true,
-          allowTaint: false,
-          imageTimeout: 2000
-        });
-        const imgData = canvas.toDataURL('image/png');
-        if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, 0, 19, 6.5);
+  for (let m of selecionadosMembros) {
+    const div = document.createElement('div');
+    div.className = 'carteirinha';
+    div.style.width = `${cardWidth}cm`;
+    div.style.height = `${cardHeight}cm`;
+    
+    // Fallback para foto do membro
+    const fallbackFoto = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCob3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiPk5lbmh1bWEgZm90bzwvdGV4dD48L3N2Zz4=';
+    let fotoMembro = m.fotoURL || fallbackFoto;
+    
+    div.innerHTML = `
+      <img src="${fundoCarteirinha}" class="fundo" crossorigin="anonymous">
+      <div class='info nome'>${m.nome || ''}</div>
+      <div class='info rg'>${m.rg || ''}</div>
+      <div class='info cargo'>${m.funcao || ''}</div>
+      <div class='info batismo'>${m.batismo || ''}</div>
+      <div class='info nascimento'>${m.nascimento || ''}</div>
+      <div class='info validade'>2025</div>
+      <img class='foto' src='${fotoMembro}' crossorigin="anonymous" onerror="this.src='${fallbackFoto}'">
+    `;
+    preview.appendChild(div);
+  }
+
+  const pdf = new jspdf.jsPDF({
+    orientation: 'portrait',
+    unit: 'cm',
+    format: 'a4'
+  });
+
+  const cards = preview.children;
+  
+  for (let i = 0; i < cards.length; i++) {
+    try {
+      const canvas = await html2canvas(cards[i], {
+        useCORS: true,
+        allowTaint: false,
+        scale: 2,
+        logging: true,
+        imageTimeout: 10000,
+        backgroundColor: null
+      });
+      
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      const imgProps = pdf.getImageProperties(imgData);
+      
+      // Centralizar a carteirinha na página A4
+      const x = (a4Width - cardWidth) / 2;
+      const y = (a4Height - cardHeight) / 2;
+      
+      if (i > 0) {
+        pdf.addPage('a4', 'portrait');
       }
-      pdf.save('carteirinhas.pdf');
+      
+      pdf.addImage(imgData, 'PNG', x, y, cardWidth, cardHeight);
+      
+    } catch (error) {
+      console.error('Erro ao gerar carteirinha:', error);
+      alert(`Erro ao gerar carteirinha para ${selecionadosMembros[i].nome}. Verifique o console.`);
+      continue;
     }
+  }
+  
+  pdf.save('carteirinhas.pdf');
+}
   </script>
 </body>
 </html>
