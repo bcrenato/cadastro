@@ -115,27 +115,57 @@
       });
     });
 
+
+// Adicione estas funções auxiliares no início do seu script (antes da função gerarCarteirinhas)
+function formatarData(data) {
+  if (!data) return '';
+  
+  // Verifica se já está no formato dd/mm/yyyy
+  if (data.match(/^\d{2}\/\d{2}\/\d{4}$/)) return data;
+  
+  // Tenta converter de yyyy-mm-dd para dd/mm/yyyy
+  const partes = data.split('-');
+  if (partes.length === 3) {
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+  
+  return data;
+}
+
+function getValidade() {
+  const hoje = new Date();
+  const ultimoDiaAno = new Date(hoje.getFullYear(), 11, 31); // 11 = dezembro
+  const dia = String(ultimoDiaAno.getDate()).padStart(2, '0');
+  const mes = String(ultimoDiaAno.getMonth() + 1).padStart(2, '0');
+  const ano = ultimoDiaAno.getFullYear();
+  return `${dia}/${mes}/${ano}`;
+}
+
+
+    
+
+    
+
+// Modifique apenas a função gerarCarteirinhas() conforme abaixo
 async function gerarCarteirinhas() {
   preview.innerHTML = '';
   const selecionadosMembros = membros.filter(m => selecionados.includes(m.id));
   const fundoCarteirinha = "https://bcrenato.github.io/cadastro/img/carteirinha.png";
 
-  // Configurações do PDF
   const pdf = new jspdf.jsPDF({
     orientation: 'portrait',
     unit: 'cm',
     format: 'a4'
   });
 
-  // Dimensões
-  const cardWidth = 19; // largura da carteirinha
-  const cardHeight = 6.5; // altura da carteirinha
-  const a4Width = 21.0; // largura A4
-  const a4Height = 29.7; // altura A4
-  const marginTop = 1.0; // margem superior
-  const spacing = 0.2; // espaço entre carteirinhas
+  const cardWidth = 19;
+  const cardHeight = 6.5;
+  const a4Width = 21.0;
+  const a4Height = 29.7;
+  const marginTop = 1.0;
+  const spacing = 0.2;
 
-  let yPosition = marginTop; // posição vertical inicial
+  let yPosition = marginTop;
 
   for (let i = 0; i < selecionadosMembros.length; i++) {
     const m = selecionadosMembros[i];
@@ -144,7 +174,11 @@ async function gerarCarteirinhas() {
     div.style.width = `${cardWidth}cm`;
     div.style.height = `${cardHeight}cm`;
     
-    // Fallback para foto
+    // Formatando as datas
+    const batismoFormatado = formatarData(m.batismo);
+    const nascimentoFormatado = formatarData(m.nascimento);
+    const validade = getValidade();
+    
     const fallbackFoto = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiPk5lbmh1bWEgZm90bzwvdGV4dD48L3N2Zz4=';
     let fotoMembro = m.fotoURL || fallbackFoto;
     
@@ -153,9 +187,9 @@ async function gerarCarteirinhas() {
       <div class='info nome'>${m.nome || ''}</div>
       <div class='info rg'>${m.rg || ''}</div>
       <div class='info cargo'>${m.funcao || ''}</div>
-      <div class='info batismo'>${m.batismo || ''}</div>
-      <div class='info nascimento'>${m.nascimento || ''}</div>
-      <div class='info validade'>2025</div>
+      <div class='info batismo'>${batismoFormatado}</div>
+      <div class='info nascimento'>${nascimentoFormatado}</div>
+      <div class='info validade'>${validade}</div>
       <img class='foto' src='${fotoMembro}' crossorigin="anonymous" onerror="this.src='${fallbackFoto}'">
     `;
     document.body.appendChild(div);
@@ -176,18 +210,15 @@ async function gerarCarteirinhas() {
         throw new Error('Falha ao gerar imagem da carteirinha');
       }
 
-      // Verifica se precisa de nova página
       if (yPosition + cardHeight > a4Height - marginTop) {
         pdf.addPage('a4', 'portrait');
-        yPosition = marginTop; // reinicia na margem superior
+        yPosition = marginTop;
       }
 
-      // Centraliza horizontalmente
       const xPosition = (a4Width - cardWidth) / 2;
       
       pdf.addImage(imgData, 'PNG', xPosition, yPosition, cardWidth, cardHeight);
       
-      // Atualiza a posição Y para a próxima carteirinha
       yPosition += cardHeight + spacing;
       
     } catch (error) {
