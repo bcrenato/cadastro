@@ -24,6 +24,62 @@ body {
     color: #333;
     overflow-x: hidden;
 }
+
+/* Estilos para o dropdown */
+    .nav-dropdown {
+        position: relative;
+        cursor: pointer;
+    }
+    
+    .nav-dropdown-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+    }
+    
+    .nav-dropdown-header i:first-child {
+        margin-right: 10px;
+    }
+    
+    .dropdown-arrow {
+        margin-left: auto;
+        transition: transform 0.3s;
+    }
+    
+    .nav-dropdown.active .dropdown-arrow {
+        transform: rotate(180deg);
+    }
+    
+    .nav-dropdown-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        background-color: rgba(0,0,0,0.05);
+    }
+    
+    .nav-dropdown.active .nav-dropdown-content {
+        max-height: 200px; /* Ajuste conforme necessário */
+    }
+    
+    .nav-subitem {
+        display: flex;
+        align-items: center;
+        padding: 8px 15px 8px 40px;
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+    
+    .nav-subitem:hover {
+        background-color: rgba(0,0,0,0.1);
+    }
+    
+    .nav-subitem i {
+        margin-right: 10px;
+        font-size: 0.9em;
+    }
+
+    
 .dashboard { display: flex; min-height: 100vh; flex-direction: column; }
 .sidebar {
     width: 100%;
@@ -138,61 +194,80 @@ body {
         </div>
 
         <div class="nav-menu" id="navMenu">
-            <a href="index.html" class="nav-item active">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Dashboard</span>
-            </a>
+    <a href="index.html" class="nav-item active">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+    </a>
 
-            <a href="cadastro-membros.html" class="nav-item">
-                <i class="fas fa-users"></i>
-                <span>Cadastrar Membros</span>
-            </a>
+    <a href="cadastro-membros.html" class="nav-item">
+        <i class="fas fa-users"></i>
+        <span>Cadastrar Membros</span>
+    </a>
 
-            <a href="listagem.html" class="nav-item admin-only" style="display: none;">
-                <i class="fas fa-list"></i>
-                <span>Lista de Membros</span>
-            </a>
+    <a href="listagem.html" class="nav-item admin-only" style="display: none;">
+        <i class="fas fa-list"></i>
+        <span>Lista de Membros</span>
+    </a>
 
-            <a href="aniversariantes.html" class="nav-item">
-                <i class="fas fa-birthday-cake"></i>
-                <span>Aniversariantes</span>
-            </a>
+    <a href="aniversariantes.html" class="nav-item">
+        <i class="fas fa-birthday-cake"></i>
+        <span>Aniversariantes</span>
+    </a>
 
-            <a href="relogio/index.html" class="nav-item">
-                <i class="fas fa-clock"></i>
-                <span>Relógio de Oração</span>
-            </a>
+    <a href="relogio/index.html" class="nav-item">
+        <i class="fas fa-clock"></i>
+        <span>Relógio de Oração</span>
+    </a>
 
-            <a href="presenca/lista.html" class="nav-item admin-only" style="display: none;">
-                <i class="fas fa-church"></i>
-                <span>Presença Cultos</span>
+    <!-- Submenu de Impressão -->
+    <div class="nav-item nav-dropdown">
+        <div class="nav-dropdown-header">
+            <i class="fas fa-print"></i>
+            <span>Impressão</span>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+        </div>
+        <div class="nav-dropdown-content">
+            <a href="carteirinhas/carteirinha.html" class="nav-subitem">
+                <i class="fas fa-id-card"></i>
+                <span>Carteirinha</span>
             </a>
-            
-            <a href="presenca/frequencia.html" class="nav-item admin-only" style="display: none;">
-                <i class="fas fa-chart-line"></i>
-                <span>Frequência Mensal</span>
-            </a>
-
-            <a href="exportar.html" class="nav-item admin-only" style="display: none;">
-                <i class="fas fa-file-export"></i>
-                <span>Exportar/Importar Dados</span>
-            </a>
-
-            <a href="backup.html" class="nav-item admin-only" style="display: none;">
-                <i class="fas fa-database"></i>
-                <span>Backup e Restauração</span>
-            </a>
-
-            <a href="register.html" class="nav-item admin-only" style="display: none;">
-                <i class="fas fa-user-plus"></i>
-                <span>Gerenciar Usuários</span>
-            </a>
-
-            <a href="push/notif_push.html" class="nav-item admin-only" style="display: none;">
-                <i class="fas fa-bell"></i>
-                <span>Enviar Notificações</span>
+            <a href="certificado.html" class="nav-subitem">
+                <i class="fas fa-certificate"></i>
+                <span>Certificado</span>
             </a>
         </div>
+    </div>
+
+    <a href="presenca/lista.html" class="nav-item admin-only" style="display: none;">
+        <i class="fas fa-church"></i>
+        <span>Presença Cultos</span>
+    </a>
+    
+    <a href="presenca/frequencia.html" class="nav-item admin-only" style="display: none;">
+        <i class="fas fa-chart-line"></i>
+        <span>Frequência Mensal</span>
+    </a>
+
+    <a href="exportar.html" class="nav-item admin-only" style="display: none;">
+        <i class="fas fa-file-export"></i>
+        <span>Exportar/Importar Dados</span>
+    </a>
+
+    <a href="backup.html" class="nav-item admin-only" style="display: none;">
+        <i class="fas fa-database"></i>
+        <span>Backup e Restauração</span>
+    </a>
+
+    <a href="register.html" class="nav-item admin-only" style="display: none;">
+        <i class="fas fa-user-plus"></i>
+        <span>Gerenciar Usuários</span>
+    </a>
+
+    <a href="push/notif_push.html" class="nav-item admin-only" style="display: none;">
+        <i class="fas fa-bell"></i>
+        <span>Enviar Notificações</span>
+    </a>
+</div>
     </div>
 
     <!-- Main Content -->
@@ -225,6 +300,16 @@ body {
     </div>
 </div>
 
+<script>
+    // Adiciona funcionalidade de toggle ao dropdown
+    document.querySelectorAll('.nav-dropdown-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const dropdown = header.parentElement;
+            dropdown.classList.toggle('active');
+        });
+    });
+</script>
+    
 <!-- Seu código principal -->
 <script type="module">
 import { checkAuth } from './auth.js';
