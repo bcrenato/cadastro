@@ -37,12 +37,7 @@ messaging.onBackgroundMessage(function(payload) {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-
-
-
-
-
-
+// Clique em notificação
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
 
@@ -51,13 +46,10 @@ self.addEventListener('notificationclick', function(event) {
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
       for (const client of clientList) {
-        // Se já estiver aberta em uma aba, foca nela
         if (client.url === targetUrl && 'focus' in client) {
           return client.focus();
         }
       }
-
-      // Abre nova aba com a URL da notificação
       if (clients.openWindow) {
         return clients.openWindow(targetUrl);
       }
@@ -65,16 +57,8 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
-
-
-
-
-
-
-
-
-// SEU CÓDIGO DE CACHE E FETCH (mantido igual ao seu original)
-const CACHE_NAME = 'cadastro-app-v2';
+// CACHE OFFLINE
+const CACHE_NAME = 'cadastro-app-v3';
 const urlsToCache = [
   '/cadastro/index.html',
   '/cadastro/login.html',
@@ -86,38 +70,35 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // 🔥 ativa imediatamente
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
-});
-
-self.addEventListener('fetch', event => {
-  if (event.request.mode === 'navigate') {
-    // 🔥 Agora só navegação usa fallback para index.html
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match('/cadastro/index.html'))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request).then(response => {
-        return response || fetch(event.request);
-      })
-    );
-  }
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then(cacheNames => 
+      Promise.all(cacheNames.map(cacheName => {
+        if (cacheName !== CACHE_NAME) {
+          return caches.delete(cacheName);
+        }
+      }))
+    ).then(() => self.clients.claim()) // 🔥 assume abas abertas
   );
+});
+
+// Corrigido: não forçar sempre index.html
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return; // apenas GET
+
+  if (urlsToCache.includes(new URL(event.request.url).pathname)) {
+    // Arquivos cacheados (CSS, JS, HTML offline)
+    event.respondWith(
+      caches.match(event.request).then(response => response || fetch(event.request))
+    );
+  } else {
+    // Para navegação e outros arquivos, vai direto à rede
+    event.respondWith(fetch(event.request).catch(() => caches.match('/cadastro/index.html')));
+  }
 });
