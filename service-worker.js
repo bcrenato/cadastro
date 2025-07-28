@@ -94,6 +94,12 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  if (event.request.mode === 'navigate') {
+    // Para páginas HTML, sempre buscar do servidor
+    event.respondWith(fetch(event.request).catch(() => caches.match('/cadastro/index.html')));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request);
