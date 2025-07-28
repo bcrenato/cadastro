@@ -30,6 +30,10 @@
     "presencas_culto": {
       ".read": "auth != null",
       ".write": "auth != null"
+       },
+    "visitantes": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "relogio": {
       "horarios": {
