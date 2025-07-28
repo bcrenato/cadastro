@@ -129,38 +129,47 @@
     const remember = document.getElementById('remember').checked;
 
     try {
-      await loginUser(username, password);
+  const user = await loginUser(username, password);
 
-if (remember) {
-  localStorage.setItem('savedUsername', username);
-} else {
-  localStorage.removeItem('savedUsername');
+  // Verifica se o usuário está ativo
+  if (!user.isActive) {
+    throw new Error("Usuário desativado. Contate o administrador.");
+  }
+
+  if (remember) {
+    localStorage.setItem('savedUsername', username);
+  } else {
+    localStorage.removeItem('savedUsername');
+  }
+
+  // Redirecionamento inteligente
+  const redirectUrl = localStorage.getItem('redirectAfterLogin');
+  if (redirectUrl) {
+    localStorage.removeItem('redirectAfterLogin');
+    window.location.href = redirectUrl;
+  } else {
+    window.location.href = 'index.html';
+  }
+} catch (error) {
+  let message = 'Erro ao fazer login.';
+  switch(error.message) {
+    case 'auth/user-not-found':
+      message = 'Usuário não encontrado.';
+      break;
+    case 'auth/wrong-password':
+      message = 'Senha incorreta.';
+      break;
+    case 'auth/too-many-requests':
+      message = 'Muitas tentativas. Tente novamente mais tarde.';
+      break;
+    case 'Usuário desativado. Contate o administrador.':
+      message = error.message; // Exibe diretamente essa mensagem
+      break;
+  }
+  errorMessage.textContent = message;
+  errorMessage.classList.remove('d-none');
 }
 
-// Redirecionamento inteligente
-const redirectUrl = localStorage.getItem('redirectAfterLogin');
-if (redirectUrl) {
-  localStorage.removeItem('redirectAfterLogin'); // Limpa para não usar de novo
-  window.location.href = redirectUrl;
-} else {
-  window.location.href = 'index.html';
-}
-    } catch (error) {
-      let message = 'Erro ao fazer login.';
-      switch(error.message) {
-        case 'auth/user-not-found':
-          message = 'Usuário não encontrado.';
-          break;
-        case 'auth/wrong-password':
-          message = 'Senha incorreta.';
-          break;
-        case 'auth/too-many-requests':
-          message = 'Muitas tentativas. Tente novamente mais tarde.';
-          break;
-      }
-      errorMessage.textContent = message;
-      errorMessage.classList.remove('d-none');
-    }
   });
 
   document.addEventListener('DOMContentLoaded', () => {
