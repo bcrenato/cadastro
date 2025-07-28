@@ -243,6 +243,7 @@ function inicializarAplicacao() {
   document.getElementById('data-culto').value = hojeAjustado.toISOString().split('T')[0];
 
   carregarMembros();
+  carregarVisitantes();
 
   document.getElementById('data-culto').addEventListener('change', (e) => {
     if (e.target.value) carregarPresencasExistente(e.target.value);
