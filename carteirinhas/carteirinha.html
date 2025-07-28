@@ -116,6 +116,35 @@
     });
 
 
+function ajustarFuncao(sexo, funcao) {
+  if (!funcao) return '';
+
+  funcao = funcao.toLowerCase(); // padroniza
+  sexo = (sexo || '').toLowerCase();
+
+  if (sexo === 'feminino') {
+    switch (funcao) {
+      case 'pastor': return 'Pastora';
+      case 'missionario': return 'Missionária';
+      case 'missionaria': return 'Missionária';
+      case 'diacono': return 'Diaconisa';
+      case 'obreiro': return 'Obreira';
+      case 'obreira': return 'Obreira';
+      default: return funcao.charAt(0).toUpperCase() + funcao.slice(1); // mantém como está
+    }
+  } else { // Masculino ou não especificado
+    switch (funcao) {
+      case 'missionaria': return 'Missionário';
+      case 'obreira': return 'Obreiro';
+      default: return funcao.charAt(0).toUpperCase() + funcao.slice(1);
+    }
+  }
+}
+    
+
+
+    
+
 // Adicione estas funções auxiliares no início do seu script (antes da função gerarCarteirinhas)
 function formatarData(data) {
   if (!data) return '';
