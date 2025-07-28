@@ -132,17 +132,41 @@
     });
 
     function carregarMembros() {
-      db.ref('membros').once('value', snapshot => {
-        snapshot.forEach(child => {
-          const m = { id: child.key, ...child.val() };
-          membros.push(m);
-          lista.innerHTML += `<div class='list-group-item'>
-            <input type='checkbox' value='${m.id}' onchange='selecionar(this)'>
-            ${m.nome} - ${m.funcao || ''}
-          </div>`;
-        });
-      });
-    }
+  db.ref('membros').once('value', snapshot => {
+    membros = []; // limpa antes de carregar novamente
+
+    snapshot.forEach(child => {
+      const m = { id: child.key, ...child.val() };
+      membros.push(m);
+    });
+
+    // 🔹 Ordem de prioridade para funções
+    const ordemFuncoes = ["pastor", "missionario", "missionário", "missionaria", "diacono", "obreiro", "membro"];
+
+    // 🔹 Ordena primeiro pela função, depois alfabeticamente pelo nome
+    membros.sort((a, b) => {
+      const funcA = (a.funcao || "").toLowerCase();
+      const funcB = (b.funcao || "").toLowerCase();
+
+      const idxA = ordemFuncoes.findIndex(f => funcA.includes(f));
+      const idxB = ordemFuncoes.findIndex(f => funcB.includes(f));
+
+      if (idxA !== idxB) {
+        return idxA - idxB; // Ordena pela função primeiro
+      }
+      return (a.nome || "").localeCompare(b.nome || ""); // Depois ordem alfabética
+    });
+
+    // Exibe a lista ordenada
+    lista.innerHTML = '';
+    membros.forEach(m => {
+      lista.innerHTML += `<div class='list-group-item'>
+        <input type='checkbox' value='${m.id}' onchange='selecionar(this)'>
+        ${m.nome} - ${ajustarFuncao(m.sexo, m.funcao)}
+      </div>`;
+    });
+  });
+}
 
     function selecionar(cb) {
       if (cb.checked) selecionados.push(cb.value);
