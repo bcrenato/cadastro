@@ -2,7 +2,6 @@
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
-// Config Firebase - use seu próprio config (igual firebase-config.js)
 firebase.initializeApp({
   apiKey: "AIzaSyCv6pzl34tyPTARtGxV6g2AJfkrtQeA-xU",
   authDomain: "cadastro-igreja-23042.firebaseapp.com",
@@ -14,9 +13,9 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Recebe notificações em segundo plano
+// 🔔 Notificações em segundo plano
 messaging.onBackgroundMessage(function(payload) {
-  console.log('[firebase-messaging-sw.js] Mensagem recebida em segundo plano:', payload);
+  console.log('[firebase-messaging-sw.js] Mensagem recebida:', payload);
 
   const data = payload.data || {};
   const notification = payload.notification || {};
@@ -38,11 +37,9 @@ messaging.onBackgroundMessage(function(payload) {
 });
 
 // Clique em notificação
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', event => {
   event.notification.close();
-
   const targetUrl = event.notification.data?.url || '/cadastro/';
-
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
       for (const client of clientList) {
@@ -50,15 +47,13 @@ self.addEventListener('notificationclick', function(event) {
           return client.focus();
         }
       }
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
     })
   );
 });
 
 // CACHE OFFLINE
-const CACHE_NAME = 'cadastro-app-v3';
+const CACHE_NAME = 'cadastro-app-v4';
 const urlsToCache = [
   '/cadastro/index.html',
   '/cadastro/login.html',
@@ -70,7 +65,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting(); // 🔥 ativa imediatamente
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
@@ -78,27 +73,28 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => 
+    caches.keys().then(cacheNames =>
       Promise.all(cacheNames.map(cacheName => {
-        if (cacheName !== CACHE_NAME) {
-          return caches.delete(cacheName);
-        }
+        if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
       }))
-    ).then(() => self.clients.claim()) // 🔥 assume abas abertas
+    ).then(() => self.clients.claim())
   );
 });
 
-// Corrigido: não forçar sempre index.html
+// ✅ Fetch corrigido para não interferir em navegações
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return; // apenas GET
+  if (event.request.method !== 'GET') return;
 
-  if (urlsToCache.includes(new URL(event.request.url).pathname)) {
-    // Arquivos cacheados (CSS, JS, HTML offline)
+  // 🔥 Se for uma navegação (clique de menu ou link interno), NÃO usar cache
+  if (event.request.mode === 'navigate') {
+    return; // deixa o navegador cuidar
+  }
+
+  // Para arquivos estáticos cacheados
+  const pathname = new URL(event.request.url).pathname;
+  if (urlsToCache.includes(pathname)) {
     event.respondWith(
       caches.match(event.request).then(response => response || fetch(event.request))
     );
-  } else {
-    // Para navegação e outros arquivos, vai direto à rede
-    event.respondWith(fetch(event.request).catch(() => caches.match('/cadastro/index.html')));
   }
 });
