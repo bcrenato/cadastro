@@ -385,29 +385,26 @@ function salvarVisitante() {
     return;
   }
 
-  const btnSalvar = document.getElementById('btnSalvarVisitante');
-  const editIndex = btnSalvar.dataset.editIndex;
-
+  const editIndex = document.getElementById('btnSalvarVisitante').dataset.editIndex;
   let visitanteId;
+
   if (editIndex !== undefined) {
-    // Edição de visitante existente
+    // Editar visitante existente
     const idx = parseInt(editIndex);
     visitanteId = presentes[idx].id;
-
     presentes[idx] = {
       ...presentes[idx],
       nome, endereco, cep, bairro, cidade, estado, cristao, telefone
     };
-
-    delete btnSalvar.dataset.editIndex;
+    delete document.getElementById('btnSalvarVisitante').dataset.editIndex;
   } else {
     // Novo visitante
     visitanteId = 'visitante_' + Date.now();
-    const visitante = { id: visitanteId, nome, tipo: 'visitante', endereco, cep, bairro, cidade, estado, cristao, telefone };
+    const visitante = { id: visitanteId, tipo: 'visitante', nome, endereco, cep, bairro, cidade, estado, cristao, telefone };
     presentes.unshift(visitante);
   }
 
-  // Salvar no Realtime Database
+  // ✅ Salvar ou atualizar visitante no Realtime Database
   database.ref('visitantes/' + visitanteId).set({
     nome, endereco, cep, bairro, cidade, estado, cristao, telefone
   });
@@ -418,7 +415,7 @@ function salvarVisitante() {
   // Fechar modal
   bootstrap.Modal.getInstance(document.getElementById('modalVisitante')).hide();
 
-  // Limpar campos
+  // Limpar campos do modal
   ['visitante-nome','visitante-endereco','visitante-cristao','visitante-telefone','visitante-cep','visitante-bairro','visitante-cidade','visitante-estado']
     .forEach(id => document.getElementById(id).value = '');
 }
