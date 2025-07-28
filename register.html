@@ -86,7 +86,9 @@
   import { checkAdminAuth } from './auth.js';
   (async () => {
     const isAdmin = await checkAdminAuth();
+    console.log("Admin Auth Status:", isAdmin);
     if (!isAdmin) {
+      alert("Acesso negado! Redirecionando...");
       window.location.href = 'index.html';
     }
   })();
