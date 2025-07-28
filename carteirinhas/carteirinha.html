@@ -232,7 +232,7 @@ function getValidade() {
       <img src="${fundoCarteirinha}" class="fundo" crossorigin="anonymous">
       <div class='info nome'>${m.nome || ''}</div>
       <div class='info rg'>${m.rg || ''}</div>
-      <div class='info cargo'>${m.funcao || ''}</div>
+      <div class='info cargo'>${ajustarFuncao(m.sexo, m.funcao)}</div>
       <div class='info batismo'>${batismoFormatado}</div>
       <div class='info nascimento'>${nascimentoFormatado}</div>
       <div class='info validade'>${validade}</div>
