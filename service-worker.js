@@ -37,6 +37,12 @@ messaging.onBackgroundMessage(function(payload) {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
+
+
+
+
+
+
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
 
@@ -59,8 +65,16 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
+
+
+
+
+
+
+
+
 // SEU CÓDIGO DE CACHE E FETCH (mantido igual ao seu original)
-const CACHE_NAME = 'cadastro-app-v2'; // alterado para forçar atualização
+const CACHE_NAME = 'cadastro-app-v2';
 const urlsToCache = [
   '/cadastro/index.html',
   '/cadastro/login.html',
@@ -72,12 +86,26 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting(); // 🔥 Força ativação imediata do SW
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       return cache.addAll(urlsToCache);
     })
   );
+});
+
+self.addEventListener('fetch', event => {
+  if (event.request.mode === 'navigate') {
+    // 🔥 Agora só navegação usa fallback para index.html
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/cadastro/index.html'))
+    );
+  } else {
+    event.respondWith(
+      caches.match(event.request).then(response => {
+        return response || fetch(event.request);
+      })
+    );
+  }
 });
 
 self.addEventListener('activate', event => {
@@ -90,21 +118,6 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    }).then(() => self.clients.claim()) // 🔥 Assume controle das abas abertas
+    })
   );
-});
-
-self.addEventListener('fetch', event => {
-  if (event.request.mode === 'navigate') {
-    // 🔥 Corrigido: tenta buscar online, se falhar usa index.html
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match('/cadastro/index.html'))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request).then(response => {
-        return response || fetch(event.request);
-      })
-    );
-  }
 });
