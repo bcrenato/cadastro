@@ -52,21 +52,21 @@
       z-index: 1;
     }
    .nome { 
+  position: absolute;
   top: 2.9cm; 
   left: 1cm; 
   width: 5.82cm; 
-  height: 0.8;               /* Altura automática */
+  height: 0.8cm;               /* Altura fixa */
   font-size: 11pt; 
-  line-height: 0.9;              /* Espaçamento entre linhas compacto */
-  white-space: normal;         /* Permite quebra de linha automática */
-  word-wrap: break-word;       /* Quebra palavras longas se necessário */
-  overflow-wrap: break-word;   /* Suporte adicional para navegadores modernos */
-  hyphens: none;               /* Remove hifenização automática */
-  text-align: justify;         /* Justifica o texto até o final do campo */
-  
-  display: flex;               /* Flex para centralizar conteúdo */
-  /*justify-content: center;     /* Centraliza horizontalmente quando uma linha */
+  display: flex;
   align-items: center;         /* Centraliza verticalmente */
+  justify-content: center;     /* Centraliza horizontalmente */
+  text-align: center;          /* Alinhamento do texto */
+  line-height: 1.2;            /* Espaçamento entre linhas melhorado */
+  white-space: normal;         /* Permite quebra de linha */
+  word-wrap: break-word;       /* Quebra palavras longas */
+  overflow: hidden;            /* Esconde texto que ultrapassar */
+  padding: 0 0.2cm;           /* Pequeno padding lateral */
 }
     .rg { top: 4.1cm; left: 1cm; width: 7cm; }
     .cargo { top: 4.75cm; left: 1.5cm; width: 7cm; }
