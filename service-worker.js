@@ -94,15 +94,27 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Se for navegação (HTML), buscar direto do servidor
   if (event.request.mode === 'navigate') {
-    // Para páginas HTML, sempre buscar do servidor
-    event.respondWith(fetch(event.request).catch(() => caches.match('/cadastro/index.html')));
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          return response;
+        })
+        .catch(() => caches.match('/cadastro/index.html'))
+    );
     return;
   }
 
+  // Para outros arquivos (CSS, JS, imagens, etc), usar cache ou rede
   event.respondWith(
     caches.match(event.request).then(response => {
-      return response || fetch(event.request);
+      return response || fetch(event.request).then(fetchResponse => {
+        return caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, fetchResponse.clone());
+          return fetchResponse;
+        });
+      });
     })
   );
 });
