@@ -64,6 +64,20 @@
         <div id="resultados-busca" class="list-group mt-1"></div>
       </div>
 
+      
+<div class="search-container mb-3">
+  <label for="busca-visitante" class="form-label">Buscar Visitante</label>
+  <input
+    type="text"
+    id="busca-visitante"
+    class="form-control"
+    placeholder="Digite o nome do visitante..."
+  />
+  <div id="resultados-visitantes" class="list-group mt-1"></div>
+</div>
+      
+
+
       <button id="btn-adicionar-manual" class="btn btn-outline-secondary mb-3">
         <i class="bi bi-person-plus"></i> Adicionar Visitante
       </button>
@@ -195,6 +209,7 @@ auth.onAuthStateChanged((user) => {
 });
 
 let membrosCadastrados = [];
+let visitantesCadastrados = [];  
 let presentes = [];
 
 // Funções para máscaras
@@ -229,6 +244,9 @@ function inicializarAplicacao() {
   document.getElementById('data-culto').value = hojeAjustado.toISOString().split('T')[0];
 
   carregarMembros();
+
+  carregarVisitantes();
+document.getElementById('busca-visitante').addEventListener('input', buscarVisitantes);
 
   document.getElementById('data-culto').addEventListener('change', (e) => {
     if (e.target.value) carregarPresencasExistente(e.target.value);
@@ -282,6 +300,48 @@ function carregarMembros() {
 function removerAcentos(str) {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
+
+function carregarVisitantes() {
+  database.ref('visitantes').once('value').then((snapshot) => {
+    visitantesCadastrados = [];
+    snapshot.forEach((child) => {
+      visitantesCadastrados.push({ id: child.key, ...child.val() });
+    });
+  });
+}
+
+function buscarVisitantes(e) {
+  const termo = removerAcentos(e.target.value.toLowerCase());
+  const resultados = document.getElementById('resultados-visitantes');
+
+  if (termo.length < 2) {
+    resultados.innerHTML = '';
+    return;
+  }
+
+  const matches = visitantesCadastrados.filter((v) =>
+    removerAcentos((v.nome || '').toLowerCase()).includes(termo)
+  ).slice(0, 5);
+
+  resultados.innerHTML = '';
+  matches.forEach((v) => {
+    const item = document.createElement('button');
+    item.className = 'list-group-item list-group-item-action';
+    item.innerHTML = `<div>${v.nome}</div><small>Visitante</small>`;
+    item.onclick = () => {
+      adicionarPresente(v.id, v.nome, 'visitante', v);
+      resultados.innerHTML = '';
+      e.target.value = '';
+    };
+    resultados.appendChild(item);
+  });
+}
+  
+
+
+
+  
+
 
 function buscarMembros(e) {
   const termo = removerAcentos(e.target.value.toLowerCase());
@@ -369,7 +429,11 @@ function salvarVisitante() {
   });
 }
 
-
+// Salvar visitante no banco para futuras buscas
+const visitanteId = editIndex !== undefined ? presentes[editIndex].id : id;
+database.ref('visitantes/' + visitanteId).set({
+  nome, endereco, cep, bairro, cidade, estado, cristao, telefone
+});
 
 
 
