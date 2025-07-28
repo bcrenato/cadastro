@@ -385,55 +385,43 @@ function salvarVisitante() {
     return;
   }
 
-  const editIndex = document.getElementById('btnSalvarVisitante').dataset.editIndex;
+  const btnSalvar = document.getElementById('btnSalvarVisitante');
+  const editIndex = btnSalvar.dataset.editIndex;
 
+  let visitanteId;
   if (editIndex !== undefined) {
-    // Editar visitante existente
+    // Edição de visitante existente
     const idx = parseInt(editIndex);
+    visitanteId = presentes[idx].id;
+
     presentes[idx] = {
       ...presentes[idx],
-      nome,
-      endereco,
-      cep,
-      bairro,
-      cidade,
-      estado,
-      cristao,
-      telefone,
+      nome, endereco, cep, bairro, cidade, estado, cristao, telefone
     };
-    delete document.getElementById('btnSalvarVisitante').dataset.editIndex;
+
+    delete btnSalvar.dataset.editIndex;
   } else {
     // Novo visitante
-    const id = 'visitante_' + Date.now();
-    const visitante = { id, nome, tipo: 'visitante', endereco, cep, bairro, cidade, estado, cristao, telefone };
+    visitanteId = 'visitante_' + Date.now();
+    const visitante = { id: visitanteId, nome, tipo: 'visitante', endereco, cep, bairro, cidade, estado, cristao, telefone };
     presentes.unshift(visitante);
   }
+
+  // Salvar no Realtime Database
+  database.ref('visitantes/' + visitanteId).set({
+    nome, endereco, cep, bairro, cidade, estado, cristao, telefone
+  });
 
   atualizarListaPresentes();
   document.getElementById('btn-salvar').disabled = false;
 
+  // Fechar modal
   bootstrap.Modal.getInstance(document.getElementById('modalVisitante')).hide();
 
-  // Limpar todos os campos
-  [
-    'visitante-nome',
-    'visitante-endereco',
-    'visitante-cristao',
-    'visitante-telefone',
-    'visitante-cep',
-    'visitante-bairro',
-    'visitante-cidade',
-    'visitante-estado',
-  ].forEach((id) => {
-    document.getElementById(id).value = '';
-  });
+  // Limpar campos
+  ['visitante-nome','visitante-endereco','visitante-cristao','visitante-telefone','visitante-cep','visitante-bairro','visitante-cidade','visitante-estado']
+    .forEach(id => document.getElementById(id).value = '');
 }
-
-// Salvar visitante no banco para futuras buscas
-const visitanteId = editIndex !== undefined ? presentes[editIndex].id : id;
-database.ref('visitantes/' + visitanteId).set({
-  nome, endereco, cep, bairro, cidade, estado, cristao, telefone
-});
 
 
 
