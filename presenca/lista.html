@@ -64,19 +64,6 @@
         <div id="resultados-busca" class="list-group mt-1"></div>
       </div>
 
-
-<div class="search-container mb-3">
-  <label for="busca-visitante" class="form-label">Buscar Visitante</label>
-  <input
-    type="text"
-    id="busca-visitante"
-    class="form-control"
-    placeholder="Digite o nome do visitante..."
-  />
-  <div id="resultados-visitante" class="list-group mt-1"></div>
-</div>
-      
-
       <button id="btn-adicionar-manual" class="btn btn-outline-secondary mb-3">
         <i class="bi bi-person-plus"></i> Adicionar Visitante
       </button>
@@ -208,7 +195,6 @@ auth.onAuthStateChanged((user) => {
 });
 
 let membrosCadastrados = [];
-let visitantesCadastrados = [];
 let presentes = [];
 
 // Funções para máscaras
@@ -243,7 +229,6 @@ function inicializarAplicacao() {
   document.getElementById('data-culto').value = hojeAjustado.toISOString().split('T')[0];
 
   carregarMembros();
-  carregarVisitantes();
 
   document.getElementById('data-culto').addEventListener('change', (e) => {
     if (e.target.value) carregarPresencasExistente(e.target.value);
@@ -293,21 +278,6 @@ function carregarMembros() {
     });
   });
 }
-
-
-
-
-function carregarVisitantes() {
-  database.ref('visitantes').once('value').then((snapshot) => {
-    visitantesCadastrados = [];
-    snapshot.forEach((child) => {
-      visitantesCadastrados.push({ id: child.key, ...child.val() });
-    });
-  });
-}
-  
-
-  
 
 function removerAcentos(str) {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -377,13 +347,7 @@ function salvarVisitante() {
     const id = 'visitante_' + Date.now();
     const visitante = { id, nome, tipo: 'visitante', endereco, cep, bairro, cidade, estado, cristao, telefone };
     presentes.unshift(visitante);
-
-
-database.ref('visitantes/' + id).set({
-  nome, endereco, cep, bairro, cidade, estado, cristao, telefone
-});
-
-
+  }
 
   atualizarListaPresentes();
   document.getElementById('btn-salvar').disabled = false;
@@ -404,6 +368,8 @@ database.ref('visitantes/' + id).set({
     document.getElementById(id).value = '';
   });
 }
+
+
 
 
 
