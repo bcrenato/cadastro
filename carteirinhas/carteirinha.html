@@ -55,6 +55,7 @@
   top: 2.9cm; 
   left: 1cm; 
   width: 5.82cm; 
+  height: auto;               /* Altura automática */
   font-size: 11pt; 
   line-height: 0.9;              /* Espaçamento entre linhas compacto */
   white-space: normal;         /* Permite quebra de linha automática */
@@ -62,6 +63,8 @@
   overflow-wrap: break-word;   /* Suporte adicional para navegadores modernos */
   hyphens: none;               /* Remove hifenização automática */
   text-align: justify;         /* Justifica o texto até o final do campo */
+  display: flex;              /* Flex para permitir alinhamento vertical */
+  align-items: center;        /* Centraliza verticalmente quando for uma linha */
 }
     .rg { top: 4.1cm; left: 1cm; width: 7cm; }
     .cargo { top: 4.75cm; left: 1.5cm; width: 7cm; }
