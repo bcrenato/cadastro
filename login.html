@@ -131,9 +131,9 @@
     try {
   const user = await loginUser(username, password);
 
-  // Verifica se o usuário está ativo
-  if (!user.isActive) {
-    throw new Error("Usuário desativado. Contate o administrador.");
+  // ✅ Verifica se o usuário está ativo (se não existir, considera ativo)
+  if (user.isActive === false) {
+    throw new Error("user-disabled");
   }
 
   if (remember) {
@@ -164,6 +164,9 @@
       break;
     case 'Usuário desativado. Contate o administrador.':
       message = error.message; // Exibe diretamente essa mensagem
+      break;
+    case 'user-disabled':
+      message = 'Usuário desativado. Contate o administrador.';
       break;
   }
   errorMessage.textContent = message;
