@@ -83,28 +83,21 @@ self.addEventListener('activate', event => {
 
 // ✅ Fetch corrigido para não interferir em navegações
 self.addEventListener('fetch', event => {
-  // Só trata requisições GET
   if (event.request.method !== 'GET') return;
 
   const requestURL = new URL(event.request.url);
 
-  // ✅ Para navegação entre páginas (cliques em links ou menus), não usar cache
-  if (event.request.mode === 'navigate') {
-    console.log('[SW] Navegação detectada, deixando o navegador carregar:', requestURL.href);
-    return; // deixa o navegador lidar diretamente
+  // ✅ Se for requisição de página HTML (navegação), busca direto da rede
+  if (event.request.mode === 'navigate' || requestURL.pathname.endsWith('.html')) {
+    console.log('[SW] Navegação ou HTML detectado, indo direto para rede:', requestURL.href);
+    event.respondWith(fetch(event.request).catch(() => caches.match('/cadastro/index.html')));
+    return;
   }
 
-  // ✅ Para arquivos estáticos cacheados
-  if (urlsToCache.includes(requestURL.pathname)) {
-    event.respondWith(
-      caches.match(event.request).then(response => {
-        if (response) {
-          console.log('[SW] Servindo do cache:', requestURL.pathname);
-          return response;
-        }
-        console.log('[SW] Buscando da rede:', requestURL.pathname);
-        return fetch(event.request);
-      })
-    );
-  }
+  // ✅ Arquivos estáticos continuam vindo do cache
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
+  );
 });
