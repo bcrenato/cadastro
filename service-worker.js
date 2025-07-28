@@ -83,18 +83,28 @@ self.addEventListener('activate', event => {
 
 // ✅ Fetch corrigido para não interferir em navegações
 self.addEventListener('fetch', event => {
+  // Só trata requisições GET
   if (event.request.method !== 'GET') return;
 
-  // 🔥 Se for uma navegação (clique de menu ou link interno), NÃO usar cache
+  const requestURL = new URL(event.request.url);
+
+  // ✅ Para navegação entre páginas (cliques em links ou menus), não usar cache
   if (event.request.mode === 'navigate') {
-    return; // deixa o navegador cuidar
+    console.log('[SW] Navegação detectada, deixando o navegador carregar:', requestURL.href);
+    return; // deixa o navegador lidar diretamente
   }
 
-  // Para arquivos estáticos cacheados
-  const pathname = new URL(event.request.url).pathname;
-  if (urlsToCache.includes(pathname)) {
+  // ✅ Para arquivos estáticos cacheados
+  if (urlsToCache.includes(requestURL.pathname)) {
     event.respondWith(
-      caches.match(event.request).then(response => response || fetch(event.request))
+      caches.match(event.request).then(response => {
+        if (response) {
+          console.log('[SW] Servindo do cache:', requestURL.pathname);
+          return response;
+        }
+        console.log('[SW] Buscando da rede:', requestURL.pathname);
+        return fetch(event.request);
+      })
     );
   }
 });
