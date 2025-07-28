@@ -1,12 +1,26 @@
 
 import { db, auth, firebaseConfig } from './firebase-config.js';
-import { ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { ref, set, get, remove, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { deleteUser as deleteAuthUser, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 const secondaryApp = initializeApp(firebaseConfig, "Secondary");
 const secondaryAuth = getAuth(secondaryApp);
+
+
+export async function toggleUserStatus(userId, currentStatus) {
+  try {
+    const userRef = ref(db, `users/${userId}`);
+    await update(userRef, { isActive: !currentStatus });
+    return true;
+  } catch (error) {
+    console.error('Erro ao atualizar status do usuário:', error);
+    throw new Error('Erro ao atualizar status do usuário: ' + error.message);
+  }
+}
+
+
 
 export async function deleteUser(userId) {
   try {
@@ -47,7 +61,17 @@ export async function registerUser(username, password, fullName, isAdmin = false
 
 export async function loginUser(username, password) {
   const email = `${username}@igreja.local`;
-  return await signInWithEmailAndPassword(auth, email, password);
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+  // Verifica se está ativo no Realtime Database
+  const snapshot = await get(ref(db, `users/${userCredential.user.uid}`));
+  const userData = snapshot.val();
+
+  if (!userData.isActive) {
+    throw new Error("Usuário desativado. Contate o administrador.");
+  }
+
+  return userCredential;
 }
 
 export async function isUserAdmin() {
