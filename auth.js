@@ -3,20 +3,29 @@ import { auth } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getCurrentUserData, isUserAdmin } from './users.js';
 
+let currentUser = null;  // nova variável para guardar usuário atual
+
+// Listener global para mudanças de autenticação
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  if (user) {
+    await updateUserDisplay();
+    // Se estiver na página login e o usuário já está logado, redireciona para home
+    if (window.location.pathname.includes('login.html')) {
+      window.location.href = 'index.html';
+    }
+  } else {
+    clearUserDisplay();
+    // Se não estiver na página login, redireciona para login
+    if (!window.location.pathname.includes('login.html')) {
+      redirectToLogin();
+    }
+  }
+});
+
 // Verificação de autenticação básica
 export async function checkAuth() {
-  return new Promise((resolve) => {
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Atualiza a navbar com o nome do usuário
-        await updateUserDisplay();
-        resolve(user);
-      } else {
-        redirectToLogin();
-        resolve(null);
-      }
-    });
-  });
+  return currentUser;
 }
 
 // Verificação específica para administradores
@@ -49,10 +58,19 @@ async function updateUserDisplay() {
   }
 }
 
+function clearUserDisplay() {
+  const userDisplay = document.getElementById('currentUserDisplay');
+  const adminMenu = document.getElementById('adminMenu');
+  
+  if (userDisplay) userDisplay.textContent = '';
+  if (adminMenu) adminMenu.style.display = 'none';
+}
+
 // Logout com tratamento de erros
 export async function logout() {
   try {
     await signOut(auth);
+    clearUserDisplay();
     redirectToLogin();
   } catch (error) {
     console.error('Erro ao fazer logout:', error);
@@ -85,8 +103,5 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', logout);
   }
   
-  // Verifica autenticação automaticamente em páginas protegidas
-  if (!window.location.pathname.includes('login.html')) {
-    checkAuth();
-  }
+  // Não precisa mais chamar checkAuth() aqui, pois o onAuthStateChanged está globalmente ativo
 });
