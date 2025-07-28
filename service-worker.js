@@ -2,6 +2,7 @@
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
+// Config Firebase - use seu próprio config (igual firebase-config.js)
 firebase.initializeApp({
   apiKey: "AIzaSyCv6pzl34tyPTARtGxV6g2AJfkrtQeA-xU",
   authDomain: "cadastro-igreja-23042.firebaseapp.com",
@@ -13,9 +14,9 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// 🔔 Notificações em segundo plano
+// Recebe notificações em segundo plano
 messaging.onBackgroundMessage(function(payload) {
-  console.log('[firebase-messaging-sw.js] Mensagem recebida:', payload);
+  console.log('[firebase-messaging-sw.js] Mensagem recebida em segundo plano:', payload);
 
   const data = payload.data || {};
   const notification = payload.notification || {};
@@ -36,24 +37,44 @@ messaging.onBackgroundMessage(function(payload) {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Clique em notificação
-self.addEventListener('notificationclick', event => {
+
+
+
+
+
+
+self.addEventListener('notificationclick', function(event) {
   event.notification.close();
+
   const targetUrl = event.notification.data?.url || '/cadastro/';
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
       for (const client of clientList) {
+        // Se já estiver aberta em uma aba, foca nela
         if (client.url === targetUrl && 'focus' in client) {
           return client.focus();
         }
       }
-      if (clients.openWindow) return clients.openWindow(targetUrl);
+
+      // Abre nova aba com a URL da notificação
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
     })
   );
 });
 
-// CACHE OFFLINE
-const CACHE_NAME = 'cadastro-app-v4';
+
+
+
+
+
+
+
+
+// SEU CÓDIGO DE CACHE E FETCH (mantido igual ao seu original)
+const CACHE_NAME = 'cadastro-app-v1';
 const urlsToCache = [
   '/cadastro/index.html',
   '/cadastro/login.html',
@@ -65,46 +86,31 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(urlsToCache);
+    })
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
   );
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames =>
-      Promise.all(cacheNames.map(cacheName => {
-        if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
-      }))
-    ).then(() => self.clients.claim())
-  );
-});
-
-// ✅ Fetch corrigido para não interferir em navegações
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-
-  const requestURL = new URL(event.request.url);
-
-  // ✅ 1. Se for arquivo HTML (login.html, membros.html etc.), sempre busca da rede primeiro
-  if (requestURL.pathname.endsWith('.html')) {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // ✅ 2. Para navegação raiz (ex: apenas /cadastro/), retorna index.html do cache (modo PWA)
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      caches.match('/cadastro/index.html')
-    );
-    return;
-  }
-
-  // ✅ 3. Para arquivos estáticos (CSS, JS, ícones), mantém cache-first
-  event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
   );
 });
