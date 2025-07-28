@@ -37,12 +37,6 @@ messaging.onBackgroundMessage(function(payload) {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-
-
-
-
-
-
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
 
@@ -65,16 +59,8 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
-
-
-
-
-
-
-
-
 // SEU CÓDIGO DE CACHE E FETCH (mantido igual ao seu original)
-const CACHE_NAME = 'cadastro-app-v1';
+const CACHE_NAME = 'cadastro-app-v2'; // alterado para forçar atualização
 const urlsToCache = [
   '/cadastro/index.html',
   '/cadastro/login.html',
@@ -86,35 +72,10 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // 🔥 Força ativação imediata do SW
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       return cache.addAll(urlsToCache);
-    })
-  );
-});
-
-self.addEventListener('fetch', event => {
-  // Se for navegação (HTML), buscar direto do servidor
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          return response;
-        })
-        .catch(() => caches.match('/cadastro/index.html'))
-    );
-    return;
-  }
-
-  // Para outros arquivos (CSS, JS, imagens, etc), usar cache ou rede
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request).then(fetchResponse => {
-        return caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, fetchResponse.clone());
-          return fetchResponse;
-        });
-      });
     })
   );
 });
@@ -129,6 +90,21 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // 🔥 Assume controle das abas abertas
   );
+});
+
+self.addEventListener('fetch', event => {
+  if (event.request.mode === 'navigate') {
+    // 🔥 Corrigido: tenta buscar online, se falhar usa index.html
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/cadastro/index.html'))
+    );
+  } else {
+    event.respondWith(
+      caches.match(event.request).then(response => {
+        return response || fetch(event.request);
+      })
+    );
+  }
 });
