@@ -87,17 +87,24 @@ self.addEventListener('fetch', event => {
 
   const requestURL = new URL(event.request.url);
 
-  // ✅ Se for requisição de página HTML (navegação), busca direto da rede
-  if (event.request.mode === 'navigate' || requestURL.pathname.endsWith('.html')) {
-    console.log('[SW] Navegação ou HTML detectado, indo direto para rede:', requestURL.href);
-    event.respondWith(fetch(event.request).catch(() => caches.match('/cadastro/index.html')));
+  // ✅ 1. Se for arquivo HTML (login.html, membros.html etc.), sempre busca da rede primeiro
+  if (requestURL.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
     return;
   }
 
-  // ✅ Arquivos estáticos continuam vindo do cache
+  // ✅ 2. Para navegação raiz (ex: apenas /cadastro/), retorna index.html do cache (modo PWA)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      caches.match('/cadastro/index.html')
+    );
+    return;
+  }
+
+  // ✅ 3. Para arquivos estáticos (CSS, JS, ícones), mantém cache-first
   event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
+    caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
