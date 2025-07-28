@@ -268,22 +268,33 @@
       }
 
       users.forEach(user => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${user.fullName || 'Não informado'}</td>
-          <td>${user.username}</td>
-          <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
-          <td class="action-buttons">
-            <button class="btn btn-sm btn-warning change-password me-2" data-id="${user.id}">
-              <i class="fas fa-key"></i> Alterar Senha
-            </button>
-            <button class="btn btn-sm btn-danger delete-user" data-id="${user.id}">
-              <i class="fas fa-trash"></i> Excluir
-            </button>
-          </td>
-        `;
-        usersList.appendChild(row);
-      });
+  const statusLabel = user.isActive ? 'Ativo' : 'Inativo';
+  const statusBtnClass = user.isActive ? 'btn-secondary' : 'btn-success';
+  const statusBtnText = user.isActive ? 'Desativar' : 'Ativar';
+
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${user.fullName || 'Não informado'}</td>
+    <td>${user.username}</td>
+    <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
+    <td>
+      <span class="badge ${user.isActive ? 'bg-success' : 'bg-danger'}">${statusLabel}</span>
+    </td>
+    <td class="action-buttons">
+      <button class="btn btn-sm btn-warning change-password me-2" data-id="${user.id}">
+        <i class="fas fa-key"></i> Senha
+      </button>
+      <button class="btn btn-sm ${statusBtnClass} toggle-status me-2" data-id="${user.id}" data-active="${user.isActive}">
+        <i class="fas fa-power-off"></i> ${statusBtnText}
+      </button>
+      <button class="btn btn-sm btn-danger delete-user" data-id="${user.id}">
+        <i class="fas fa-trash"></i> Excluir
+      </button>
+    </td>
+  `;
+  usersList.appendChild(row);
+});
+
 
       // Configurar eventos de botões
       document.querySelectorAll('.change-password').forEach(btn => {
@@ -305,9 +316,10 @@
     try {
       await registerUser(
         document.getElementById('username').value,
-        document.getElementById('password').value,
-        document.getElementById('fullName').value,
-        document.getElementById('isAdmin').checked
+          document.getElementById('password').value,
+          document.getElementById('fullName').value,
+          document.getElementById('isAdmin').checked,
+          true // ativo por padrão
       );
       showToast('Usuário cadastrado com sucesso!');
       registerForm.reset();
@@ -355,6 +367,24 @@
       }
     }
   });
+
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('toggle-status') || e.target.closest('.toggle-status')) {
+    const button = e.target.classList.contains('toggle-status') ? e.target : e.target.closest('.toggle-status');
+    const userId = button.getAttribute('data-id');
+    const isActive = button.getAttribute('data-active') === 'true';
+
+    try {
+      await update(ref(db, 'users/' + userId), { isActive: !isActive });
+      showToast(`Usuário ${isActive ? 'desativado' : 'ativado'} com sucesso!`);
+      loadUsers();
+    } catch (error) {
+      showToast('Erro ao atualizar status do usuário: ' + error.message, 'danger');
+    }
+  }
+});
+
+    
 
   // Função para mostrar toast
   function showToast(message, type = 'success') {
