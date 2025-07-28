@@ -377,7 +377,13 @@ function salvarVisitante() {
     const id = 'visitante_' + Date.now();
     const visitante = { id, nome, tipo: 'visitante', endereco, cep, bairro, cidade, estado, cristao, telefone };
     presentes.unshift(visitante);
-  }
+
+
+database.ref('visitantes/' + id).set({
+  nome, endereco, cep, bairro, cidade, estado, cristao, telefone
+});
+
+
 
   atualizarListaPresentes();
   document.getElementById('btn-salvar').disabled = false;
@@ -398,10 +404,6 @@ function salvarVisitante() {
     document.getElementById(id).value = '';
   });
 }
-
-database.ref('visitantes/' + id).set({
-  nome, endereco, cep, bairro, cidade, estado, cristao, telefone
-});
 
 
 
