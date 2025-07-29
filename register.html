@@ -171,6 +171,8 @@
                   <i class="fas fa-user-tag me-1"></i> Papel do Usuário
                 </label>
                 <select id="role" class="form-control" required>
+                  <option value="secretaria">Secretária</option>
+                  <option value="basico">Básico</option>
                   <option value="usuario">Usuário</option>
                   <option value="moderador">Moderador</option>
                   <option value="admin">Administrador</option>
@@ -253,6 +255,8 @@ import { ref, get, remove, update } from "https://www.gstatic.com/firebasejs/9.2
     <td>${user.username}</td>
     <td>
   <select class="form-select form-select-sm change-role" data-id="${user.id}">
+    <option value="basico" ${user.role === 'basico' ? 'selected' : ''}>Básico</option>
+    <option value="secretaria" ${user.role === 'secretaria' ? 'selected' : ''}>Secretária</option>
     <option value="usuario" ${user.role === 'usuario' ? 'selected' : ''}>Usuário</option>
     <option value="moderador" ${user.role === 'moderador' ? 'selected' : ''}>Moderador</option>
     <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrador</option>
