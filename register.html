@@ -216,38 +216,6 @@
     </div>
   </div>
 
-  <!-- Modal para alterar senha -->
-  <div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header bg-warning">
-          <h5 class="modal-title">
-            <i class="fas fa-key me-2"></i> Alterar Senha
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="passwordForm">
-            <input type="hidden" id="userId">
-            <div class="mb-3 password-field">
-              <label for="newPassword" class="form-label">Nova Senha</label>
-              <input type="password" id="newPassword" class="form-control" required minlength="6">
-              <i class="fas fa-eye toggle-password" onclick="togglePassword('newPassword')"></i>
-            </div>
-            <div class="mb-3 password-field">
-              <label for="confirmPassword" class="form-label">Confirmar Senha</label>
-              <input type="password" id="confirmPassword" class="form-control" required minlength="6">
-              <i class="fas fa-eye toggle-password" onclick="togglePassword('confirmPassword')"></i>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" id="savePasswordBtn" class="btn btn-primary">Salvar Alterações</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
@@ -283,14 +251,18 @@ import { ref, get, remove, update } from "https://www.gstatic.com/firebasejs/9.2
   row.innerHTML = `
     <td>${user.fullName || 'Não informado'}</td>
     <td>${user.username}</td>
-    <td>${user.role || 'usuario'}</td>
+    <td>
+  <select class="form-select form-select-sm change-role" data-id="${user.id}">
+    <option value="usuario" ${user.role === 'usuario' ? 'selected' : ''}>Usuário</option>
+    <option value="moderador" ${user.role === 'moderador' ? 'selected' : ''}>Moderador</option>
+    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrador</option>
+  </select>
+</td>
     <td>
       <span class="badge ${user.isActive ? 'bg-success' : 'bg-danger'}">${statusLabel}</span>
     </td>
     <td class="action-buttons">
-      <button class="btn btn-sm btn-warning change-password me-2" data-id="${user.id}">
-        <i class="fas fa-key"></i> Senha
-      </button>
+      
       <button class="btn btn-sm ${statusBtnClass} toggle-status me-2" data-id="${user.id}" data-active="${user.isActive}">
         <i class="fas fa-power-off"></i> ${statusBtnText}
       </button>
@@ -336,25 +308,23 @@ import { ref, get, remove, update } from "https://www.gstatic.com/firebasejs/9.2
     }
   });
 
-  // Alterar senha
-  document.getElementById('savePasswordBtn').addEventListener('click', async () => {
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
 
-    if (newPassword !== confirmPassword) {
-      showToast('As senhas não coincidem!', "danger");
-      return;
-    }
+// Alterar tipo (role)
+document.addEventListener('change', async (e) => {
+  if (e.target.classList.contains('change-role')) {
+    const userId = e.target.getAttribute('data-id');
+    const newRole = e.target.value;
 
     try {
-      await updatePassword(auth.currentUser, newPassword);
-      showToast('Senha alterada com sucesso!');
-      passwordForm.reset();
-      bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+      await update(ref(db, 'users/' + userId), { role: newRole });
+      showToast(`Tipo do usuário atualizado para "${newRole}" com sucesso!`);
     } catch (error) {
-      showToast('Erro ao alterar senha: ' + error.message, "danger");
+      showToast('Erro ao atualizar tipo do usuário: ' + error.message, 'danger');
     }
-  });
+  }
+});
+
+    
 
   // Excluir usuário (atualizado)
   document.addEventListener('click', async (e) => {
