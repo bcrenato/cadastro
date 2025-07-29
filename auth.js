@@ -19,16 +19,20 @@ export async function checkAuth() {
   });
 }
 
-// Verificação específica para administradores
-export async function checkAdminAuth() {
+import { getUserRole } from './users.js';
+
+export async function checkRoleAuth(allowedRoles) {
   const user = await checkAuth();
-  if (!user || !(await isUserAdmin())) {
-    showAccessDenied();
+  if (!user) return false;
+  const role = await getUserRole();
+  if (!allowedRoles.includes(role)) {
+    alert('Acesso negado!');
     redirectToHome();
     return false;
   }
   return true;
 }
+
 
 // Atualiza a exibição do usuário na navbar
 async function updateUserDisplay() {
