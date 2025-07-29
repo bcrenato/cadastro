@@ -22,13 +22,14 @@ export async function toggleUserStatus(userId, currentStatus) {
 
 
 
+// Excluir usuário (corrigido para usar "role")
 export async function deleteUser(userId) {
   try {
     const currentUser = auth.currentUser;
     if (!currentUser) throw new Error("Usuário não autenticado");
 
     const currentUserData = await get(ref(db, `users/${currentUser.uid}`));
-    if (!currentUserData.exists() || !currentUserData.val().isAdmin) {
+    if (!currentUserData.exists() || currentUserData.val().role !== 'admin') {
       throw new Error("Apenas administradores podem excluir usuários");
     }
 
