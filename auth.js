@@ -1,7 +1,8 @@
 // auth.js
 import { auth } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getCurrentUserData, isUserAdmin } from './users.js';
+import { getCurrentUserData, getUserRole } from './users.js';
+
 
 // Verificação de autenticação básica
 export async function checkAuth() {
@@ -39,15 +40,12 @@ async function updateUserDisplay() {
   try {
     const userData = await getCurrentUserData();
     const userDisplay = document.getElementById('currentUserDisplay');
-    const adminMenu = document.getElementById('adminMenu');
-    
+       
     if (userDisplay) {
       userDisplay.textContent = userData?.fullName || 'Usuário';
     }
     
-    if (adminMenu) {
-      adminMenu.style.display = (await isUserAdmin()) ? 'block' : 'none';
-    }
+  
   } catch (error) {
     console.error('Erro ao atualizar dados do usuário:', error);
   }
