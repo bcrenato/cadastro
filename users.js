@@ -40,24 +40,34 @@ export async function deleteUser(userId) {
   }
 }
 
-export async function registerUser(username, password, fullName, isAdmin = false) {
-  const email = `${username}@igreja.local`;
-  try {
-    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-
-    await set(ref(db, `users/${userCredential.user.uid}`), {
-      username,
-      fullName,
-      isAdmin,
-      createdAt: new Date().toISOString()
-    });
-
-    await secondaryAuth.signOut();
-    return userCredential.user;
-  } catch (error) {
-    throw new Error(`Erro ao registrar: ${error.message}`);
-  }
+export async function getUserRole() {
+  const user = auth.currentUser;
+  if (!user) return null;
+  const snapshot = await get(ref(db, `users/${user.uid}/role`));
+  return snapshot.val() || 'usuario';
 }
+
+export async function isUserInRole(roles) {
+  const role = await getUserRole();
+  return roles.includes(role);
+}
+
+export async function registerUser(username, password, fullName, role = 'usuario') {
+  const email = `${username}@igreja.local`;
+  const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+
+  await set(ref(db, `users/${userCredential.user.uid}`), {
+    username,
+    fullName,
+    role,
+    isActive: true,
+    createdAt: new Date().toISOString()
+  });
+
+  await secondaryAuth.signOut();
+  return userCredential.user;
+}
+
 
 export async function loginUser(username, password) {
   const email = `${username}@igreja.local`;
