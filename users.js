@@ -84,12 +84,6 @@ export async function loginUser(username, password) {
   return userCredential;
 }
 
-export async function isUserAdmin() {
-  const user = auth.currentUser;
-  if (!user) return false;
-  const snapshot = await get(ref(db, `users/${user.uid}/isAdmin`));
-  return snapshot.val() === true;
-}
 
 export async function getCurrentUserData() {
   const user = auth.currentUser;
