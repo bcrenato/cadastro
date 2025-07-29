@@ -20,7 +20,6 @@ export async function checkAuth() {
   });
 }
 
-import { getUserRole } from './users.js';
 
 export async function checkRoleAuth(allowedRoles) {
   const user = await checkAuth();
