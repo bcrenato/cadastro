@@ -313,61 +313,62 @@ body {
 <!-- Seu código principal -->
 <script type="module">
 import { checkAuth } from './auth.js';
-import { isUserAdmin } from './users.js';
+import { getUserRole } from './users.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const user = await checkAuth();
+  const user = await checkAuth();
+  if (user) {
+    let nome = user.displayName || user.email;
+    if (nome.includes(' ')) {
+      nome = nome.split(' ')[0];
+    } else if (nome.includes('@')) {
+      nome = nome.split('@')[0];
+    }
+    document.getElementById('currentUserDisplay').innerHTML =
+      `<i class="fas fa-user-circle"></i> Bem-vindo, ${nome}`;
+  }
 
-    if (user) {
-        let nome = user.displayName || user.email;
+  // 🔑 Exibe links de acordo com o papel do usuário
+  const role = await getUserRole();
+  document.querySelectorAll('[data-role]').forEach(el => {
+    const allowed = el.getAttribute('data-role').split(' ');
+    if (!allowed.includes(role)) el.style.display = 'none';
+  });
 
-        if (nome.includes(' ')) {
-            nome = nome.split(' ')[0];
-        } else if (nome.includes('@')) {
-            nome = nome.split('@')[0];
-        }
+  // Botão de logout
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    const { logout } = await import('./auth.js');
+    await logout();
+    window.location.href = 'login.html';
+  });
 
-        document.getElementById('currentUserDisplay').innerHTML =
-            `<i class="fas fa-user-circle"></i> Bem-vindo, ${nome}`;
+  // Menu toggle mobile
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('navMenu').classList.toggle('open');
+  });
 
-        if (await isUserAdmin()) {
-            document.querySelectorAll('.admin-only').forEach(el => {
-                el.style.display = 'block';
-            });
-        }
+  // Ativa o menu correto
+  const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+  const navItems = document.querySelectorAll('.nav-item');
+
+  navItems.forEach(item => {
+    const itemHref = item.getAttribute('href');
+    if (itemHref === currentPage) {
+      navItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+
+      const pageTitle = item.querySelector('span').textContent;
+      document.querySelector('.page-title h1').textContent = pageTitle;
     }
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-        const { logout } = await import('./auth.js');
-        await logout();
-        window.location.href = 'login.html';
+    item.addEventListener('click', () => {
+      if (window.innerWidth < 768) {
+        document.getElementById('navMenu').classList.remove('open');
+      }
     });
+  });
+});
 
-    // Menu toggle mobile
-    document.getElementById('menuToggle').addEventListener('click', () => {
-        document.getElementById('navMenu').classList.toggle('open');
-    });
-
-    // Ativa o menu correto
-    const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
-    const navItems = document.querySelectorAll('.nav-item');
-
-    navItems.forEach(item => {
-        const itemHref = item.getAttribute('href');
-        if (itemHref === currentPage) {
-            navItems.forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-
-            const pageTitle = item.querySelector('span').textContent;
-            document.querySelector('.page-title h1').textContent = pageTitle;
-        }
-
-        item.addEventListener('click', () => {
-            if (window.innerWidth < 768) {
-                document.getElementById('navMenu').classList.remove('open');
-            }
-        });
-    });
 
     // Botão para ativar notificações
     const btnNotify = document.getElementById('btnEnableNotifications');
