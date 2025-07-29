@@ -83,11 +83,12 @@
 <body>
   <!-- Verificação de Admin -->
   <script type="module">
-    import { checkAdminAuth } from './auth.js';
-    if (!await checkAdminAuth()) {
-      window.location.href = 'index.html';
-    }
-  </script>
+  import { checkRoleAuth } from './auth.js';
+  if (!await checkRoleAuth(['admin'])) {
+    window.location.href = 'index.html';
+  }
+</script>
+
 
   <!-- Navbar Administrativa -->
   <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
@@ -163,13 +164,19 @@
                 <input type="password" id="password" class="form-control" required minlength="6">
                 <i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i>
               </div>
+
               
-              <div class="mb-3 form-check">
-                <input type="checkbox" id="isAdmin" class="form-check-input">
-                <label for="isAdmin" class="form-check-label">
-                  <i class="fas fa-user-shield me-1"></i> É administrador?
+             <div class="mb-3">
+                <label for="role" class="form-label">
+                  <i class="fas fa-user-tag me-1"></i> Papel do Usuário
                 </label>
+                <select id="role" class="form-control" required>
+                  <option value="usuario">Usuário</option>
+                  <option value="moderador">Moderador</option>
+                  <option value="admin">Administrador</option>
+                </select>
               </div>
+
               
               <button type="submit" class="btn btn-primary w-100 py-2">
                 <i class="fas fa-save me-2"></i> Cadastrar Usuário
@@ -276,7 +283,7 @@ import { ref, get, remove, update } from "https://www.gstatic.com/firebasejs/9.2
   row.innerHTML = `
     <td>${user.fullName || 'Não informado'}</td>
     <td>${user.username}</td>
-    <td>${user.isAdmin ? 'Admin' : 'Usuário'}</td>
+    <td>${user.role || 'usuario'}</td>
     <td>
       <span class="badge ${user.isActive ? 'bg-success' : 'bg-danger'}">${statusLabel}</span>
     </td>
@@ -316,11 +323,11 @@ import { ref, get, remove, update } from "https://www.gstatic.com/firebasejs/9.2
     try {
       await registerUser(
         document.getElementById('username').value,
-          document.getElementById('password').value,
-          document.getElementById('fullName').value,
-          document.getElementById('isAdmin').checked,
-          true // ativo por padrão
+        document.getElementById('password').value,
+        document.getElementById('fullName').value,
+        document.getElementById('role').value
       );
+
       showToast('Usuário cadastrado com sucesso!');
       registerForm.reset();
       loadUsers();
