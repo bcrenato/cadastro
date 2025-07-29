@@ -26,60 +26,29 @@ body {
 }
 
 /* Estilos para o dropdown */
-    .nav-dropdown {
-        position: relative;
-        cursor: pointer;
-    }
-    
-    .nav-dropdown-header {
-        display: flex;
-        align-items: center;
-        padding: 10px 15px;
-    }
-    
-    .nav-dropdown-header i:first-child {
-        margin-right: 10px;
-    }
-    
-    .dropdown-arrow {
-        margin-left: auto;
-        transition: transform 0.3s;
-    }
-    
-    .nav-dropdown.active .dropdown-arrow {
-        transform: rotate(180deg);
-    }
-    
-    .nav-dropdown-content {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease-out;
-        background-color: rgba(0,0,0,0.05);
-    }
-    
-    .nav-dropdown.active .nav-dropdown-content {
-        max-height: 200px; /* Ajuste conforme necessário */
-    }
-    
-    .nav-subitem {
-        display: flex;
-        align-items: center;
-        padding: 8px 15px 8px 40px;
-        color: #333;
-        text-decoration: none;
-        transition: background-color 0.3s;
-    }
-    
-    .nav-subitem:hover {
-        background-color: rgba(0,0,0,0.1);
-    }
-    
-    .nav-subitem i {
-        margin-right: 10px;
-        font-size: 0.9em;
-    }
+.nav-dropdown { position: relative; cursor: pointer; }
+.nav-dropdown-header { display: flex; align-items: center; padding: 10px 15px; }
+.nav-dropdown-header i:first-child { margin-right: 10px; }
+.dropdown-arrow { margin-left: auto; transition: transform 0.3s; }
+.nav-dropdown.active .dropdown-arrow { transform: rotate(180deg); }
+.nav-dropdown-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    background-color: rgba(0,0,0,0.05);
+}
+.nav-dropdown.active .nav-dropdown-content { max-height: 200px; }
+.nav-subitem {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px 8px 40px;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+.nav-subitem:hover { background-color: rgba(0,0,0,0.1); }
+.nav-subitem i { margin-right: 10px; font-size: 0.9em; }
 
-    
 .dashboard { display: flex; min-height: 100vh; flex-direction: column; }
 .sidebar {
     width: 100%;
@@ -89,22 +58,10 @@ body {
     position: relative;
     z-index: 100;
 }
-.logo {
-    text-align: center;
-    padding: 15px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
+.logo { text-align: center; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .logo img { height: 50px; width: auto; }
 .logo h2 { margin: 10px 0 0; font-weight: 500; font-size: 1.2rem; }
-.menu-toggle {
-    display: block;
-    padding: 15px;
-    cursor: pointer;
-    text-align: right;
-    position: absolute;
-    right: 0;
-    top: 0;
-}
+.menu-toggle { display: block; padding: 15px; cursor: pointer; text-align: right; position: absolute; right: 0; top: 0; }
 .menu-toggle i { font-size: 1.5rem; }
 .nav-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
 .nav-menu.open { max-height: 1000px; }
@@ -120,17 +77,9 @@ body {
 }
 .nav-item:hover { background-color: var(--secondary); }
 .nav-item.active { background-color: var(--accent); }
-.nav-item i {
-    margin-right: 10px;
-    font-size: 18px;
-    min-width: 25px;
-    text-align: center;
-}
+.nav-item i { margin-right: 10px; font-size: 18px; min-width: 25px; text-align: center; }
 .main-content { flex: 1; padding: 20px; margin-top: 20px; }
-.header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 20px; flex-wrap: wrap;
-}
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
 .page-title h1 { margin: 0; color: var(--primary); font-size: 1.5rem; }
 .user-info { display: flex; align-items: center; margin-top: 10px; }
 .user-info span { margin-right: 10px; font-size: 0.9rem; }
@@ -152,32 +101,18 @@ body {
     margin-top: 15px;
     font-size: 1rem;
 }
-.btn-notify:hover {
-    background-color: var(--secondary);
-}
+.btn-notify:hover { background-color: var(--secondary); }
+
 @media (min-width: 768px) {
     .dashboard { flex-direction: row; }
-    .sidebar {
-        width: 250px;
-        min-height: 100vh;
-        position: fixed;
-    }
+    .sidebar { width: 250px; min-height: 100vh; position: fixed; }
     .menu-toggle { display: none; }
     .nav-menu { max-height: none; }
-    .main-content {
-        padding: 30px;
-        margin-left: 250px;
-        margin-top: 0;
-    }
+    .main-content { padding: 30px; margin-left: 250px; margin-top: 0; }
     .header { margin-bottom: 30px; }
     .user-info { margin-top: 0; }
-    .logo img {
-        height: 40px;
-    }
-    .logo h2 {
-        font-size: 0.8rem;
-        margin-top: 8px;
-    }
+    .logo img { height: 40px; }
+    .logo h2 { font-size: 0.8rem; margin-top: 8px; }
 }
 </style>
 </head>
@@ -185,115 +120,47 @@ body {
 <div class="dashboard">
     <!-- Sidebar -->
     <div class="sidebar">
-        <div class="menu-toggle" id="menuToggle">
-            <i class="fas fa-bars"></i>
-        </div>
+        <div class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></div>
         <div class="logo">
             <img src="logo.png" alt="Logo da Igreja" />
             <h2>Famílias Vivendo na Graça e Unção do Espírito</h2>
         </div>
-
         <div class="nav-menu" id="navMenu">
-    <a href="index.html" class="nav-item active">
-        <i class="fas fa-tachometer-alt"></i>
-        <span>Dashboard</span>
-    </a>
-
-    <a href="cadastro-membros.html" class="nav-item">
-        <i class="fas fa-users"></i>
-        <span>Cadastrar Membros</span>
-    </a>
-
-    <a href="listagem.html" class="nav-item" data-role="admin moderador">
-        <i class="fas fa-list"></i>
-        <span>Lista de Membros</span>
-    </a>
-
-    <a href="aniversariantes.html" class="nav-item">
-        <i class="fas fa-birthday-cake"></i>
-        <span>Aniversariantes</span>
-    </a>
-
-    <a href="relogio/index.html" class="nav-item">
-        <i class="fas fa-clock"></i>
-        <span>Relógio de Oração</span>
-    </a>
-
-    <!-- Submenu de Impressão -->
-    <div class="nav-item nav-dropdown">
-        <div class="nav-dropdown-header">
-            <i class="fas fa-print"></i>
-            <span>Impressão</span>
-            <i class="fas fa-chevron-down dropdown-arrow"></i>
+            <a href="index.html" class="nav-item active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+            <a href="cadastro-membros.html" class="nav-item"><i class="fas fa-users"></i><span>Cadastrar Membros</span></a>
+            <a href="listagem.html" class="nav-item" data-role="admin moderador"><i class="fas fa-list"></i><span>Lista de Membros</span></a>
+            <a href="aniversariantes.html" class="nav-item"><i class="fas fa-birthday-cake"></i><span>Aniversariantes</span></a>
+            <a href="relogio/index.html" class="nav-item"><i class="fas fa-clock"></i><span>Relógio de Oração</span></a>
+            <div class="nav-item nav-dropdown">
+                <div class="nav-dropdown-header"><i class="fas fa-print"></i><span>Impressão</span><i class="fas fa-chevron-down dropdown-arrow"></i></div>
+                <div class="nav-dropdown-content">
+                    <a href="carteirinhas/carteirinha.html" class="nav-subitem"><i class="fas fa-id-card"></i><span>Carteirinha</span></a>
+                    <a href="certificado.html" class="nav-subitem"><i class="fas fa-certificate"></i><span>Certificado</span></a>
+                </div>
+            </div>
+            <a href="presenca/lista.html" class="nav-item" data-role="admin moderador"><i class="fas fa-church"></i><span>Presença Cultos</span></a>
+            <a href="presenca/frequencia.html" class="nav-item" data-role="admin moderador"><i class="fas fa-chart-line"></i><span>Frequência Mensal</span></a>
+            <a href="exportar.html" class="nav-item" data-role="admin moderador"><i class="fas fa-file-export"></i><span>Exportar/Importar Dados</span></a>
+            <a href="backup.html" class="nav-item" data-role="admin moderador"><i class="fas fa-database"></i><span>Backup e Restauração</span></a>
+            <a href="register.html" class="nav-item" data-role="admin moderador"><i class="fas fa-user-plus"></i><span>Gerenciar Usuários</span></a>
+            <a href="push/notif_push.html" class="nav-item" data-role="admin moderador"><i class="fas fa-bell"></i><span>Enviar Notificações</span></a>
         </div>
-        <div class="nav-dropdown-content">
-            <a href="carteirinhas/carteirinha.html" class="nav-subitem">
-                <i class="fas fa-id-card"></i>
-                <span>Carteirinha</span>
-            </a>
-            <a href="certificado.html" class="nav-subitem">
-                <i class="fas fa-certificate"></i>
-                <span>Certificado</span>
-            </a>
-        </div>
-    </div>
-
-    <a href="presenca/lista.html" class="nav-item" data-role="admin moderador">
-        <i class="fas fa-church"></i>
-        <span>Presença Cultos</span>
-    </a>
-    
-    <a href="presenca/frequencia.html" class="nav-item" data-role="admin moderador">
-        <i class="fas fa-chart-line"></i>
-        <span>Frequência Mensal</span>
-    </a>
-
-    <a href="exportar.html" class="nav-item" data-role="admin moderador">
-        <i class="fas fa-file-export"></i>
-        <span>Exportar/Importar Dados</span>
-    </a>
-
-    <a href="backup.html" class="nav-item" data-role="admin moderador">
-        <i class="fas fa-database"></i>
-        <span>Backup e Restauração</span>
-    </a>
-
-    <a href="register.html" class="nav-item" data-role="admin moderador">
-        <i class="fas fa-user-plus"></i>
-        <span>Gerenciar Usuários</span>
-    </a>
-
-    <a href="push/notif_push.html" class="nav-item" data-role="admin moderador">
-        <i class="fas fa-bell"></i>
-        <span>Enviar Notificações</span>
-    </a>
-</div>
     </div>
 
     <!-- Main Content -->
     <div class="main-content">
         <div class="header">
-            <div class="page-title">
-                <h1>Dashboard</h1>
-            </div>
+            <div class="page-title"><h1>Dashboard</h1></div>
             <div class="user-info">
-                <span id="currentUserDisplay">
-                    <i class="fas fa-user-circle"></i> Carregando...
-                </span>
-                <button id="logoutBtn" class="btn btn-sm btn-outline-light" style="margin-left:10px;">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </button>
+                <span id="currentUserDisplay"><i class="fas fa-user-circle"></i> Carregando...</span>
+                <button id="logoutBtn" class="btn btn-sm btn-outline-light" style="margin-left:10px;"><i class="fas fa-sign-out-alt"></i> Sair</button>
             </div>
         </div>
-
         <div class="content-area">
             <p>Selecione uma opção no menu à esquerda para começar.</p>
-
             <div style="margin-top: 20px; padding: 15px; background-color: var(--light); border-radius: 5px;">
                 <h3 style="margin-top: 0; color: var(--secondary);">Resumo do Sistema</h3>
                 <p>Este painel administrativo permite gerenciar todas as atividades da igreja de forma centralizada.</p>
-
-                <!-- Botão para ativar notificações -->
                 <button id="btnEnableNotifications" class="btn-notify">Ativar Notificações</button>
             </div>
         </div>
@@ -301,16 +168,11 @@ body {
 </div>
 
 <script>
-    // Adiciona funcionalidade de toggle ao dropdown
-    document.querySelectorAll('.nav-dropdown-header').forEach(header => {
-        header.addEventListener('click', () => {
-            const dropdown = header.parentElement;
-            dropdown.classList.toggle('active');
-        });
-    });
+document.querySelectorAll('.nav-dropdown-header').forEach(header => {
+    header.addEventListener('click', () => header.parentElement.classList.toggle('active'));
+});
 </script>
-    
-<!-- Seu código principal -->
+
 <script type="module">
 import { checkAuth } from './auth.js';
 import { getUserRole } from './users.js';
@@ -319,110 +181,75 @@ document.addEventListener('DOMContentLoaded', async () => {
   const user = await checkAuth();
   if (user) {
     let nome = user.displayName || user.email;
-    if (nome.includes(' ')) {
-      nome = nome.split(' ')[0];
-    } else if (nome.includes('@')) {
-      nome = nome.split('@')[0];
-    }
-    document.getElementById('currentUserDisplay').innerHTML =
-      `<i class="fas fa-user-circle"></i> Bem-vindo, ${nome}`;
+    if (nome.includes(' ')) nome = nome.split(' ')[0];
+    else if (nome.includes('@')) nome = nome.split('@')[0];
+    document.getElementById('currentUserDisplay').innerHTML = `<i class="fas fa-user-circle"></i> Bem-vindo, ${nome}`;
   }
 
-  // 🔑 Exibe links de acordo com o papel do usuário
   const role = await getUserRole();
   document.querySelectorAll('[data-role]').forEach(el => {
     const allowed = el.getAttribute('data-role').split(' ');
     if (!allowed.includes(role)) el.style.display = 'none';
   });
 
-  // Botão de logout
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     const { logout } = await import('./auth.js');
     await logout();
     window.location.href = 'login.html';
   });
 
-  // Menu toggle mobile
   document.getElementById('menuToggle').addEventListener('click', () => {
     document.getElementById('navMenu').classList.toggle('open');
   });
 
-  // Ativa o menu correto
-  const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const navItems = document.querySelectorAll('.nav-item');
-
   navItems.forEach(item => {
     const itemHref = item.getAttribute('href');
     if (itemHref === currentPage) {
       navItems.forEach(i => i.classList.remove('active'));
       item.classList.add('active');
-
-      const pageTitle = item.querySelector('span').textContent;
-      document.querySelector('.page-title h1').textContent = pageTitle;
+      document.querySelector('.page-title h1').textContent = item.querySelector('span').textContent;
     }
-
     item.addEventListener('click', () => {
-      if (window.innerWidth < 768) {
-        document.getElementById('navMenu').classList.remove('open');
-      }
+      if (window.innerWidth < 768) document.getElementById('navMenu').classList.remove('open');
     });
   });
-});
 
-
-    // Botão para ativar notificações
-    const btnNotify = document.getElementById('btnEnableNotifications');
-    btnNotify.addEventListener('click', async () => {
-        btnNotify.disabled = true;
-        btnNotify.textContent = 'Ativando...';
-
-        try {
-            // Importa dinamicamente o script para salvar token e ativar notificações
-            await import('./salvar-token.js');
-            btnNotify.textContent = 'Notificações Ativadas';
-        } catch (e) {
-            alert('Erro ao ativar notificações: ' + e.message);
-            btnNotify.textContent = 'Ativar Notificações';
-            btnNotify.disabled = false;
-        }
-    });
+  // Botão de notificações
+  const btnNotify = document.getElementById('btnEnableNotifications');
+  btnNotify.addEventListener('click', async () => {
+    btnNotify.disabled = true;
+    btnNotify.textContent = 'Ativando...';
+    try {
+      await import('./salvar-token.js');
+      btnNotify.textContent = 'Notificações Ativadas';
+    } catch (e) {
+      alert('Erro ao ativar notificações: ' + e.message);
+      btnNotify.textContent = 'Ativar Notificações';
+      btnNotify.disabled = false;
+    }
+  });
 });
 </script>
 
-<!-- Logoff após inatividade -->
 <script type="module" src="js/session-timeout.js"></script>
-
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/cadastro/service-worker.js')
-      .then(reg => {
-        console.log('Service Worker registrado:', reg.scope);
-      })
-      .catch(err => {
-        console.log('Falha ao registrar Service Worker:', err);
-      });
+      .then(reg => console.log('Service Worker registrado:', reg.scope))
+      .catch(err => console.log('Falha ao registrar Service Worker:', err));
   });
 }
 </script>
-
-<!-- Logoff após inatividade -->
-<script type="module" src="js/session-timeout.js"></script>
-  
-    
-    
 <script>
-// Escuta mensagens do Service Worker com a URL clicada na notificação
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', event => {
     const { redirectUrl } = event.data || {};
-    if (redirectUrl) {
-      // Salva a URL para redirecionar após login
-      localStorage.setItem('redirectAfterLogin', redirectUrl);
-    }
+    if (redirectUrl) localStorage.setItem('redirectAfterLogin', redirectUrl);
   });
 }
-</script>    
-
+</script>
 </body>
 </html>
