@@ -16,6 +16,25 @@ body { padding-top: 70px; }
 </head>
 <body>
 
+<script type="module">
+import { checkAuth } from './auth.js';
+import { getUserRole } from './users.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // ✅ Garante autenticação
+  const user = await checkAuth();
+  if (!user) return; // checkAuth redireciona para login se não estiver logado
+
+  // ✅ Verifica role
+  const role = await getUserRole();
+  if (!['admin'].includes(role)) {
+    alert('Acesso negado! Apenas Admins ou Moderadores podem acessar esta página.');
+    window.location.href = 'index.html';
+  }
+});
+</script>
+  
+
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
   <div class="container">
