@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ✅ Verifica role
   const role = await getUserRole();
-  if (!['admin', 'moderador'].includes(role)) {
+  if (!['admin'].includes(role)) {
     alert('Acesso negado! Apenas Admins ou Moderadores podem acessar esta página.');
     window.location.href = 'index.html';
   }
