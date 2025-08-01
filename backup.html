@@ -58,41 +58,16 @@ body {
   border-color: #f44336; 
 }
 
-/* Estilos para mensagem de não autorizado */
-#nao-autorizado {
-  margin-top: 100px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-  display: none;
-}
 
-/* Oculta conteúdo restrito por padrão */
-.conteudo-restrito {
-  display: none;
-}
-
-body.autorizado .conteudo-restrito {
-  display: block;
-}
 </style>
 </head>
 
 <body>
 
-<!-- Mensagem de não autorizado (igual à listagem.html) -->
-<div id="nao-autorizado">
-  <div class="alert alert-danger text-center">
-    <h4><i class="fas fa-exclamation-triangle me-2"></i>Acesso Restrito</h4>
-    <p class="mb-4">Você não tem permissão para acessar esta área administrativa.</p>
-    <a href="index.html" class="btn btn-primary">
-      <i class="fas fa-arrow-left me-2"></i>Voltar à página inicial
-    </a>
-  </div>
-</div>
+
 
 <!-- 🔹 Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top ">
   <div class="container">
     <a class="navbar-brand" href="#"><i class="fas fa-database me-2"></i>Backup Firebase</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -108,7 +83,7 @@ body.autorizado .conteudo-restrito {
   </div>
 </nav>
 
-<div class="container py-5 conteudo-restrito">
+<div class="container py-5">
   <h1 class="mb-4 text-center"><i class="fas fa-cloud me-2"></i>Backup & Restauração</h1>
 
   <div class="card">
