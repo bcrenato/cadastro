@@ -11,61 +11,10 @@ body { padding-top: 70px; }
 .navbar { background-color: #4CAF50; }
 .navbar .nav-link, .navbar .navbar-brand { color: #fff; }
 .navbar .nav-link:hover, .navbar .navbar-brand:hover { color: #ddd; }
-#nao-autorizado {
-  margin-top: 100px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-  display: none;
-}
-.conteudo-restrito { display: none; }
-body.autorizado .conteudo-restrito { display: block; }
+
 </style>
 </head>
 <body>
-
-<!-- Acesso restrito -->
-<div id="nao-autorizado">
-  <div class="alert alert-danger text-center">
-    <h4><i class="fas fa-exclamation-triangle me-2"></i>Acesso Restrito</h4>
-    <p class="mb-4">Você não tem permissão para acessar esta área administrativa.</p>
-    <a href="index.html" class="btn btn-primary"><i class="fas fa-arrow-left me-2"></i>Voltar à página inicial</a>
-  </div>
-</div>
-
-<script type="module">
-import { auth, db } from './firebase-config.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
-async function checkAdmin(user) {
-  if (!user) return false;
-  const snapshot = await get(ref(db, `users/${user.uid}`));
-  if (!snapshot.exists()) return false;
-  return snapshot.val().isAdmin === true;
-}
-
-function toggleContent(isAdmin) {
-  const authMsg = document.getElementById('nao-autorizado');
-  const content = document.querySelectorAll('.conteudo-restrito');
-  if (isAdmin) {
-    authMsg.style.display = 'none';
-    content.forEach(el => el.style.display = 'block');
-    document.body.classList.add('autorizado');
-  } else {
-    authMsg.style.display = 'block';
-    content.forEach(el => el.style.display = 'none');
-    document.body.classList.remove('autorizado');
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  onAuthStateChanged(auth, async (user) => {
-    const isAdmin = await checkAdmin(user);
-    toggleContent(isAdmin);
-  });
-});
-</script>
 
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top conteudo-restrito">
